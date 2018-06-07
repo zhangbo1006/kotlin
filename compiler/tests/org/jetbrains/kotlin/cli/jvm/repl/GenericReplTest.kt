@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.common.repl.*
 import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.daemon.common.WallAndThreadTotalProfiler
 import org.jetbrains.kotlin.integration.KotlinIntegrationTestBase
 import org.jetbrains.kotlin.script.KotlinScriptDefinition
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromAnnotatedTemplate
@@ -36,6 +37,7 @@ import org.jetbrains.kotlin.test.testFramework.KtUsefulTestCase.resetApplication
 import java.io.Closeable
 import java.io.File
 import java.net.URLClassLoader
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
@@ -162,11 +164,72 @@ class GenericReplTest : KtUsefulTestCase() {
         TestRepl().use { repl ->
             val state = repl.createState()
 
-            repl.compileAndEval(state, ReplCodeLine(0, 0, "class Test<T>(val x: T) { fun <R> map(f: (T) -> R): R = f(x) }".trimIndent()))
+            repl.compileAndEval(state, ReplCodeLine(0, 0, "class Test<T>(val x: T) { fun <R> map(f: (T) -> R): R = f(x) }"))
 
             // We expect that analysis time is not exponential
             for (i in 1..60) {
                 repl.compileAndEval(state, ReplCodeLine(i, 0, "fun <T> Test<T>.map(f: (T) -> Double): List<Double> = listOf(f(this.x))"))
+            }
+        }
+    }
+
+    fun testReplCompileTimesSimple() {
+        replBench(
+            listOf(
+                "fun <R> f(x: R, y: Int)=x",
+                "fun f(x: Double, y: Int)=x"
+            ),
+            listOf("fun <K> f(x: K, y: Int)=y"),
+            5, 50
+        )
+    }
+
+    fun testReplCompileTimesFromKt22740() {
+        replBench(
+            listOf(
+                "val v1 = 1",
+                "fun foo(x: Int) = x + v1",
+                "fun<T> bar(x: T) = x.toString().length + foo(v1)",
+                "class Test<T>(val x: T) { fun <R> map(f: (T) -> R): R = f(x) }"
+            ),
+            listOf("fun <T> Test<T>.map(f: (T) -> Double): List<Double> = listOf(f(this.x))"),
+            4, 20
+        )
+    }
+
+    fun replBench(startLines: List<String>, repeatLines: List<String>, steps: Int, repeatsStep: Int) {
+        val expectedC = 2
+
+        fun Long.ms() = TimeUnit.NANOSECONDS.toMillis(this)
+
+        fun time(name: String, body: () -> Unit): Long {
+            val profiler = WallAndThreadTotalProfiler()
+            profiler.withMeasure(null, body)
+            println("$name: ${profiler.total.threadTime.ms()}ms")
+            return profiler.total.threadTime
+        }
+
+        TestRepl().use { repl ->
+            // warmup
+            repl.compileLinesWithRepeat(startLines, repeatLines, 1)
+
+            var prevRepeats = repeatsStep
+            var prevTime = time("compile $prevRepeats") {
+                repl.compileLinesWithRepeat(startLines, repeatLines, prevRepeats)
+            }
+
+            for (repeatMul in 2..steps) {
+                val repeats = repeatsStep * repeatMul
+                val curTime = time("compile $repeats") {
+                    repl.compileLinesWithRepeat(startLines, repeatLines, repeats)
+                }
+                val expectedStep = expectedC * repeats / prevRepeats
+                TestCase.assertTrue(
+                    "$repeats lines repeated: expecting it to take no more that ${expectedStep}x from previous measurement, but got ${curTime.ms()} > ${prevTime.ms()} * $expectedStep",
+                    curTime <= prevTime * expectedC * repeats / prevRepeats
+                )
+                prevRepeats = repeats
+                prevTime = curTime
             }
         }
     }
@@ -229,3 +292,13 @@ private fun TestRepl.compileAndEval(state: IReplStageState<*>, codeLine: ReplCod
     }
     return compRes to evalRes
 }
+
+private fun TestRepl.compileLinesWithRepeat(startLines: List<String>, repeatLines: List<String>, repeats: Int) {
+    val state = createState()
+    val lines = startLines + List(repeats) { repeatLines }.flatten()
+    lines.forEachIndexed { idx, line ->
+        val res = replCompiler.compile(state, ReplCodeLine(idx, 0, line))
+        TestCase.assertNotNull("Unexpected compile result: $res", res as? ReplCompileResult.CompiledClasses)
+    }
+}
+
