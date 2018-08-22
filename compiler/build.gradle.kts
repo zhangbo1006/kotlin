@@ -78,7 +78,7 @@ dependencies {
     testCompile(project(":compiler:ir.tree")) // used for deepCopyWithSymbols call that is removed by proguard from the compiler TODO: make it more straightforward
     testCompile(project(":kotlin-scripting-compiler"))
     testCompile(project(":kotlin-script-util"))
-    testCompileOnly(projectRuntimeJar(":kotlin-daemon-client"))
+    testCompileOnly(project(":kotlin-daemon-client"))
     testCompileOnly(project(":kotlin-reflect-api"))
     otherCompilerModules.forEach {
         testCompileOnly(project(it))

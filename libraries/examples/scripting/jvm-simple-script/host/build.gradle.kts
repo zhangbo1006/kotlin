@@ -8,7 +8,7 @@ dependencies {
     compile(project(":examples:scripting-jvm-simple-script"))
     compile(project(":kotlin-scripting-jvm-host"))
     compile(project(":kotlin-script-util"))
-    runtime(projectRuntimeJar(":kotlin-compiler"))
+    runtime(project(":kotlin-compiler"))
     testCompile(commonDep("junit"))
 }
 
