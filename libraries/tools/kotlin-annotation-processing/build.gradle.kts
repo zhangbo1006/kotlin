@@ -20,10 +20,7 @@ projectTest {
     workingDir = projectDir
 }
 
-val jar: Jar by tasks
-jar.apply {
-    classifier = "base"
-}
+noDefaultJar()
 
 runtimeJar(rewriteDepsToShadedCompiler(
     task<ShadowJar>("shadowJar") {
