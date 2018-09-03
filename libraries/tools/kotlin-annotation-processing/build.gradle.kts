@@ -13,7 +13,7 @@ val packedJars by configurations.creating
 dependencies {
     compile(project(":kotlin-stdlib"))
     packedJars(project(":kotlin-annotation-processing")) { isTransitive = false }
-    runtime(project(":kotlin-compiler-embeddable"))
+    runtime(projectRuntimeJar(":kotlin-compiler-embeddable"))
 }
 
 projectTest {

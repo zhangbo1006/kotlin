@@ -16,10 +16,10 @@ dependencies {
     compileOnly(project(":kotlin-preloader"))
     compileOnly(project(":compiler:frontend.java"))
     compileOnly(project(":compiler:daemon-common"))
-    compile(project(":kotlin-daemon-client"))
+    compile(projectRuntimeJar(":kotlin-daemon-client"))
     compileOnly(project(":compiler:util"))
     compileOnly(intellijCoreDep()) { includeJars("intellij-core") }
-    runtimeOnly(project(":kotlin-compiler-embeddable"))
+    runtimeOnly(projectRuntimeJar(":kotlin-compiler-embeddable"))
 }
 
 sourceSets {
