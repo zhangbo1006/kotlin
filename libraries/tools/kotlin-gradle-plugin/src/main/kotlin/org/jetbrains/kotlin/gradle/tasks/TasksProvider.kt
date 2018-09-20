@@ -38,8 +38,8 @@ internal open class KotlinTasksProvider(val targetName: String) {
         }
 
     fun createKotlinCommonTask(project: Project, name: String, compilation: KotlinCompilation): KotlinCompileCommon =
-        project.tasks.create(name, KotlinCompileCommon::class.java).apply {
-            configure(this, project, compilation)
+        project.tasks.create(name, KotlinCompileCommon::class.java) {
+            configure(it, project, compilation)
         }
 
     open fun configure(

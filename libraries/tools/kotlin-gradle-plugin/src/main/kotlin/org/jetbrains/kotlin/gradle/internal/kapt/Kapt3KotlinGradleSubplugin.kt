@@ -404,26 +404,24 @@ class Kapt3KotlinGradleSubplugin : KotlinGradleSubplugin<KotlinCompile> {
         return kaptTask
     }
 
-    private fun Kapt3SubpluginContext.createKaptGenerateStubsTask(): KaptGenerateStubsTask {
-        val kaptTask = project.tasks.create(
-                getKaptTaskName("kaptGenerateStubs"),
-                KaptGenerateStubsTask::class.java)
+    private fun Kapt3SubpluginContext.createKaptGenerateStubsTask(): KaptGenerateStubsTask =
+        project.tasks.create(
+            getKaptTaskName("kaptGenerateStubs"),
+            KaptGenerateStubsTask::class.java
+        ) {
+            it.sourceSetName = sourceSetName
+            it.kotlinCompileTask = kotlinCompile
+            kotlinToKaptGenerateStubsTasksMap[kotlinCompile] = it
 
-        kaptTask.sourceSetName = sourceSetName
-        kaptTask.kotlinCompileTask = kotlinCompile
-        kotlinToKaptGenerateStubsTasksMap[kotlinCompile] = kaptTask
+            it.stubsDir = getKaptStubsDir()
+            it.destinationDir = getKaptIncrementalDataDir()
+            it.mapClasspath { kotlinCompile.classpath }
+            it.generatedSourcesDir = sourcesOutputDir
+            mapKotlinTaskProperties(project, it)
 
-        kaptTask.stubsDir = getKaptStubsDir()
-        kaptTask.destinationDir = getKaptIncrementalDataDir()
-        kaptTask.mapClasspath { kotlinCompile.classpath }
-        kaptTask.generatedSourcesDir = sourcesOutputDir
-        mapKotlinTaskProperties(project, kaptTask)
-
-        kaptTask.kaptClasspathConfigurations = kaptClasspathConfigurations
-        buildAndAddOptionsTo(kaptTask, kaptTask.pluginOptions, aptMode = "stubs")
-
-        return kaptTask
-    }
+            it.kaptClasspathConfigurations = kaptClasspathConfigurations
+            buildAndAddOptionsTo(it, it.pluginOptions, aptMode = "stubs")
+        }
 
     private fun Kapt3SubpluginContext.getKaptTaskName(prefix: String): String {
         // Replace compile*Kotlin to kapt*Kotlin
