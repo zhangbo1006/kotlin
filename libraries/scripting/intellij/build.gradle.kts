@@ -1,4 +1,6 @@
 
+description = "Kotlin Scripting Extension for Intellij platform"
+
 plugins {
     kotlin("jvm")
     id("jps-compatible")

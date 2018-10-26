@@ -1,4 +1,6 @@
 
+description = "Kotlin Scripting API"
+
 plugins {
     kotlin("jvm")
     id("jps-compatible")

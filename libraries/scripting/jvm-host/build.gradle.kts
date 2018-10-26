@@ -1,4 +1,6 @@
 
+description = "Kotlin Scripting JVM host"
+
 plugins {
     kotlin("jvm")
     id("jps-compatible")
