@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.backend.common.ClassLoweringPass
 import org.jetbrains.kotlin.backend.common.FileLoweringPass
 import org.jetbrains.kotlin.backend.common.descriptors.WrappedSimpleFunctionDescriptor
 import org.jetbrains.kotlin.backend.common.ir.copyTo
+import org.jetbrains.kotlin.backend.common.ir.copyTypeParametersFrom
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.builders.*
@@ -246,7 +247,7 @@ class InlineClassLowering(val context: BackendContext) {
                 is IrConstructor -> function.parentAsClass.defaultType
                 else -> error("Unknown function type")
             }
-            typeParameters += function.typeParameters
+            copyTypeParametersFrom(function)
             annotations += function.annotations
             dispatchReceiverParameter = null
             extensionReceiverParameter = function.extensionReceiverParameter?.copyTo(this)
