@@ -101,6 +101,7 @@ private fun JsIrBackendContext.performInlining(moduleFragment: IrModuleFragment)
 }
 
 private fun JsIrBackendContext.lower(moduleFragment: IrModuleFragment, dependencies: List<IrModuleFragment>) {
+    validateIrModule(this, moduleFragment)
     ThrowableSuccessorsLowering(this).lower(moduleFragment)
     TailrecLowering(this).runOnFilesPostfix(moduleFragment)
     UnitMaterializationLowering(this).lower(moduleFragment)
