@@ -20,17 +20,27 @@ import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
+import org.jetbrains.kotlin.ir.types.IrDynamicType
+import org.jetbrains.kotlin.ir.types.isUnit
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.types.toKotlinType
 import org.jetbrains.kotlin.ir.util.isAnnotationClass
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
+import org.jetbrains.kotlin.resolve.descriptorUtil.isEffectivelyExternal
 import org.jetbrains.kotlin.types.KotlinType
 
 typealias ReportError = (element: IrElement, message: String) -> Unit
 
-class CheckIrElementVisitor(val builtIns: KotlinBuiltIns, val reportError: ReportError, val ensureAllNodesAreDifferent: Boolean) : IrElementVisitorVoid {
+class CheckIrElementVisitor(
+    val builtIns: KotlinBuiltIns,
+    val reportError: ReportError,
+    private val ensureAllNodesAreDifferent: Boolean,
+    private val checkTypes: Boolean = true,
+    private val checkDescriptors: Boolean = true
+) : IrElementVisitorVoid {
 
     val set = mutableSetOf<IrElement>()
 
@@ -44,6 +54,9 @@ class CheckIrElementVisitor(val builtIns: KotlinBuiltIns, val reportError: Repor
     }
 
     private fun IrExpression.ensureTypeIs(expectedType: KotlinType) {
+        if (!checkTypes)
+            return
+
         // TODO: compare IR types instead.
         if (expectedType != type.toKotlinType()) {
             reportError(this, "unexpected expression.type: expected $expectedType, got ${type.toKotlinType()}")
@@ -51,7 +64,7 @@ class CheckIrElementVisitor(val builtIns: KotlinBuiltIns, val reportError: Repor
     }
 
     private fun IrSymbol.ensureBound(expression: IrExpression) {
-        if (!this.isBound) {
+        if (!this.isBound && expression.type !is IrDynamicType) {
             reportError(expression, "Unbound symbol ${this}")
         }
     }
@@ -163,7 +176,7 @@ class CheckIrElementVisitor(val builtIns: KotlinBuiltIns, val reportError: Repor
             IrTypeOperator.INSTANCEOF, IrTypeOperator.NOT_INSTANCEOF -> builtIns.booleanType
         }
 
-        if (operator == IrTypeOperator.IMPLICIT_COERCION_TO_UNIT && typeOperand != builtIns.unitType) {
+        if (operator == IrTypeOperator.IMPLICIT_COERCION_TO_UNIT && !typeOperand.isUnit()) {
             reportError(expression, "typeOperand is $typeOperand")
         }
 
@@ -200,7 +213,7 @@ class CheckIrElementVisitor(val builtIns: KotlinBuiltIns, val reportError: Repor
     override fun visitClass(declaration: IrClass) {
         super.visitClass(declaration)
 
-        if (!declaration.isAnnotationClass) {
+        if (checkDescriptors && !declaration.isAnnotationClass) {
             // Check that all functions and properties from memberScope are present in IR
             // (including FAKE_OVERRIDE ones).
 
@@ -218,8 +231,44 @@ class CheckIrElementVisitor(val builtIns: KotlinBuiltIns, val reportError: Repor
         }
     }
 
+    override fun visitFunction(declaration: IrFunction) {
+        val parameters = declaration.run {
+            listOfNotNull(dispatchReceiverParameter, extensionReceiverParameter) + valueParameters
+        }
+        for (p in parameters) {
+            if (p.parent != declaration) {
+                reportError(declaration, "Wrong value parameter parent ${p.index}")
+            }
+        }
+        for ((i, p) in declaration.valueParameters.withIndex()) {
+            if (p.index != i) {
+                reportError(declaration, "Inconsistent index of value parameter ${p.index} != $i")
+            }
+        }
+
+        for ((i, p) in declaration.typeParameters.withIndex()) {
+            if (p.index != i) {
+                reportError(declaration, "Inconsistent index of type parameter ${p.index} != $i")
+            }
+            if (p.parent != declaration) {
+                reportError(declaration, "Wrong type parameter parent ${p.index}")
+            }
+        }
+    }
+
     override fun visitDeclarationReference(expression: IrDeclarationReference) {
         super.visitDeclarationReference(expression)
+
+        // TODO: Fix unbound external declarations
+        if (expression.descriptor.isEffectivelyExternal())
+            return
+
+        // TODO: Fix unbound dynamic filed declarations
+        if (expression is IrFieldAccessExpression) {
+            val receiverType = expression.receiver?.type
+            if (receiverType is IrDynamicType)
+                return
+        }
 
         expression.symbol.ensureBound(expression)
     }

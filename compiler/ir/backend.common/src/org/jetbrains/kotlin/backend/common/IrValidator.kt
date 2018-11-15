@@ -45,7 +45,7 @@ private fun CommonBackendContext.reportIrValidationError(message: String, irFile
     // TODO: throw an exception after fixing bugs leading to invalid IR.
 }
 
-private class IrValidator(val context: CommonBackendContext, performHeavyValidations: Boolean) : IrElementVisitorVoid {
+class IrValidator(val context: CommonBackendContext, performHeavyValidations: Boolean) : IrElementVisitorVoid {
 
     val builtIns = context.builtIns
     var currentFile: IrFile? = null
@@ -58,12 +58,15 @@ private class IrValidator(val context: CommonBackendContext, performHeavyValidat
     private fun error(element: IrElement, message: String) {
         // TODO: render all element's parents.
         context.reportIrValidationError(
-                "$message\n" +
-                        element.render(),
-                currentFile, element)
+            "$message\n" + element.render(),
+            currentFile,
+            element
+        )
+
+        TODO()
     }
 
-    private val elementChecker = CheckIrElementVisitor(builtIns, this::error, performHeavyValidations)
+    private val elementChecker = CheckIrElementVisitor(builtIns, this::error, performHeavyValidations, false, false)
 
     override fun visitElement(element: IrElement) {
         element.acceptVoid(elementChecker)
