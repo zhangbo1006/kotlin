@@ -154,9 +154,9 @@ class DeclarationStubGenerator(
             return referenced.owner
         }
 
-        return symbolTable.declareConstructor(
-            UNDEFINED_OFFSET, UNDEFINED_OFFSET, origin, descriptor.original
-        ) { IrLazyConstructor(UNDEFINED_OFFSET, UNDEFINED_OFFSET, origin, it, this, typeTranslator) }
+        return symbolTable.declareConstructor(descriptor.original) {
+            IrLazyConstructor(UNDEFINED_OFFSET, UNDEFINED_OFFSET, origin, it, this, typeTranslator)
+        }
     }
 
     private fun KotlinType.toIrType() = typeTranslator.translateType(this)

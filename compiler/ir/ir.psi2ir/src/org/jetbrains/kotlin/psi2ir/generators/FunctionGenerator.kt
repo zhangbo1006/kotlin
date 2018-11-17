@@ -247,11 +247,10 @@ class FunctionGenerator(declarationGenerator: DeclarationGenerator) : Declaratio
     ): IrConstructor =
         context.symbolTable.declareConstructor(
             ktConstructorElement.pureStartOffset, ktConstructorElement.pureEndOffset, IrDeclarationOrigin.DEFINED,
-            constructorDescriptor
+            constructorDescriptor, returnType = constructorDescriptor.returnType.toIrType()
         ).buildWithScope { irConstructor ->
             generateValueParameterDeclarations(irConstructor, ktParametersElement, null)
             irConstructor.body = createBodyGenerator(irConstructor.symbol).generateBody()
-            irConstructor.returnType = constructorDescriptor.returnType.toIrType()
         }
 
     fun generateSyntheticFunctionParameterDeclarations(irFunction: IrFunction) {

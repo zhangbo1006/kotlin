@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.symbols.impl.*
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.impl.IrUninitializedType
+import org.jetbrains.kotlin.ir.types.toIrType
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
@@ -236,13 +237,24 @@ open class SymbolTable : ReferenceSymbolTable {
         endOffset: Int,
         origin: IrDeclarationOrigin,
         descriptor: ClassConstructorDescriptor,
-        constructorFactory: (IrConstructorSymbol) -> IrConstructor = { IrConstructorImpl(startOffset, endOffset, origin, it, IrUninitializedType) }
+        returnType: IrType
+    ): IrConstructor =
+        constructorSymbolTable.declare(
+            descriptor,
+            { IrConstructorSymbolImpl(descriptor) },
+            { IrConstructorImpl(startOffset, endOffset, origin, it, returnType) }
+        )
+
+    fun declareConstructor(
+        descriptor: ClassConstructorDescriptor,
+        constructorFactory: (IrConstructorSymbol) -> IrConstructor
     ): IrConstructor =
         constructorSymbolTable.declare(
             descriptor,
             { IrConstructorSymbolImpl(descriptor) },
             constructorFactory
         )
+
 
     override fun referenceConstructor(descriptor: ClassConstructorDescriptor) =
         constructorSymbolTable.referenced(descriptor) { IrConstructorSymbolImpl(descriptor) }

@@ -62,10 +62,10 @@ interface IrBuilderExtension {
             this.startOffset,
             this.endOffset,
             SERIALIZABLE_PLUGIN_ORIGIN,
-            descriptor
+            descriptor,
+            returnType = descriptor.returnType.toIrType()
         )
         c.parent = this
-        c.returnType = descriptor.returnType.toIrType()
         c.createParameterDeclarations()
         c.body = compilerContext.createIrBuilder(c.symbol).irBlockBody { bodyGen(c) }
         this.addMember(c)
