@@ -136,7 +136,7 @@ private fun JsIrBackendContext.lower(moduleFragment: IrModuleFragment, dependenc
     }
     AutoboxingTransformer(this).lower(moduleFragment)
     BlockDecomposerLowering(this).runOnFilesPostfix(moduleFragment)
-
+    moduleFragment.patchDeclarationParents()
     ClassReferenceLowering(this).lower(moduleFragment)
     PrimitiveCompanionLowering(this).lower(moduleFragment)
     ConstLowering(this).lower(moduleFragment)

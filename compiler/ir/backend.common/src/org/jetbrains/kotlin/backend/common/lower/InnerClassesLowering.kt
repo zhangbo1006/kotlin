@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.ir.symbols.IrValueSymbol
 import org.jetbrains.kotlin.ir.types.classifierOrNull
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.dump
+import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.ir.util.transformDeclarationsFlat
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
@@ -94,7 +95,7 @@ class InnerClassesLowering(val context: BackendContext) : ClassLoweringPass {
                     delegatingConstructorCall.startOffset, delegatingConstructorCall.endOffset, outerThisValueParameter
                 )
             }
-
+            blockBody.patchDeclarationParents(loweredConstructor)
             loweredConstructor.body = blockBody
             return loweredConstructor
         }
