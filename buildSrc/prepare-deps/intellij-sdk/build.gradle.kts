@@ -110,8 +110,10 @@ fun Task.configureExtractFromConfigurationTask(sourceConfig: Configuration,
     dependsOn(sourceConfig)
     inputs.files(sourceConfig)
     val targetDir = File(repoDir, sourceConfig.name)
-    outputs.dirs(targetDir)
+    outputs.upToDateWhen { targetDir.exists() }
+
     doFirst {
+        project.delete(targetDir)
         project.copy {
             from(extractor(sourceConfig))
             into(targetDir)
@@ -196,26 +198,21 @@ val prepareIvyXmls by tasks.creating {
 
     if (installIntellijCommunity) {
         dependsOn(unzipIntellijSdk)
-        inputs.dir(intellijSdkDir)
         outputs.file(File(repoDir, "${intellij.name}.ivy.xml"))
     }
 
     if (installIntellijUltimate) {
         dependsOn(unzipIntellijUltimateSdk)
-        inputs.dir(intellijUltimateSdkDir)
         outputs.file(File(repoDir, "${intellijUltimate.name}.ivy.xml"))
     }
 
     val flatDeps = listOf(`intellij-core`, `jps-standalone`, `jps-build-test`)
     flatDeps.forEach {
-        inputs.dir(File(repoDir, it.name))
         outputs.file(File(repoDir, "${it.name}.ivy.xml"))
     }
-    inputs.dir(File(repoDir, sources.name))
-
+    
     if (intellijUltimateEnabled) {
         dependsOn(unzipNodeJSPlugin)
-        inputs.dir(File(repoDir, `plugins-NodeJS`.name))
         outputs.file(File(repoDir, "${`plugins-NodeJS`.name}.ivy.xml"))
     }
 
