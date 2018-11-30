@@ -1,3 +1,8 @@
+/*
+ * Copyright 2010-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
+ * that can be found in the license/LICENSE.txt file.
+ */
+
 package org.jetbrains.kotlin.backend.common.ir
 
 import org.jetbrains.kotlin.backend.common.CommonBackendContext
@@ -165,6 +170,8 @@ abstract class Symbols<out T : CommonBackendContext>(val context: T, private val
 //            context.getInternalFunctions("getContinuation").single())
 
     abstract val coroutineImpl: IrClassSymbol
+
+    abstract val workerInterface: IrClassSymbol
 
     abstract val coroutineSuspendedGetter: IrSimpleFunctionSymbol
 

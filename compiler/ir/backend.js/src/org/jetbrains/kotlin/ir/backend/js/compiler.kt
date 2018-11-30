@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.ir.backend.js.lower.inline.FunctionInlining
 import org.jetbrains.kotlin.ir.backend.js.lower.inline.RemoveInlineFunctionsWithReifiedTypeParametersLowering
 import org.jetbrains.kotlin.ir.backend.js.lower.inline.ReturnableBlockLowering
 import org.jetbrains.kotlin.ir.backend.js.lower.inline.replaceUnboundSymbols
+import org.jetbrains.kotlin.ir.backend.js.lower.workers.WorkerIntrinsicLowering
 import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -78,6 +79,7 @@ fun compile(
     MoveExternalDeclarationsToSeparatePlace().lower(moduleFragment)
     ExpectDeclarationsRemoving(context).lower(moduleFragment)
     CoroutineIntrinsicLowering(context).lower(moduleFragment)
+    WorkerIntrinsicLowering(context).lower(moduleFragment)
     ArrayInlineConstructorLowering(context).lower(moduleFragment)
     LateinitLowering(context, true).lower(moduleFragment)
 

@@ -141,6 +141,8 @@ class JvmBackendContext(
                 get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
             override val coroutineSuspendedGetter: IrSimpleFunctionSymbol
                 get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+            override val workerInterface: IrClassSymbol
+                get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
             override val lateinitIsInitializedPropertyGetter= symbolTable.referenceSimpleFunction(
                 state.module.getPackage(FqName("kotlin")).memberScope.getContributedVariables(
