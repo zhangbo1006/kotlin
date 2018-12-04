@@ -1,6 +1,5 @@
 // !LANGUAGE: +InlineClasses
 // IGNORE_BACKEND: JVM_IR
-// IGNORE_BACKEND: JS_IR
 // WITH_RUNTIME
 
 inline class Ucn(private val i: UInt)
@@ -17,8 +16,10 @@ class Kx(val x: UInt) : Input<Ucn> {
 }
 
 fun box(): String {
-    val p = Kx(42u).foo()
-    if (p.toString() != "Ucn(i=42)") throw AssertionError()
+    val x = Kx(42u)
+    val p = x.foo()
+    val s = p.toString()
+    if (s != "Ucn(i=42)") throw AssertionError()
 
     return "OK"
 }
