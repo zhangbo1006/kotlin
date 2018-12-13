@@ -236,10 +236,11 @@ private class AnyArgsConverter : ArgsConverter<Any> {
 }
 
 @Suppress("UNCHECKED_CAST")
-private inline fun <reified T> convertAnyArray(classifier: KClassifier?, args: Sequence<T?>): Any? {
+private inline fun <reified T> convertAnyArray(classifier: KClassifier?, args: Sequence<T?>): Any? =
+    if (classifier == T::class) args.toList().toTypedArray() // simple case
+    else convertAnyArrayImpl<T>(classifier, args)
 
-    if (classifier == T::class) return args.toList().toTypedArray() // simple case
-
+private fun <T> convertAnyArrayImpl(classifier: KClassifier?, args: Sequence<T?>): Any? {
     val elementClass = (classifier as? KClass<*>) ?: return null
 
     val argsList = args.toList()
@@ -248,7 +249,7 @@ private inline fun <reified T> convertAnyArray(classifier: KClassifier?, args: S
         try {
             java.lang.reflect.Array.set(result, idx, arg)
         } catch (e: IllegalArgumentException) {
-            return@convertAnyArray null
+            return@convertAnyArrayImpl null
         }
     }
     return result

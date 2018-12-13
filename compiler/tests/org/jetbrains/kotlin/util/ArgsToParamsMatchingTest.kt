@@ -75,6 +75,12 @@ class ArgsToParamsMatchingTest {
                               "n" to 42)
         Assert.assertNull(tryCreateCallableMappingFromNamedArgs(::notNullNumber, listOf(null to "42")))
     }
+
+    @Test
+    fun testMatchVarargFromAny() {
+        assertParamMapsEquals(tryCreateCallableMappingFromNamedArgs(::varargStrings, listOf("a", "b", "c").map { null to it }),
+                              "s" to arrayOf("a", "b", "c"))
+    }
 }
 
 private fun assertParamMapsEquals(actuals: Map<KParameter, Any?>?, vararg expected: Pair<String, Any?>) {
