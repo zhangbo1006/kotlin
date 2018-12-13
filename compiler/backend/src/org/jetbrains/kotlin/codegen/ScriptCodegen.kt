@@ -173,7 +173,7 @@ class ScriptCodegen private constructor(
             scriptDescriptor.scriptProvidedProperties.forEachIndexed { envVarIndex, envVar ->
                 val fieldClassType = typeMapper.mapType(envVar)
                 val envVarParamIndex = frameMap.enterTemp(fieldClassType)
-                val name = scriptContext.getprovidedPropertyName(envVarIndex)
+                val name = scriptContext.getProvidedPropertyName(envVarIndex)
                 genFieldFromParam(fieldClassType, envVarParamIndex, name)
             }
 
@@ -213,7 +213,7 @@ class ScriptCodegen private constructor(
             classBuilder.newField(
                 NO_ORIGIN,
                 ACC_PUBLIC or ACC_FINAL,
-                scriptContext.getprovidedPropertyName(envVarIndex),
+                scriptContext.getProvidedPropertyName(envVarIndex),
                 scriptContext.getProvidedPropertyType(envVarIndex).descriptor,
                 null,
                 null

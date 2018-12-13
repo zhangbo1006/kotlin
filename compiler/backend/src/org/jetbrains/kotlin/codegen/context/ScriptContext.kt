@@ -88,7 +88,7 @@ class ScriptContext(
         return kClass?.java?.classId?.let(AsmUtil::asmTypeByClassId)
     }
 
-    fun getprovidedPropertyName(index: Int): String =
+    fun getProvidedPropertyName(index: Int): String =
         scriptDescriptor.unsubstitutedPrimaryConstructor.valueParameters[ctorProvidedPropertiesParametersStart + index].name.identifier
 
     fun getProvidedPropertyType(index: Int): Type = typeMapper.mapType(scriptDescriptor.scriptProvidedProperties[index].type)
