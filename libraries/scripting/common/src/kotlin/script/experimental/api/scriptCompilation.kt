@@ -145,7 +145,7 @@ class RefineConfigurationBuilder : PropertiesCollection.Builder() {
 
     /**
      * The callback that will be called on the script compilation after parsing script file annotations
-     * @typeparam T the annotation to trigger the callback on
+     * @param T the annotation to trigger the callback on
      * @param handler the callback that will be called
      */
     inline fun <reified T : Annotation> onAnnotations(noinline handler: RefineScriptCompilationConfigurationHandler) {
