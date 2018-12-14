@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.util.dump
+import java.io.File
 import kotlin.system.measureTimeMillis
 
 interface CompilerPhase<in Context : BackendContext, Data> {
@@ -87,9 +88,10 @@ interface PhaseRunner<Context : BackendContext, Data> {
     fun runAfter(phase: CompilerPhase<Context, Data>, depth: Int, context: Context, data: Data)
 }
 
-abstract class DefaultIrPhaseRunner<Context : CommonBackendContext, Data : IrElement>(private val validator: (data: Data, context: Context) -> Unit = { _, _ -> }) :
+abstract class DefaultIrPhaseRunner<Context : CommonBackendContext, Data : IrElement>(private val validator: (data: Data, context: Context) -> Unit = { _, _ -> }, val dump: Boolean = false) :
     PhaseRunner<Context, Data> {
 
+    var id = 0
     enum class BeforeOrAfter { BEFORE, AFTER }
 
     abstract val startPhaseMarker: CompilerPhase<Context, Data>
@@ -120,7 +122,8 @@ abstract class DefaultIrPhaseRunner<Context : CommonBackendContext, Data : IrEle
     }
 
     final override fun runAfter(phase: CompilerPhase<Context, Data>, depth: Int, context: Context, data: Data) {
-        checkAndRun(phase, phases(context).toDumpStateAfter) { dumpElement(data, phase, context, BeforeOrAfter.AFTER) }
+        if (dump) dumpElement(data, phase, context, BeforeOrAfter.AFTER)
+        //checkAndRun(phase, phases(context).toDumpStateAfter) { dumpElement(data, phase, context, BeforeOrAfter.AFTER) }
         checkAndRun(phase, phases(context).toValidateStateAfter) { validator(data, context) }
     }
 
@@ -155,7 +158,8 @@ abstract class DefaultIrPhaseRunner<Context : CommonBackendContext, Data : IrEle
             }
         }
         separator(title)
-        println(input.dump())
+        File("/Users/jetbrains/ir2/${id++}_${phase.name}.ir").writeText(input.dump())
+        //println(input.dump())
     }
 
     private fun runAndProfile(phase: CompilerPhase<Context, Data>, context: Context, source: Data): Data {

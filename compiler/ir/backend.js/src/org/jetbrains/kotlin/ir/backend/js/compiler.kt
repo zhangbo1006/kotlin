@@ -59,7 +59,7 @@ fun compile(
         irDependencyModules
     )
 
-    CompilerPhaseManager(context, context.phases, moduleFragment, JsPhaseRunner).run {
+    CompilerPhaseManager(context, context.phases, moduleFragment, JsPhaseRunner(moduleFragment.files.size < 100)).run {
         jsPhases.fold(data) { m, p -> phase(p, context, m) }
     }
 

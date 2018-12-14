@@ -22,7 +22,7 @@ private fun validationCallback(module: IrModuleFragment, context: JsIrBackendCon
     module.accept(CheckDeclarationParentsVisitor, null)
 }
 
-object JsPhaseRunner : DefaultIrPhaseRunner<JsIrBackendContext, IrModuleFragment>(::validationCallback) {
+class JsPhaseRunner(dump: Boolean) : DefaultIrPhaseRunner<JsIrBackendContext, IrModuleFragment>(::validationCallback, dump) {
     override val startPhaseMarker = IrModuleStartPhase
     override val endPhaseMarker = IrModuleEndPhase
 
