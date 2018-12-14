@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.ir.backend.js.lower
 
 import org.jetbrains.kotlin.backend.common.FileLoweringPass
+import org.jetbrains.kotlin.builtins.PrimitiveType
 import org.jetbrains.kotlin.ir.backend.js.JsIrBackendContext
 import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
@@ -29,9 +30,10 @@ private class ArrayConstructorTransformer(
     val context: JsIrBackendContext
 ) : IrElementTransformerVoid() {
 
-    private val primitiveArrayInlineToSizeConstructorMap = context.intrinsics.primitiveArrays.keys.associate {
-        it.inlineConstructor to it.sizeConstructor
-    }
+    private val primitiveArrayInlineToSizeConstructorMap =
+        context.intrinsics.primitiveArrays.filter { it.value != PrimitiveType.CHAR }.keys.associate {
+            it.inlineConstructor to it.sizeConstructor
+        }
 
     override fun visitCall(expression: IrCall): IrExpression {
         expression.transformChildrenVoid(this)

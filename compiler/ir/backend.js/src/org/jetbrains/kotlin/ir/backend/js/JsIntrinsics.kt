@@ -235,8 +235,10 @@ class JsIntrinsics(private val irBuiltIns: IrBuiltIns, val context: JsIrBackendC
             } ?: getInternalFunction("${type.typeName.asString().toLowerCase()}ArrayOf"))
         }
 
+    // Concatenate multiple elements of type Array<T>
     val arrayConcat = getInternalWithoutPackage("arrayConcat")
 
+    // Concatenate multiple elements of primitive types that translates to typed JS arrays
     val primitiveArrayConcat = getInternalWithoutPackage("primitiveArrayConcat")
 
     val jsArraySlice = unOp("slice")

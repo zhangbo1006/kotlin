@@ -21,10 +21,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrCompositeImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.types.*
-import org.jetbrains.kotlin.ir.util.isFunctionOrKFunction
-import org.jetbrains.kotlin.ir.util.isInterface
-import org.jetbrains.kotlin.ir.util.isNullable
-import org.jetbrains.kotlin.ir.util.isTypeParameter
+import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformer
 
 class TypeOperatorLowering(val context: JsIrBackendContext) : FileLoweringPass {
@@ -85,6 +82,13 @@ class TypeOperatorLowering(val context: JsIrBackendContext) : FileLoweringPass {
 
             private fun lowerImplicitNotNull(expression: IrTypeOperatorCall, declaration: IrDeclarationParent): IrExpression {
                 assert(expression.operator == IrTypeOperator.IMPLICIT_NOTNULL)
+
+
+                if (!(expression.typeOperand.isNullable() xor expression.argument.type.isNullable())) {
+                    val d = expression.dump()
+                    1+1
+                }
+
                 assert(expression.typeOperand.isNullable() xor expression.argument.type.isNullable())
 
                 val newStatements = mutableListOf<IrStatement>()

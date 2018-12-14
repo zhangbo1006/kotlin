@@ -9,9 +9,9 @@ package kotlin
  * Represents a 16-bit Unicode character.
  * On the JVM, non-nullable values of this type are represented as values of the primitive type `char`.
  */
-public class Char(value: Int) : Comparable<Char> {
+inline public class Char(val value: Int) : Comparable<Char> {
 
-    private val value = value and 0xFFFF
+    //private val value = value and 0xFFFF
 
     /**
      * Compares this value with the specified value for order.
@@ -21,17 +21,17 @@ public class Char(value: Int) : Comparable<Char> {
     public override fun compareTo(other: Char): Int = value - other.value
 
     /** Adds the other Int value to this value resulting a Char. */
-    public operator fun plus(other: Int): Char = Char(value + other)
+    public operator fun plus(other: Int): Char = (value + other).toChar()
 
     /** Subtracts the other Char value from this value resulting an Int. */
     public operator fun minus(other: Char): Int = value - other.value
     /** Subtracts the other Int value from this value resulting a Char. */
-    public operator fun minus(other: Int): Char = Char(value - other)
+    public operator fun minus(other: Int): Char = (value - other).toChar()
 
     /** Increments this value. */
-    public operator fun inc(): Char = Char(value + 1)
+    public operator fun inc(): Char = (value + 1).toChar()
     /** Decrements this value. */
-    public operator fun dec(): Char = Char(value - 1)
+    public operator fun dec(): Char = (value - 1).toChar()
 
     /** Creates a range from this value to the specified [other] value. */
     public operator fun rangeTo(other: Char): CharRange = CharRange(this, other)
@@ -51,9 +51,9 @@ public class Char(value: Int) : Comparable<Char> {
     /** Returns the value of this character as a `Double`. */
     public fun toDouble(): Double = value.toDouble()
 
-    override fun equals(other: Any?): Boolean = other is Char && value == other.value
+    // override fun equals(other: Any?): Boolean = other is Char && value == other.value
 
-    override fun hashCode(): Int = value
+    //override fun hashCode(): Int = value
 
     override fun toString(): String {
         val value = value
