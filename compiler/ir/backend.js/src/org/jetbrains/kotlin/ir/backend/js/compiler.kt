@@ -9,7 +9,6 @@ import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.backend.common.*
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.lower.*
-import org.jetbrains.kotlin.backend.common.lower.InlineClassLowering
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
@@ -26,15 +25,20 @@ import org.jetbrains.kotlin.ir.backend.js.lower.workers.WorkerIntrinsicLowering
 import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.impl.IrModuleFragmentImpl
+import org.jetbrains.kotlin.ir.declarations.name
 import org.jetbrains.kotlin.ir.util.ExternalDependenciesGenerator
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import org.jetbrains.kotlin.js.analyze.TopDownAnalyzerFacadeForJS
+import org.jetbrains.kotlin.js.backend.ast.JsNode
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.progress.ProgressIndicatorAndCompilationCanceledStatus
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi2ir.Psi2IrTranslator
+import org.jetbrains.kotlin.storage.LockBasedStorageManager
 
 data class Result(val moduleDescriptor: ModuleDescriptor, val generatedCode: String, val moduleFragment: IrModuleFragment)
 
@@ -79,20 +83,52 @@ fun compile(
     MoveExternalDeclarationsToSeparatePlace().lower(moduleFragment)
     ExpectDeclarationsRemoving(context).lower(moduleFragment)
     CoroutineIntrinsicLowering(context).lower(moduleFragment)
-    WorkerIntrinsicLowering(context).lower(moduleFragment)
     ArrayInlineConstructorLowering(context).lower(moduleFragment)
     LateinitLowering(context, true).lower(moduleFragment)
 
     val moduleFragmentCopy = moduleFragment.deepCopyWithSymbols()
 
+    val workerLowering = WorkerIntrinsicLowering(context).apply { lower(moduleFragment) }
+
+    val program = inlineLowerAndTransform(context, moduleFragment, irDependencyModules)
+
+    return Result(
+        analysisResult.moduleDescriptor,
+        workerLowering.newFilesToBlobs(moduleFragment, irDependencyModules) + program.toString(),
+        moduleFragmentCopy
+    )
+}
+
+private fun inlineLowerAndTransform(
+    context: JsIrBackendContext,
+    moduleFragment: IrModuleFragment,
+    irDependencyModules: List<IrModuleFragment>
+): JsNode {
     context.performInlining(moduleFragment)
 
     context.lower(moduleFragment, irDependencyModules)
 
-    val program = moduleFragment.accept(IrModuleToJsTransformer(context), null)
-
-    return Result(analysisResult.moduleDescriptor, program.toString(), moduleFragmentCopy)
+    return moduleFragment.accept(IrModuleToJsTransformer(context), null)
 }
+
+private fun WorkerIntrinsicLowering.newFilesToBlobs(moduleFragment: IrModuleFragment, irDependencyModules: List<IrModuleFragment>): String {
+    var res = ""
+    for (newFile in additionalFiles) {
+        res += "var ${newFile.name} = new Blob([" +
+                "\"${inlineLowerAndTransform(context, newFile.toModuleFragment(moduleFragment), irDependencyModules)}\"]);\n"
+    }
+    return res
+}
+
+private fun IrFile.toModuleFragment(existing: IrModuleFragment) = IrModuleFragmentImpl(
+    descriptor = ModuleDescriptorImpl(
+        moduleName = Name.identifier(name),
+        builtIns = existing.descriptor.builtIns,
+        storageManager = LockBasedStorageManager.NO_LOCKS
+    ),
+    irBuiltins = existing.irBuiltins,
+    files = arrayListOf(this)
+)
 
 private fun JsIrBackendContext.performInlining(moduleFragment: IrModuleFragment) {
     FunctionInlining(this).inline(moduleFragment)
