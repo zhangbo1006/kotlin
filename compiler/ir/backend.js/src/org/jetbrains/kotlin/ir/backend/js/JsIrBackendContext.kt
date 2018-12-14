@@ -202,7 +202,7 @@ class JsIrBackendContext(
             override val copyRangeTo: Map<ClassDescriptor, IrSimpleFunctionSymbol>
                 get() = TODO("not implemented")
             override val coroutineImpl = symbolTable.referenceClass(findClass(coroutinePackage.memberScope, COROUTINE_IMPL_NAME.identifier))
-            override val workerInterface = symbolTable.referenceClass(findClass(workerPackage.memberScope, "Worker"))
+            override val workerInterface = symbolTable.referenceClass(findClass(workerPackage.memberScope, "WebWorker"))
             override val coroutineSuspendedGetter = symbolTable.referenceSimpleFunction(
                 coroutineIntrinsicsPackage.memberScope.getContributedVariables(
                     COROUTINE_SUSPENDED_NAME,
