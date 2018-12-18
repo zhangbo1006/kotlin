@@ -9,6 +9,10 @@ allprojects {
     }
 }
 
+// Hide window of instrumentation tasks
+val headlessOldValue: String? = System.setProperty("java.awt.headless", "true")
+logger.info("Setting java.awt.headless=true, old value was $headlessOldValue")
+
 /**
  *  Configures instrumentation for all JavaCompile tasks in project
  */
@@ -30,8 +34,6 @@ fun Project.configureJavaInstrumentation() {
 }
 
 fun JavaCompile.instrumentClasses(instrumentatorClasspath: String) {
-    val headlessOldValue = System.setProperty("java.awt.headless", "true")
-
     ant.withGroovyBuilder {
         "taskdef"(
             "name" to "instrumentIdeaExtensions",
@@ -65,11 +67,5 @@ fun JavaCompile.instrumentClasses(instrumentatorClasspath: String) {
                 "instrumentNotNull" to true
             )
         }
-    }
-
-    if (headlessOldValue != null) {
-        System.setProperty("java.awt.headless", headlessOldValue)
-    } else {
-        System.clearProperty("java.awt.headless")
     }
 }
