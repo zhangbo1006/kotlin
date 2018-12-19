@@ -45,16 +45,6 @@ fun JavaCompile.instrumentClasses(instrumentatorClasspath: String) {
 
     val sourceSet = project.sourceSets.single { it.compileJavaTaskName == name }
 
-    val dependencySourceSetDirectories = project.configurations[sourceSet.compileConfigurationName]
-        .dependencies
-        .withType(ProjectDependency::class.java)
-        .mapNotNull { p -> p.dependencyProject.takeIf { it.plugins.hasPlugin("org.gradle.java-base") } }
-        .map { p -> p.mainSourceSet.allSource.sourceDirectories }
-
-    val instrumentationClasspath = dependencySourceSetDirectories
-        .fold(classpath, FileCollection::plus)
-        .asPath
-
     val javaSourceDirectories = sourceSet.allJava.sourceDirectories.filter { it.exists() }
 
     ant.withGroovyBuilder {
@@ -62,7 +52,7 @@ fun JavaCompile.instrumentClasses(instrumentatorClasspath: String) {
             "instrumentIdeaExtensions"(
                 "srcdir" to directory,
                 "destdir" to destinationDir,
-                "classpath" to instrumentationClasspath,
+                "classpath" to classpath.asPath,
                 "includeantruntime" to false,
                 "instrumentNotNull" to true
             )
