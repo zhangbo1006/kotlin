@@ -34,7 +34,7 @@ interface LightClassDataHolder {
     interface ForClass : LightClassDataHolder {
         fun findDataForDefaultImpls(classOrObject: KtClassOrObject) = findData {
             it.findDelegate(classOrObject).findInnerClassByName(JvmAbi.DEFAULT_IMPLS_CLASS_NAME, false)
-            ?: throw IllegalStateException("Couldn't get delegate for $this\n in ${DebugUtil.stubTreeToString(it)}")
+                ?: throw IllegalStateException("Couldn't get delegate for $this\n in ${DebugUtil.stubTreeToString(it)}")
         }
 
         fun findDataForClassOrObject(classOrObject: KtClassOrObject): LightClassData = findData { it.findDelegate(classOrObject) }
@@ -52,7 +52,7 @@ interface LightClassDataHolder {
 interface LightClassData {
     val clsDelegate: PsiClass
 
-    val supertypes: Array<PsiClassType> get() { return clsDelegate.superTypes }
+    val supertypes: Array<PsiClassType> get() = clsDelegate.superTypes
 
     fun getOwnFields(containingClass: KtLightClass): List<KtLightField>
     fun getOwnMethods(containingClass: KtLightClass): List<KtLightMethod>
@@ -77,8 +77,8 @@ object InvalidLightClassDataHolder : LightClassDataHolder.ForClass {
 }
 
 class LightClassDataHolderImpl(
-        override val javaFileStub: PsiJavaFileStub,
-        override val extraDiagnostics: Diagnostics
+    override val javaFileStub: PsiJavaFileStub,
+    override val extraDiagnostics: Diagnostics
 ) : LightClassDataHolder.ForClass, LightClassDataHolder.ForFacade, LightClassDataHolder.ForScript {
     override fun findData(findDelegate: (PsiJavaFileStub) -> PsiClass) = findDelegate(javaFileStub).let(::LightClassDataImpl)
 }
@@ -91,16 +91,15 @@ fun PsiJavaFileStub.findDelegate(classOrObject: KtClassOrObject): PsiClass {
     val outermostClassOrObject = getOutermostClassOrObject(classOrObject)
     val ktFileText: String? = try {
         outermostClassOrObject.containingFile.text
-    }
-    catch (e: Exception) {
+    } catch (e: Exception) {
         "Can't get text for outermost class"
     }
 
     val stubFileText = DebugUtil.stubTreeToString(this)
     throw KotlinExceptionWithAttachments("Couldn't get delegate for class")
-            .withAttachment(classOrObject.name ?: "unnamed class or object", classOrObject.getDebugText())
-            .withAttachment("file.kt", ktFileText)
-            .withAttachment("stub text", stubFileText)
+        .withAttachment(classOrObject.name ?: "unnamed class or object", classOrObject.getDebugText())
+        .withAttachment("file.kt", ktFileText)
+        .withAttachment("stub text", stubFileText)
 }
 
 fun PsiJavaFileStub.findDelegate(classFqName: FqName): PsiClass {
