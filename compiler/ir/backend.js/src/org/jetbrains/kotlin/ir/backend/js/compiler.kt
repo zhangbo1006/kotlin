@@ -114,15 +114,27 @@ private fun inlineLowerAndTransform(
 private fun WorkerIntrinsicLowering.newFilesToBlobs(moduleFragment: IrModuleFragment, irDependencyModules: List<IrModuleFragment>): String {
     var res = ""
     for (newFile in additionalFiles) {
-        res += "var ${newFile.name} = new Blob([" +
-                "\"${inlineLowerAndTransform(context, newFile.toModuleFragment(moduleFragment), irDependencyModules)}\"]);\n"
+        val blob =
+            """
+            "var _this_ = this;\n" +
+            "function postMessage_kotlin_Any(it) { postMessage(it); }\n" +
+            "function Unitkotlin_getInstance() { return; }\n" +
+            """.trimIndent() +
+                    inlineLowerAndTransform(context, newFile.toModuleFragment(moduleFragment), irDependencyModules).toString()
+                        .split("\n").joinToString(separator = "") { "\"$it\\n\" +\n" } +
+                    """
+                    "onmessage = function(it) { onmessageImpl_kotlin_Any(it); }"
+                    """.trimIndent()
+        res += "var ${newFile.name.specialToIdentifier()} = new Blob([$blob]);\n"
     }
     return res
 }
 
+private fun String.specialToIdentifier(): String = replace("<", "").replace(">", "")
+
 private fun IrFile.toModuleFragment(existing: IrModuleFragment) = IrModuleFragmentImpl(
     descriptor = ModuleDescriptorImpl(
-        moduleName = Name.identifier(name),
+        moduleName = Name.special(name),
         builtIns = existing.descriptor.builtIns,
         storageManager = LockBasedStorageManager.NO_LOCKS
     ),
