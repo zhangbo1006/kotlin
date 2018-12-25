@@ -201,5 +201,5 @@ projectTest(taskName = "performanceTest") {
 testsJar {}
 
 classesDirsArtifact()
-configureInstrumentation()
+configureFormInstrumentation()
 
