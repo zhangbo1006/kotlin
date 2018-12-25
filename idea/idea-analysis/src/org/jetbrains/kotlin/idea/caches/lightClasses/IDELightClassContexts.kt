@@ -177,6 +177,18 @@ internal object IDELightClassContexts {
         return IDELightClassConstructionContext(resolveSession.bindingContext, resolveSession.moduleDescriptor, files.first().languageVersionSettings, LIGHT)
     }
 
+    fun lightContextForScript(script: KtScript): LightClassConstructionContext {
+        val resolveSession = setupAdHocResolve(
+            script.project,
+            script.getResolutionFacade().moduleDescriptor,
+            listOf(script.containingKtFile)
+        )
+
+        ForceResolveUtil.forceResolveAllContents(resolveSession.resolveToDescriptor(script))
+
+        return IDELightClassConstructionContext(resolveSession.bindingContext, resolveSession.moduleDescriptor, LIGHT)
+    }
+
     private fun isDummyResolveApplicable(classOrObject: KtClassOrObject): Boolean {
         if (classOrObject.hasModifier(KtTokens.INLINE_KEYWORD)) return false
 

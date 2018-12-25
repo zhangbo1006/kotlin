@@ -239,7 +239,7 @@ class IDELightClassGenerationSupport(private val project: Project) : LightClassG
         return LazyLightClassDataHolder.ForScript(
             builder,
             exactContextProvider = { IDELightClassContexts.contextForScript(script) },
-            dummyContextProvider = { null },
+            dummyContextProvider = { IDELightClassContexts.lightContextForScript(script) },
             diagnosticsHolderProvider = { script.getDiagnosticsHolder() }
         )
     }
