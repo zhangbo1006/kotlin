@@ -356,6 +356,11 @@ public class IdeCompiledLightClassTestGenerated extends AbstractIdeCompiledLight
             KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/asJava/lightClasses/script"), Pattern.compile("^([^.]+)\\.(kt|kts)$"), TargetBackend.ANY, true);
         }
 
+        @TestMetadata("AnonymousObject.kts")
+        public void testAnonymousObject() throws Exception {
+            runTest("compiler/testData/asJava/lightClasses/script/AnonymousObject.kts");
+        }
+
         @TestMetadata("HelloWorld.kts")
         public void testHelloWorld() throws Exception {
             runTest("compiler/testData/asJava/lightClasses/script/HelloWorld.kts");
