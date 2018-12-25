@@ -122,7 +122,7 @@ abstract class DefaultIrPhaseRunner<Context : CommonBackendContext, Data : IrEle
     }
 
     final override fun runAfter(phase: CompilerPhase<Context, Data>, depth: Int, context: Context, data: Data) {
-        if (dump) dumpElement(data, phase, context, BeforeOrAfter.AFTER)
+        // if (dump) dumpElement(data, phase, context, BeforeOrAfter.AFTER)
         //checkAndRun(phase, phases(context).toDumpStateAfter) { dumpElement(data, phase, context, BeforeOrAfter.AFTER) }
         checkAndRun(phase, phases(context).toValidateStateAfter) { validator(data, context) }
     }
