@@ -186,7 +186,7 @@ internal object IDELightClassContexts {
 
         ForceResolveUtil.forceResolveAllContents(resolveSession.resolveToDescriptor(script))
 
-        return IDELightClassConstructionContext(resolveSession.bindingContext, resolveSession.moduleDescriptor, LIGHT)
+        return IDELightClassConstructionContext(resolveSession.bindingContext, resolveSession.moduleDescriptor, script.languageVersionSettings, LIGHT)
     }
 
     private fun isDummyResolveApplicable(classOrObject: KtClassOrObject): Boolean {
