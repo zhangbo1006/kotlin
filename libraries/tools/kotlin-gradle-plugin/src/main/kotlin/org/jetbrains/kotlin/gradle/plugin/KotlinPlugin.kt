@@ -358,7 +358,6 @@ internal abstract class AbstractKotlinPlugin(
             { compilation -> buildSourceSetProcessor(project, compilation, kotlinPluginVersion) }
         )
 
-        configureAttributes(target)
         configureProjectGlobalSettings(project, kotlinPluginVersion)
         registry.register(KotlinModelBuilder(kotlinPluginVersion, null))
     }
@@ -375,6 +374,7 @@ internal abstract class AbstractKotlinPlugin(
         ) {
             setUpJavaSourceSets(target)
             configureSourceSetDefaults(target, buildSourceSetProcessor)
+            configureAttributes(target)
         }
 
         private fun configureClassInspectionForIC(project: Project) {
@@ -451,7 +451,7 @@ internal abstract class AbstractKotlinPlugin(
             // Setup the consuming configurations:
             project.dependencies.attributesSchema.attribute(KotlinPlatformType.attribute)
             kotlinTarget.compilations.all { compilation ->
-                AbstractKotlinTargetConfigurator.defineConfigurationsForCompilation(compilation, kotlinTarget, project.configurations)
+                AbstractKotlinTargetConfigurator.defineConfigurationsForCompilation(compilation)
             }
 
             project.configurations.getByName("default").apply {
