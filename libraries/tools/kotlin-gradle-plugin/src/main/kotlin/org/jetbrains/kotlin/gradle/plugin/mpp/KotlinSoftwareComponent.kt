@@ -59,7 +59,6 @@ class DefaultKotlinUsageContext(
     override val compilation: KotlinCompilation<*>,
     private val usage: Usage,
     override val dependencyConfigurationName: String,
-    private val publishWithGradleMetadata: Boolean,
     override val sourcesArtifact: PublishArtifact? = null,
     private val overrideConfigurationArtifacts: Set<PublishArtifact>? = null
 ) : KotlinUsageContext {
