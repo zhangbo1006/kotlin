@@ -46,6 +46,10 @@ fun isCommonCoroutineTest(file: File): Boolean {
     return InTextDirectivesUtils.isDirectiveDefined(file.readText(), "COMMON_COROUTINES_TEST")
 }
 
+fun is1_2CoroutineTest(file: File): Boolean {
+    return InTextDirectivesUtils.isDirectiveDefined(file.readText(), "!LANGUAGE: -ReleaseCoroutines")
+}
+
 fun createCommonCoroutinesTestMethodModels(
     rootDir: File,
     file: File,

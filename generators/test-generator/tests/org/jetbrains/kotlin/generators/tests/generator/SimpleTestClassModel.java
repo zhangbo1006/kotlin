@@ -174,8 +174,10 @@ public class SimpleTestClassModel implements TestClassModel {
                                                                                                   targetBackend, skipIgnored));
                             }
                             else {
-                                result.add(new SimpleTestMethodModel(rootFile, file, filenamePattern,
-                                                                     checkFilenameStartsLowerCase, targetBackend, skipIgnored));
+                                if (targetBackend != TargetBackend.JS_IR || !CoroutinesKt.is1_2CoroutineTest(file)) {
+                                    result.add(new SimpleTestMethodModel(rootFile, file, filenamePattern,
+                                                                         checkFilenameStartsLowerCase, targetBackend, skipIgnored));
+                                }
                             }
                         }
                     }
