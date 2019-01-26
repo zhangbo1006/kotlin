@@ -1,6 +1,7 @@
 // !LANGUAGE: -ReleaseCoroutines
 // IGNORE_BACKEND: JVM_IR
 // WITH_COROUTINES
+// TARGET_BACKEND: JVM
 
 import helpers.*
 // TREAT_AS_ONE_FILE

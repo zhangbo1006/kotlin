@@ -1,8 +1,8 @@
 // !LANGUAGE: -ReleaseCoroutines
-// IGNORE_BACKEND: JS_IR
 // IGNORE_BACKEND: JVM_IR
 // WITH_RUNTIME
 // WITH_COROUTINES
+// TARGET_BACKEND: JVM
 
 import helpers.*
 import kotlin.coroutines.experimental.*

@@ -1,8 +1,7 @@
 // !LANGUAGE: -ReleaseCoroutines
-// IGNORE_BACKEND: JS_IR
 // WITH_RUNTIME
 // WITH_COROUTINES
-// IGNORE_BACKEND: JS
+// TARGET_BACKEND: JVM
 
 import kotlin.coroutines.experimental.*
 import kotlin.coroutines.experimental.intrinsics.COROUTINE_SUSPENDED
