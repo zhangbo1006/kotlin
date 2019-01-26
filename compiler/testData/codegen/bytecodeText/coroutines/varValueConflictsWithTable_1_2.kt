@@ -1,6 +1,7 @@
 // !LANGUAGE: -ReleaseCoroutines
 // IGNORE_BACKEND: JVM_IR
 // WITH_COROUTINES
+// DONT_TARGET_EXACT_BACKEND: JS_IR
 
 import helpers.*
 // TREAT_AS_ONE_FILE
