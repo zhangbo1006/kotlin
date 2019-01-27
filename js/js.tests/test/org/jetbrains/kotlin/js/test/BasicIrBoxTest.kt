@@ -13,8 +13,8 @@ import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 import org.jetbrains.kotlin.js.config.JsConfig
 import org.jetbrains.kotlin.js.facade.MainCallParameters
 import org.jetbrains.kotlin.js.facade.TranslationUnit
+import org.jetbrains.kotlin.js.parser.sourcemaps.JsonString
 import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.test.KotlinTestUtils
 import org.jetbrains.kotlin.test.TargetBackend
 import java.io.File
 
@@ -121,7 +121,7 @@ abstract class BasicIrBoxTest(
         compilationCache[outputFile.name.replace(".js", ".meta.js")] = result
 
         // Prefix to help node.js runner find runtime
-        val runtimePrefix = "// RUNTIME: [\"${runtimeFile.path}\"]\n"
+        val runtimePrefix = "// RUNTIME: [${JsonString(runtimeFile.path)}]\n"
 
         outputFile.write(runtimePrefix + result.generatedCode)
     }
