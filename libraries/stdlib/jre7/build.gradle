@@ -35,8 +35,9 @@ jar {
 
 artifacts {
     archives sourcesJar
-    archives javadocJar
 }
+
+javadocJar()
 
 task distForTest(type: Copy) {
     rename "-${java.util.regex.Pattern.quote(version)}", ''

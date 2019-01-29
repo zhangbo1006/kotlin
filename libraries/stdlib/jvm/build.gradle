@@ -136,9 +136,10 @@ task modularJar(type: Jar) {
 
 artifacts {
     archives sourcesJar
-    archives javadocJar
     archives modularJar
 }
+
+javadocJar()
 
 dist {
     dependsOn distMavenSources

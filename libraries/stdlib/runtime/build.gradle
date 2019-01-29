@@ -43,8 +43,9 @@ sourcesJar {
 
 artifacts {
     archives sourcesJar
-    archives javadocJar
 }
+
+javadocJar()
 
 compileKotlin {
     kotlinOptions {
