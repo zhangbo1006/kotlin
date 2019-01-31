@@ -48,7 +48,8 @@ class JsIrBackendContext(
     val symbolTable: SymbolTable,
     irModuleFragment: IrModuleFragment,
     val configuration: CompilerConfiguration,
-    val dependencies: List<IrModuleFragment>
+    val dependencies: List<ModuleDependency>,
+    val moduleType: ModuleType
 ) : CommonBackendContext {
 
     override val builtIns = module.builtIns

@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.ir.backend.js.transformers.irToJs
 
+import com.intellij.util.SmartList
 import org.jetbrains.kotlin.backend.common.descriptors.isSuspend
 import org.jetbrains.kotlin.ir.backend.js.utils.JsGenerationContext
 import org.jetbrains.kotlin.ir.backend.js.utils.Namer
@@ -86,4 +87,196 @@ fun JsName.objectInstanceName() = "${ident}_instance"
 fun defineProperty(receiver: JsExpression, name: String, value: () -> JsExpression): JsInvocation {
     val objectDefineProperty = JsNameRef("defineProperty", Namer.JS_OBJECT)
     return JsInvocation(objectDefineProperty, receiver, JsStringLiteral(name), value())
+}
+
+object JsAstUtils {
+    private fun deBlockIfPossible(statement: JsStatement): JsStatement {
+        return if (statement is JsBlock && statement.statements.size == 1) {
+            statement.statements[0]
+        } else {
+            statement
+        }
+    }
+
+    @JvmOverloads
+    fun newJsIf(
+        ifExpression: JsExpression,
+        thenStatement: JsStatement,
+        elseStatement: JsStatement? = null
+    ): JsIf {
+        var elseStatement = elseStatement
+        elseStatement = if (elseStatement != null) deBlockIfPossible(elseStatement) else null
+        return JsIf(ifExpression, deBlockIfPossible(thenStatement), elseStatement)
+    }
+
+    fun extractExpressionFromStatement(statement: JsStatement?): JsExpression? {
+        return if (statement is JsExpressionStatement) statement.expression else null
+    }
+
+    fun mergeStatementInBlockIfNeeded(statement: JsStatement, block: JsBlock): JsStatement {
+        if (block.isEmpty) {
+            return statement
+        } else {
+            if (isEmptyStatement(statement)) {
+                return deBlockIfPossible(block)
+            }
+            block.statements.add(statement)
+            return block
+        }
+    }
+
+    fun isEmptyStatement(statement: JsStatement): Boolean {
+        return statement is JsEmpty
+    }
+
+    fun toInt32(expression: JsExpression): JsExpression {
+        return JsBinaryOperation(JsBinaryOperator.BIT_OR, expression, JsIntLiteral(0))
+    }
+
+    fun extractToInt32Argument(expression: JsExpression): JsExpression? {
+        if (expression !is JsBinaryOperation) return null
+
+        if (expression.operator != JsBinaryOperator.BIT_OR) return null
+
+        if (expression.arg2 !is JsIntLiteral) return null
+        val arg2 = expression.arg2 as JsIntLiteral
+        return if (arg2.value == 0) expression.arg1 else null
+    }
+
+    fun and(op1: JsExpression, op2: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.AND, op1, op2)
+    }
+
+    fun or(op1: JsExpression, op2: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.OR, op1, op2)
+    }
+
+    private fun setQualifier(selector: JsExpression, receiver: JsExpression?) {
+        assert(selector is JsInvocation || selector is JsNameRef)
+        if (selector is JsInvocation) {
+            setQualifier(selector.qualifier, receiver)
+            return
+        }
+        setQualifierForNameRef(selector as JsNameRef, receiver)
+    }
+
+    private fun setQualifierForNameRef(selector: JsNameRef, receiver: JsExpression?) {
+        val qualifier = selector.qualifier
+        if (qualifier == null) {
+            selector.setQualifier(receiver)
+        } else {
+            setQualifier(qualifier, receiver)
+        }
+    }
+
+    fun equality(arg1: JsExpression, arg2: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.REF_EQ, arg1, arg2)
+    }
+
+    fun inequality(arg1: JsExpression, arg2: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.REF_NEQ, arg1, arg2)
+    }
+
+    fun lessThanEq(arg1: JsExpression, arg2: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.LTE, arg1, arg2)
+    }
+
+    fun lessThan(arg1: JsExpression, arg2: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.LT, arg1, arg2)
+    }
+
+    fun greaterThan(arg1: JsExpression, arg2: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.GT, arg1, arg2)
+    }
+
+    fun greaterThanEq(arg1: JsExpression, arg2: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.GTE, arg1, arg2)
+    }
+
+    fun assignment(left: JsExpression, right: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.ASG, left, right)
+    }
+
+    fun assignmentToThisField(fieldName: String, right: JsExpression): JsStatement {
+        return assignment(JsNameRef(fieldName, JsThisRef()), right).source(right.source).makeStmt()
+    }
+
+    fun decomposeAssignment(expr: JsExpression): Pair<JsExpression, JsExpression>? {
+        if (expr !is JsBinaryOperation) return null
+
+        return if (expr.operator != JsBinaryOperator.ASG) null else Pair(expr.arg1, expr.arg2)
+
+    }
+
+    fun sum(left: JsExpression, right: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.ADD, left, right)
+    }
+
+    fun addAssign(left: JsExpression, right: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.ASG_ADD, left, right)
+    }
+
+    fun subtract(left: JsExpression, right: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.SUB, left, right)
+    }
+
+    fun mul(left: JsExpression, right: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.MUL, left, right)
+    }
+
+    fun div(left: JsExpression, right: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.DIV, left, right)
+    }
+
+    fun mod(left: JsExpression, right: JsExpression): JsBinaryOperation {
+        return JsBinaryOperation(JsBinaryOperator.MOD, left, right)
+    }
+
+    fun not(expression: JsExpression): JsPrefixOperation {
+        return JsPrefixOperation(JsUnaryOperator.NOT, expression)
+    }
+
+    fun typeOfIs(expression: JsExpression, string: JsStringLiteral): JsBinaryOperation {
+        return equality(JsPrefixOperation(JsUnaryOperator.TYPEOF, expression), string)
+    }
+
+    fun newVar(name: JsName, expr: JsExpression?): JsVars {
+        return JsVars(JsVars.JsVar(name, expr))
+    }
+
+    fun newSequence(expressions: List<JsExpression>): JsExpression {
+        assert(!expressions.isEmpty())
+        if (expressions.size == 1) {
+            return expressions[0]
+        }
+        var result = expressions[0]
+        for (i in 1 until expressions.size) {
+            result = JsBinaryOperation(JsBinaryOperator.COMMA, result, expressions[i])
+        }
+        return result
+    }
+
+    fun createFunctionWithEmptyBody(parent: JsScope): JsFunction {
+        return JsFunction(parent, JsBlock(), "<anonymous>")
+    }
+
+    fun toStringLiteralList(strings: List<String>): List<JsExpression> {
+        if (strings.isEmpty()) {
+            return emptyList()
+        }
+
+        val result = SmartList<JsExpression>()
+        for (str in strings) {
+            result.add(JsStringLiteral(str))
+        }
+        return result
+    }
+
+    fun wrapValue(label: JsExpression, value: JsExpression): JsObjectLiteral {
+        return JsObjectLiteral(listOf(JsPropertyInitializer(label, value)))
+    }
+
+    fun flattenStatement(statement: JsStatement): List<JsStatement> {
+        return (statement as? JsBlock)?.statements ?: SmartList(statement)
+    }
 }

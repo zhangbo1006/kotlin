@@ -6,15 +6,15 @@
 package org.jetbrains.kotlin.js.test
 
 import org.jetbrains.kotlin.config.*
-import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
+import org.jetbrains.kotlin.ir.backend.js.ModuleType
 import org.jetbrains.kotlin.ir.backend.js.Result
 import org.jetbrains.kotlin.ir.backend.js.compile
+import org.jetbrains.kotlin.ir.backend.js.asModuleDependency
 import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 import org.jetbrains.kotlin.js.config.JsConfig
 import org.jetbrains.kotlin.js.facade.MainCallParameters
 import org.jetbrains.kotlin.js.facade.TranslationUnit
 import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.test.KotlinTestUtils
 import org.jetbrains.kotlin.test.TargetBackend
 import java.io.File
 
@@ -59,7 +59,8 @@ abstract class BasicIrBoxTest(
         remap: Boolean,
         testPackage: String?,
         testFunction: String,
-        runtime: JsIrTestRuntime
+        runtime: JsIrTestRuntime,
+        isMainModule: Boolean
     ) {
         val filesToCompile = units
             .map { (it as TranslationUnit.SourceFile).file }
@@ -94,14 +95,15 @@ abstract class BasicIrBoxTest(
         val runtimeFile = File(runtime.path)
         val runtimeResult = runtimeResults.getOrPut(runtime) {
             runtimeConfiguration.put(CommonConfigurationKeys.MODULE_NAME, "JS_IR_RUNTIME")
-            val result = compile(config.project, runtime.sources.map(::createPsiFile), runtimeConfiguration)
+            val result = compile(config.project, runtime.sources.map(::createPsiFile), runtimeConfiguration, moduleType = ModuleType.TEST_RUNTIME)
             runtimeFile.write(result.generatedCode)
             result
         }
 
         val dependencyNames = config.configuration[JSConfigurationKeys.LIBRARIES]!!.map { File(it).name }
-        val dependencies = listOf(runtimeResult.moduleDescriptor) + dependencyNames.mapNotNull { compilationCache[it]?.moduleDescriptor }
-        val irDependencies = listOf(runtimeResult.moduleFragment) + compilationCache.values.map { it.moduleFragment }
+        val dependencies = listOf(runtimeResult.asModuleDependency()) + dependencyNames.mapNotNull {
+            compilationCache[it]?.asModuleDependency()
+        }
 
 //        config.configuration.put(CommonConfigurationKeys.PHASES_TO_DUMP_STATE, setOf("UnitMaterializationLowering"))
 //        config.configuration.put(CommonConfigurationKeys.PHASES_TO_DUMP_STATE_BEFORE, setOf("ReturnableBlockLowering"))
@@ -112,10 +114,10 @@ abstract class BasicIrBoxTest(
             config.project,
             filesToCompile,
             config.configuration,
-            FqName((testPackage?.let { "$it." } ?: "") + testFunction),
+            listOf(FqName((testPackage?.let { "$it." } ?: "") + testFunction)),
             dependencies,
-            irDependencies,
-            runtimeResult.moduleDescriptor as ModuleDescriptorImpl
+            runtimeResult.asModuleDependency(),
+            moduleType = if (isMainModule) ModuleType.MAIN else ModuleType.SECONDARY
         )
 
         compilationCache[outputFile.name.replace(".js", ".meta.js")] = result
@@ -137,7 +139,7 @@ abstract class BasicIrBoxTest(
     ) {
         // TODO: should we do anything special for module systems?
         // TODO: return list of js from translateFiles and provide then to this function with other js files
-        nashornIrJsTestCheckers[runtime]!!.check(jsFiles, null, null, testFunction, expectedResult, false)
+        nashornIrJsTestCheckers[runtime]!!.check(jsFiles, testModuleName, null, testFunction, expectedResult, withModuleSystem)
     }
 }
 
