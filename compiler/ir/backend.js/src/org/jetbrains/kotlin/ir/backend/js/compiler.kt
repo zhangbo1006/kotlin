@@ -7,38 +7,59 @@ package org.jetbrains.kotlin.ir.backend.js
 
 import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.backend.common.CompilerPhaseManager
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.languageVersionSettings
-import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
+import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.IrModuleToJsTransformer
+import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrPackageFragment
+import org.jetbrains.kotlin.ir.declarations.impl.IrModuleFragmentImpl
 import org.jetbrains.kotlin.ir.util.SymbolTable
+import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
 import org.jetbrains.kotlin.js.analyze.TopDownAnalyzerFacadeForJS
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.progress.ProgressIndicatorAndCompilationCanceledStatus
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi2ir.Psi2IrTranslator
+import org.jetbrains.kotlin.utils.DFS
 
-data class Result(val moduleDescriptor: ModuleDescriptor, val generatedCode: String, val moduleFragment: IrModuleFragment)
+enum class ModuleType {
+    TEST_RUNTIME,
+    SECONDARY,
+    MAIN
+}
+
+class CompiledModule(
+    val moduleName: String,
+    val generatedCode: String?,
+    val moduleFragment: IrModuleFragment?,
+    val moduleType: ModuleType,
+    val dependencies: List<CompiledModule>
+) {
+    val descriptor
+        get() = moduleFragment!!.descriptor as ModuleDescriptorImpl
+}
 
 fun compile(
     project: Project,
     files: List<KtFile>,
     configuration: CompilerConfiguration,
-    export: FqName? = null,
-    dependencies: List<ModuleDescriptor> = listOf(),
-    irDependencyModules: List<IrModuleFragment> = listOf(),
-    builtInsModule: ModuleDescriptorImpl? = null
-): Result {
+    export: List<FqName> = emptyList(),
+    dependencies: List<CompiledModule> = emptyList(),
+    builtInsModule: CompiledModule? = null,
+    moduleType: ModuleType
+): CompiledModule {
     val analysisResult =
         TopDownAnalyzerFacadeForJS.analyzeFiles(
             files,
             project,
             configuration,
-            dependencies.mapNotNull { it as? ModuleDescriptorImpl },
+            dependencies.map { it.descriptor },
             emptyList(),
             thisIsBuiltInsModule = builtInsModule == null,
-            customBuiltInsModule = builtInsModule
+            customBuiltInsModule = builtInsModule?.descriptor
         )
 
     ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
@@ -46,7 +67,7 @@ fun compile(
     TopDownAnalyzerFacadeForJS.checkForErrors(files, analysisResult.bindingContext)
 
     val symbolTable = SymbolTable()
-    irDependencyModules.forEach { symbolTable.loadModule(it)}
+    dependencies.forEach { symbolTable.loadModule(it.moduleFragment!!) }
 
     val psi2IrTranslator = Psi2IrTranslator(configuration.languageVersionSettings)
     val psi2IrContext = psi2IrTranslator.createGeneratorContext(analysisResult.moduleDescriptor, analysisResult.bindingContext, symbolTable)
@@ -59,12 +80,44 @@ fun compile(
         psi2IrContext.symbolTable,
         moduleFragment,
         configuration,
-        irDependencyModules
+        dependencies,
+        moduleType
     )
 
-    CompilerPhaseManager(context, context.phases, moduleFragment, JsPhaseRunner).run {
-        jsPhases.fold(data) { m, p -> phase(p, context, m) }
+    val phaseManager =
+        CompilerPhaseManager(context, context.phases, moduleFragment, JsPhaseRunner)
+
+    phaseManager.run {
+        jsPhasesBeforeModuleCopy.fold(data) { m, p -> phase(p, context, m) }
     }
 
-    return Result(analysisResult.moduleDescriptor, context.jsProgram.toString(), context.moduleFragmentCopy)
+    val moduleName = configuration[CommonConfigurationKeys.MODULE_NAME]!!
+    var moduleFragmentCopy: IrModuleFragment? = null
+    when (moduleType) {
+        ModuleType.MAIN -> {
+            val moduleDependencies: List<CompiledModule> =
+                DFS.topologicalOrder(dependencies, CompiledModule::dependencies)
+                    .filter { it.moduleType == ModuleType.SECONDARY }
+
+            val fileDependencies = moduleDependencies.flatMap { it.moduleFragment!!.files }
+
+            moduleFragment.files.addAll(0, fileDependencies)
+        }
+
+        ModuleType.SECONDARY -> {
+            return CompiledModule(moduleName, null, moduleFragment, moduleType, dependencies)
+        }
+
+        ModuleType.TEST_RUNTIME -> {
+            moduleFragmentCopy = moduleFragment.deepCopyWithSymbols()
+        }
+    }
+
+    phaseManager.run {
+        jsPhasesAfterModuleCopy.fold(data) { m, p -> phase(p, context, m) }
+    }
+
+    val jsProgram = moduleFragment.accept(IrModuleToJsTransformer(context), null)
+
+    return CompiledModule(moduleName, jsProgram.toString(), moduleFragmentCopy, moduleType, dependencies)
 }

@@ -72,13 +72,6 @@ private val LateinitLoweringPhase = makeJsPhase(
     description = "Insert checks for lateinit field references"
 )
 
-private val ModuleCopyingPhase = makeJsPhase(
-    { context, module -> context.moduleFragmentCopy = module.deepCopyWithSymbols() },
-    name = "ModuleCopying",
-    description = "<Supposed to be removed> Copy current module to make it accessible from different one",
-    prerequisite = setOf(LateinitLoweringPhase)
-)
-
 private val FunctionInliningPhase = makeJsPhase(
     { context, module ->
         FunctionInlining(context).inline(module)
@@ -87,7 +80,7 @@ private val FunctionInliningPhase = makeJsPhase(
     },
     name = "FunctionInliningPhase",
     description = "Perform function inlining",
-    prerequisite = setOf(ModuleCopyingPhase, LateinitLoweringPhase, ArrayInlineConstructorLoweringPhase, CoroutineIntrinsicLoweringPhase)
+    prerequisite = setOf(LateinitLoweringPhase, ArrayInlineConstructorLoweringPhase, CoroutineIntrinsicLoweringPhase)
 )
 
 private val RemoveInlineFunctionsWithReifiedTypeParametersLoweringPhase = makeJsPhase(
@@ -328,20 +321,16 @@ object IrModuleEndPhase : CompilerPhase<BackendContext, IrModuleFragment> {
     override fun invoke(context: BackendContext, input: IrModuleFragment) = input
 }
 
-private val IrToJsPhase = makeJsPhase(
-    { context, module -> context.jsProgram = IrModuleToJsTransformer(context).let { module.accept(it, null) } },
-    name = "IrModuleToJsTransformer",
-    description = "Generate JsAst from IrTree"
-)
-
-val jsPhases = listOf(
+val jsPhasesBeforeModuleCopy = listOf(
     IrModuleStartPhase,
     MoveBodilessDeclarationsToSeparatePlacePhase,
     ExpectDeclarationsRemovingPhase,
     CoroutineIntrinsicLoweringPhase,
     ArrayInlineConstructorLoweringPhase,
-    LateinitLoweringPhase,
-    ModuleCopyingPhase,
+    LateinitLoweringPhase
+)
+
+val jsPhasesAfterModuleCopy = listOf(
     FunctionInliningPhase,
     RemoveInlineFunctionsWithReifiedTypeParametersLoweringPhase,
     ThrowableSuccessorsLoweringPhase,
@@ -377,6 +366,5 @@ val jsPhases = listOf(
     PrimitiveCompanionLoweringPhase,
     ConstLoweringPhase,
     CallsLoweringPhase,
-    IrModuleEndPhase,
-    IrToJsPhase
+    IrModuleEndPhase
 )
