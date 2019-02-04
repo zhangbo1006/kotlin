@@ -5,6 +5,8 @@
 
 package org.jetbrains.kotlin.js.test
 
+import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.util.text.StringUtil
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.ir.backend.js.ModuleType
 import org.jetbrains.kotlin.ir.backend.js.CompiledModule
@@ -121,11 +123,12 @@ abstract class BasicIrBoxTest(
 
         compilationCache[outputFile.name.replace(".js", ".meta.js")] = result
 
-        if (result.generatedCode != null) {
+        val generatedCode = result.generatedCode
+        if (generatedCode != null) {
             // Prefix to help node.js runner find runtime
             val runtimePrefix = "// RUNTIME: [\"${runtimeFile.path}\"]\n"
-
-            outputFile.write(runtimePrefix + result.generatedCode)
+            val wrappedCode = wrapWithModuleEmulationMarkers(generatedCode, moduleId = config.moduleId, moduleKind = config.moduleKind)
+            outputFile.write(runtimePrefix + wrappedCode)
         }
     }
 

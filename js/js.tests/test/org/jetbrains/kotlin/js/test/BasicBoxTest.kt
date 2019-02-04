@@ -469,18 +469,9 @@ abstract class BasicBoxTest(
         val outputDir = outputFile.parentFile ?: error("Parent file for output file should not be null, outputFilePath: " + outputFile.path)
         outputFiles.writeAllTo(outputDir)
 
-        if (config.moduleKind == ModuleKind.COMMON_JS) {
+        if (config.moduleKind != ModuleKind.PLAIN) {
             val content = FileUtil.loadFile(outputFile, true)
-            val wrappedContent = "$KOTLIN_TEST_INTERNAL.beginModule();\n" +
-                                 "$content\n" +
-                                 "$KOTLIN_TEST_INTERNAL.endModule(\"${StringUtil.escapeStringCharacters(config.moduleId)}\");"
-            FileUtil.writeToFile(outputFile, wrappedContent)
-        }
-        else if (config.moduleKind == ModuleKind.AMD || config.moduleKind == ModuleKind.UMD) {
-            val content = FileUtil.loadFile(outputFile, true)
-            val wrappedContent = "if (typeof $KOTLIN_TEST_INTERNAL !== \"undefined\") { " +
-                                 "$KOTLIN_TEST_INTERNAL.setModuleId(\"${StringUtil.escapeStringCharacters(config.moduleId)}\"); }\n" +
-                                 "$content\n"
+            val wrappedContent = wrapWithModuleEmulationMarkers(content, moduleId = config.moduleId, moduleKind = config.moduleKind)
             FileUtil.writeToFile(outputFile, wrappedContent)
         }
 
@@ -496,6 +487,28 @@ abstract class BasicBoxTest(
 
         processJsProgram(translationResult.program, units.filterIsInstance<TranslationUnit.SourceFile>().map { it.file })
         checkSourceMap(outputFile, translationResult.program, remap)
+    }
+
+    protected fun wrapWithModuleEmulationMarkers(
+        content: String,
+        moduleKind: ModuleKind,
+        moduleId: String
+    ): String {
+        val escapedModuleId = StringUtil.escapeStringCharacters(moduleId)
+
+        return when (moduleKind) {
+
+            ModuleKind.COMMON_JS -> "$KOTLIN_TEST_INTERNAL.beginModule();\n" +
+                    "$content\n" +
+                    "$KOTLIN_TEST_INTERNAL.endModule(\"$escapedModuleId\");"
+
+            ModuleKind.AMD, ModuleKind.UMD ->
+                "if (typeof $KOTLIN_TEST_INTERNAL !== \"undefined\") { " +
+                        "$KOTLIN_TEST_INTERNAL.setModuleId(\"$escapedModuleId\"); }\n" +
+                        "$content\n"
+
+            ModuleKind.PLAIN -> content
+        }
     }
 
     private fun processJsProgram(program: JsProgram, psiFiles: List<KtFile>) {
