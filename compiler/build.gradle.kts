@@ -66,8 +66,7 @@ dependencies {
     antLauncherJar(commonDep("org.apache.ant", "ant"))
     antLauncherJar(files(toolsJar()))
 
-    // For JPS build
-    if (System.getProperty("idea.active") != null) {
+    if (isJpsBuildEnabled && ideaImport) {
         testRuntimeOnly(files("${rootProject.projectDir}/dist/kotlinc/lib/kotlin-reflect.jar"))
     }
 }

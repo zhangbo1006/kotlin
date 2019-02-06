@@ -57,9 +57,6 @@ fun Project.ideaUltimatePreloadedDeps(vararg artifactBaseNames: String, subdir: 
 
 fun Project.kotlinDep(artifactBaseName: String, version: String): String = "org.jetbrains.kotlin:kotlin-$artifactBaseName:$version"
 
-val Project.useBootstrapStdlib: Boolean get() =
-    findProperty("jpsBuild")?.toString() == "true"
-
 fun Project.kotlinStdlib(suffix: String? = null): Any {
     return if (useBootstrapStdlib)
         kotlinDep(listOfNotNull("stdlib", suffix).joinToString("-"), bootstrapKotlinVersion)
