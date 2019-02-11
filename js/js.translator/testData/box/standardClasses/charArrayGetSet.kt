@@ -1,4 +1,3 @@
-// IGNORE_BACKEND: JS_IR
 // EXPECTED_REACHABLE_NODES: 1281
 fun box(): String {
     val a = CharArray(1)
@@ -10,7 +9,7 @@ fun box(): String {
     if (aType2 != "number") return "fail2: $aType2"
 
     val aType3 = jsTypeOf(a[0].asDynamic())
-    if (aType3 != "number") return "fail3: $aType3"
+    if (aType3 != "object") return "fail3: $aType3"
 
     val b = Array<Char>(1) { 'Q' }
     val bType = jsTypeOf(b.asDynamic()[0])
@@ -21,7 +20,7 @@ fun box(): String {
     if (bType2 != "object") return "fail5: $bType2"
 
     val bType3 = jsTypeOf(b[0].asDynamic())
-    if (bType3 != "number") return "fail6: $bType3"
+    if (bType3 != "object") return "fail6: $bType3"
 
     return "OK"
 }

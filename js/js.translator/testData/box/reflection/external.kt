@@ -1,15 +1,14 @@
-// IGNORE_BACKEND: JS_IR
 // EXPECTED_REACHABLE_NODES: 1221
-external class A
+external class A1
 
-external object O
+external object O1
 
 fun box(): String {
-    assertEquals(null, A::class.simpleName, "simpleName of external class must be null")
-    assertEquals(js("A"), A::class.js, "Can't get reference to external class")
+    assertEquals(null, A1::class.simpleName, "simpleName of external class must be null")
+    assertEquals(js("A1"), A1::class.js, "Can't get reference to external class")
 
-    assertEquals(null, O::class.simpleName, "simpleName of external object must be null")
-    assertEquals(js("O"), O::class.js, "Can't get reference to external object via instance")
+    assertEquals(null, O1::class.simpleName, "simpleName of external object must be null")
+    assertEquals(js("O1"), O1::class.js, "Can't get reference to external object via instance")
 
     return "OK"
 }

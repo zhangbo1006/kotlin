@@ -1,4 +1,4 @@
-function A() {
+function A1() {
 }
 
-var O = {};
+var O1 = {};
