@@ -106,6 +106,10 @@ class SimpleNameGenerator : NameGenerator {
                 return@getOrPut context.currentScope.declareName(jsName)
             }
 
+            if (declaration is IrSimpleFunction && declaration.origin == IrDeclarationOrigin.BRIDGE_TO_EXTERNAL_FUNCTION) {
+                return@getOrPut context.staticContext.rootScope.declareName(declaration.name.identifier)
+            }
+
             if (declaration.isEffectivelyExternal()) {
                 // TODO: descriptors are still used here due to the corresponding declaration doesn't have enough information yet
                 val descriptorName = when (descriptor) {
