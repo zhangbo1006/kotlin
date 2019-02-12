@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.ir.backend.js.utils
 
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
+import org.jetbrains.kotlin.ir.declarations.IrOverridableDeclaration
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.util.getAnnotation
@@ -31,5 +32,17 @@ fun IrAnnotationContainer.isJsNonModule(): Boolean =
 fun IrAnnotationContainer.getJsQualifier(): String? =
     getAnnotation(JsAnnotations.jsQualifierFqn)?.getSingleConstStringArgument()
 
-fun IrAnnotationContainer.getJsName(): String? =
-    getAnnotation(JsAnnotations.jsNameFqn)?.getSingleConstStringArgument()
+fun IrAnnotationContainer.getJsName(): String? {
+    val jsName = getAnnotation(JsAnnotations.jsNameFqn)?.getSingleConstStringArgument()
+    if (jsName != null) return jsName
+
+    // TODO: Cache JS names
+    if (this is IrOverridableDeclaration<*>) {
+        return this.overriddenSymbols.asSequence()
+            .map { it.owner }
+            .filterIsInstance<IrAnnotationContainer>()
+            .mapNotNull { it.getJsName() }
+            .singleOrNull()
+    }
+    return null
+}
