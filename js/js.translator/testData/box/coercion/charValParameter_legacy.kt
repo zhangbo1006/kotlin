@@ -1,4 +1,4 @@
-// TARGET_BACKEND: JS_IR
+// DONT_TARGET_EXACT_BACKEND: JS_IR
 // EXPECTED_REACHABLE_NODES: 1283
 class A(val x: Char)
 
@@ -8,7 +8,7 @@ fun box(): String {
     val a = A('0')
 
     var r = typeOf(a.asDynamic().x)
-    if (r != "number") return "fail1: $r"
+    if (r != "object") return "fail1: $r"
 
     r = typeOf(a.x)
     if (r != "number") return "fail2: $r"
