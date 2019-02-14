@@ -19,7 +19,7 @@ class Class {
     fun getLongArray() = longArrayOf(1L, 2L, 3L, 4L, 5L)
     fun getCharArray() = charArrayOf(1.toChar(), 2.toChar(), 3.toChar(), 4.toChar(), 5.toChar())
 
-    class _NestedClass {
+    class NestedClass {
         val prop_4 = 4
         val prop_5 = 5
     }
