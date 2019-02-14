@@ -1,4 +1,4 @@
-// TARGET_BACKEND: JS_IR
+// DONT_TARGET_EXACT_BACKEND: JS_IR
 // EXPECTED_REACHABLE_NODES: 1296
 open class A {
     val foo: Char
@@ -46,23 +46,23 @@ fun box(): String {
     if (r2 != "object") return "fail2: $r2"
 
     val r3 = typeOf(a.asDynamic().foo)
-    if (r3 != "number") return "fail3: $r3"
+    if (r3 != "object") return "fail3: $r3"
 
     val r4 = typeOf(a.asDynamic().bar)
-    if (r4 != "number") return "fail4: $r4"
+    if (r4 != "object") return "fail4: $r4"
 
     val r5 = typeOf(a.asDynamic().baz)
-    if (r5 != "number") return "fail5: $r5"
+    if (r5 != "object") return "fail5: $r5"
 
     a.bar++
     val r6 = typeOf(a.asDynamic().bar)
-    if (r6 != "number") return "fail6: $r6"
+    if (r6 != "object") return "fail6: $r6"
 
     val r7 = typeOf(a.asDynamic().mutable)
-    if (r7 != "number") return "fail7: $r7"
+    if (r7 != "object") return "fail7: $r7"
 
     a.mutable = 'E'
-    if (typeOfMutable != "number;number;number") return "fail8: $typeOfMutable"
+    if (typeOfMutable != "number;object;number") return "fail8: $typeOfMutable"
 
     val r9 = typeOf(a.mutable)
     if (r9 != "number") return "fail9: $r9"
