@@ -23,7 +23,7 @@ fun case_1(x: Int?) {
     while (true) {
         if (x == null) break
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
     }
 }
 
@@ -32,7 +32,7 @@ fun case_2(x: Unit?) {
     while (true) {
         if (x === null) continue
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Unit & kotlin.Unit?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Unit? & kotlin.Unit"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Unit & kotlin.Unit?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -49,7 +49,7 @@ fun case_4(x: Number?) {
     for (i in 0..10) {
         if (x !== null) else { break }
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -58,7 +58,7 @@ fun case_5(x: Char?, y: Nothing?, f: Boolean) {
     do {
         if (x != <!DEBUG_INFO_CONSTANT!>y<!>) else continue
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Char & kotlin.Char?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Char? & kotlin.Char"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Char & kotlin.Char?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     } while (f)
 }
 
@@ -67,7 +67,7 @@ fun case_6(x: Object?, f: Boolean) {
     while (f) {
         if (x !== <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!>) else { continue }
         <!DEBUG_INFO_EXPRESSION_TYPE("Object & Object?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Object? & Object"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Object & Object?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -76,7 +76,7 @@ fun case_7(x: Class?, list: List<Int>) {
     for (element in list) {
         if (x === <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!> || false || false || false) { break }
         <!DEBUG_INFO_EXPRESSION_TYPE("Class & Class?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Class? & Class"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Class & Class?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -85,7 +85,7 @@ fun case_8(x: Int?) {
     for (i in 0..10) {
         if (false || false || false || x == <!DEBUG_INFO_CONSTANT!>nullableNothingProperty<!>) continue
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
     }
 }
 
@@ -94,7 +94,7 @@ fun case_9(list: List<Int?>) {
     for (element in list) {
         if (element != <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!> && true && true && true) else { break }
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>element<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>element<!>.inv()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>element<!>.inv()
     }
 }
 
@@ -103,7 +103,7 @@ fun case_10(x: Float?) {
     while (false) {
         if (true && true && true && x !== null) else break
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float & kotlin.Float?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float? & kotlin.Float"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float & kotlin.Float?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -121,7 +121,7 @@ fun case_12(list: List<Int?>) {
     for (element in list) {
         if (element === null) continue
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>element<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>element<!>.inv()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>element<!>.inv()
     }
 }
 
@@ -149,9 +149,9 @@ fun case_15(map: MutableMap<Int?, Int?>, y: Nothing?) {
         if (k != <!DEBUG_INFO_CONSTANT!>y<!>) else break
         if (v != <!DEBUG_INFO_CONSTANT!>y<!>) else continue
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>k<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>k<!>.inv()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>k<!>.inv()
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>v<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>v<!>.inv()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>v<!>.inv()
     }
 }
 
@@ -160,9 +160,9 @@ fun case_16(map: Map<Int?, Int?>) {
     for ((k, v) in map) {
         if (k !== <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!> && v !== <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!>) else { continue }
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>k<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>k<!>.inv()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>k<!>.inv()
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>v<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>v<!>.inv()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>v<!>.inv()
     }
 }
 
@@ -171,7 +171,7 @@ fun <T>case_17(x: T?, f: Boolean) {
     while (f) {
         if (x === <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!> || false) { break }
         <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("T? & T!!"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -200,7 +200,7 @@ fun <K, V: K>case_20(map: MutableMap<K?, V>) {
     for ((k, v) in map) {
         if (true && true && true && k !== null && v != null && true) else continue
         <!DEBUG_INFO_EXPRESSION_TYPE("K!! & K?")!>k<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("K? & K!!"), DEBUG_INFO_SMARTCAST!>k<!>.equals(k)
+        <!DEBUG_INFO_EXPRESSION_TYPE("K!! & K?"), DEBUG_INFO_SMARTCAST!>k<!>.equals(k)
         <!DEBUG_INFO_EXPRESSION_TYPE("V & V!!")!>v<!>
         <!DEBUG_INFO_EXPRESSION_TYPE("V & V!!"), DEBUG_INFO_SMARTCAST!>v<!>.equals(v)
     }
@@ -212,9 +212,9 @@ fun <K, V>case_21(map: MutableMap<out K?, in V>) {
         if (k == null) continue
         if (v === null || false) break
         <!DEBUG_INFO_EXPRESSION_TYPE("K!! & K?")!>k<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("K? & K!!"), DEBUG_INFO_SMARTCAST!>k<!>.equals(k)
+        <!DEBUG_INFO_EXPRESSION_TYPE("K!! & K?"), DEBUG_INFO_SMARTCAST!>k<!>.equals(k)
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>v<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Any"), DEBUG_INFO_SMARTCAST!>v<!>.equals(v)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>v<!>.equals(v)
     }
 }
 
@@ -223,7 +223,7 @@ fun <T> case_22(x: T?) {
     while (true) {
         if (x === null) break
         <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("T? & T!!"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 

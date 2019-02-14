@@ -23,7 +23,7 @@ fun case_1() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -33,7 +33,7 @@ fun case_2() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -43,7 +43,7 @@ fun case_3() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -53,7 +53,7 @@ fun case_4() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -63,7 +63,7 @@ fun case_5() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -73,7 +73,7 @@ fun case_6() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -85,7 +85,7 @@ fun case_7() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -97,7 +97,7 @@ fun case_8() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -109,7 +109,7 @@ fun case_9() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -121,7 +121,7 @@ fun case_10() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -133,7 +133,7 @@ fun case_11() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -145,7 +145,7 @@ fun case_12() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -161,11 +161,11 @@ fun case_13() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?>? & Out<kotlin.Int?>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
         val y = <!DEBUG_INFO_SMARTCAST!>x<!>.get()
         if (y != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>y<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
         }
     }
 }
@@ -178,11 +178,11 @@ fun case_14() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?>? & Out<kotlin.Int?>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
         val y = <!DEBUG_INFO_SMARTCAST!>x<!>.get()
         if (y != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>y<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
         }
     }
 }
@@ -195,11 +195,11 @@ fun case_15() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?>? & Out<kotlin.Int?>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
         val y = <!DEBUG_INFO_SMARTCAST!>x<!>.get()
         if (y != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>y<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
         }
     }
 }
@@ -216,11 +216,11 @@ fun case_16() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?>? & Out<kotlin.Int?>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
         val y = <!DEBUG_INFO_SMARTCAST!>x<!>.get()
         if (y != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>y<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
         }
     }
 }
@@ -233,11 +233,11 @@ fun case_17() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Number?> & Out<kotlin.Number?>?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Number?>? & Out<kotlin.Number?>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Number?> & Out<kotlin.Number?>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
         val y = <!DEBUG_INFO_SMARTCAST!>x<!>.get()
         if (y != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?")!>y<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
         }
     }
 }
@@ -257,7 +257,7 @@ fun case_18() {
     val y = x.get()
     if (y != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?")!>y<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
     }
 }
 
@@ -272,7 +272,7 @@ fun case_19() {
     val y = x.get()
     if (y != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>y<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>y<!>.equals(y)
     }
 }
 
@@ -284,7 +284,7 @@ fun case_20(y: Int?) {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -296,7 +296,7 @@ fun case_21(y: Int?) {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -308,7 +308,7 @@ fun case_22(y: Int?) {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -320,7 +320,7 @@ fun case_23(y: Int?) {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?>? & Out<kotlin.Int?>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -332,7 +332,7 @@ fun case_24(y: Int) {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?>? & Out<kotlin.Int?>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Out<kotlin.Int?> & Out<kotlin.Int?>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -345,11 +345,11 @@ fun <A, B : Out<A>, C: Out<B>, D: Out<C>, E: Out<D>, F> case_25(x: F, y: Out<C>)
     select(x.get()?.get()?.get()?.get()?.get(), y.get().get().get())
 
 fun case_25(y: Int) {
-    val x = case_25(Out(Out(<!TYPE_MISMATCH, TYPE_MISMATCH!>Out(Out(Out(y)))<!>)), Out(Out(Out(y))))
+    val x = case_25(Out(Out(Out(Out(Out(y))))), Out(Out(Out(y))))
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -362,10 +362,10 @@ fun <A, B : Out<A>, C: Out<B>, D: Out<C>, E: Out<D>, F> case_26(x: F, y: Out<C>)
     select(x.get()?.get()?.get()?.get()?.get(), y.get().get().get())
 
 fun case_26(y: Int) {
-    val x = case_26(Out(Out(<!TYPE_MISMATCH, TYPE_MISMATCH!>Out(Out(Out(y)))<!>)), Out(Out(Out(y))))
+    val x = case_26(Out(Out(Out(Out(Out(y))))), Out(Out(Out(y))))
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }

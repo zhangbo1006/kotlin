@@ -111,8 +111,8 @@ fun <T> T.case_7() {
     if (x is Interface1?) {
         if (x != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("Interface1 & T & T!!")!>x<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("T & Interface1"), DEBUG_INFO_SMARTCAST!>x<!>.equals(this)
-            <!DEBUG_INFO_EXPRESSION_TYPE("T & Interface1"), DEBUG_INFO_SMARTCAST!>x<!>.itest1()
+            <!DEBUG_INFO_EXPRESSION_TYPE("Interface1 & T"), DEBUG_INFO_SMARTCAST!>x<!>.equals(this)
+            <!DEBUG_INFO_EXPRESSION_TYPE("Interface1 & T"), DEBUG_INFO_SMARTCAST!>x<!>.itest1()
 
             x.apply {
                 <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & T!!}"), DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & T!!}")!>this<!>

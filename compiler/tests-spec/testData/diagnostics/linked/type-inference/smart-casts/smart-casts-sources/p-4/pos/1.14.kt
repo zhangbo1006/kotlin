@@ -36,7 +36,7 @@ fun case_2(vararg x: Int?) {
     x[0].also {
         if (it != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>it<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>it<!>.inv()
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>it<!>.inv()
         }
     }
 }
@@ -61,7 +61,7 @@ fun <T : Number?> case_4(vararg x: T?) {
     x[0].also {
         if (it != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?")!>it<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("T? & T!!"), DEBUG_INFO_SMARTCAST!>it<!>.toByte()
+            <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?"), DEBUG_INFO_SMARTCAST!>it<!>.toByte()
         }
     }
 }

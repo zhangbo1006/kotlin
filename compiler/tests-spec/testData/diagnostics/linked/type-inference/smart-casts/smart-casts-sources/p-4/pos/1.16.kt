@@ -22,14 +22,14 @@
 fun case_1(x: Int?) {
     if (x == null) return
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
 }
 
 // TESTCASE NUMBER: 2
 fun case_2(x: Unit?) {
     if (x === null) return
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Unit & kotlin.Unit?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Unit? & kotlin.Unit"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Unit & kotlin.Unit?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 3
@@ -43,49 +43,49 @@ fun case_3(x: Nothing?) {
 fun case_4(x: Number?) {
     if (x !== null) else { return }
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 5
 fun case_5(x: Char?, y: Nothing?) {
     if (x != <!DEBUG_INFO_CONSTANT!>y<!>) else return
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Char & kotlin.Char?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Char? & kotlin.Char"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Char & kotlin.Char?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 6
 fun case_6(x: Object?) {
     if (x !== <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!>) else { return }
     <!DEBUG_INFO_EXPRESSION_TYPE("Object & Object?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("Object? & Object"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("Object & Object?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 7
 fun case_7(x: Class?) {
     if (x === <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!> || false || false || false) { return }
     <!DEBUG_INFO_EXPRESSION_TYPE("Class & Class?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("Class? & Class"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("Class & Class?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 8
 fun case_8(x: Int?) {
     if (false || false || false || x == <!DEBUG_INFO_CONSTANT!>nullableNothingProperty<!>) return
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
 }
 
 // TESTCASE NUMBER: 9
 fun case_9(x: String?) {
     if (x != <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!> && true && true && true) else { return }
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.String & kotlin.String?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.String? & kotlin.String"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.String & kotlin.String?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 10
 fun case_10(x: Float?) {
     if (true && true && true && x !== null) else return
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float & kotlin.Float?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float? & kotlin.Float"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float & kotlin.Float?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 11
@@ -99,7 +99,7 @@ fun case_11(x: Out<*>?) {
 fun case_12(x: Map<Unit, Nothing?>?) {
     if (x === null) return
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.collections.Map<kotlin.Unit, kotlin.Nothing?> & kotlin.collections.Map<kotlin.Unit, kotlin.Nothing?>?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.collections.Map<kotlin.Unit, kotlin.Nothing?>? & kotlin.collections.Map<kotlin.Unit, kotlin.Nothing?>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.collections.Map<kotlin.Unit, kotlin.Nothing?> & kotlin.collections.Map<kotlin.Unit, kotlin.Nothing?>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 13
@@ -127,7 +127,7 @@ fun case_15(x: MutableCollection<out Nothing?>?, y: Nothing?) {
 fun case_16(x: Collection<Collection<Collection<Collection<Collection<Collection<Collection<*>>>>>>>?) {
     if (x !== <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!>) else { return }
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>> & kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>>?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>>? & kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>> & kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 17
@@ -169,7 +169,7 @@ fun <T> case_21(x: T) {
 fun <T> case_22(x: T?) {
     if (x === null) return
     <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("T? & T!!"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 23
@@ -191,7 +191,7 @@ fun case_25(x: Int?) {
     val x = (l@ {
         if (x == null) return@l
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int & kotlin.Int?"), DEBUG_INFO_SMARTCAST!>x<!>.inv()
     })()
 }
 
@@ -200,7 +200,7 @@ fun case_26(x: Unit?, y: List<*>) {
     y.forEach l@ {
         if (x === null) return@l
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Unit & kotlin.Unit?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Unit? & kotlin.Unit"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Unit & kotlin.Unit?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -216,7 +216,7 @@ fun case_28(x: Number?) {
     {(l@ {
         if (x !== null) else { return@l }
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Number & kotlin.Number?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     })()}()
 }
 
@@ -224,7 +224,7 @@ fun case_28(x: Number?) {
 fun case_29(x: Char?, y: Nothing?) = l@ {
     if (x != <!DEBUG_INFO_CONSTANT!>y<!>) else return@l
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Char & kotlin.Char?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Char? & kotlin.Char"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Char & kotlin.Char?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 30
@@ -232,7 +232,7 @@ fun case_30(x: Object?): Any {
     return (l@ {
         if (x !== <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!>) else { return@l }
         <!DEBUG_INFO_EXPRESSION_TYPE("Object & Object?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Object? & Object"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Object & Object?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     })()
 }
 
@@ -241,7 +241,7 @@ fun case_31(x: Class?): Any {
     return l@ {
         if (x === <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!> || false || false || false) { return@l }
         <!DEBUG_INFO_EXPRESSION_TYPE("Class & Class?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("Class? & Class"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("Class & Class?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -250,7 +250,7 @@ fun case_32(x: Any?) {
     case_32((l@ {
         if (false || false || false || x == <!DEBUG_INFO_CONSTANT!>nullableNothingProperty<!>) return@l
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Any"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     })())
 }
 
@@ -259,7 +259,7 @@ fun case_33(x: Any?) {
     case_33(l@ {
         if (x != <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!> && true && true && true) else { return@l }
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Any"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     })
 }
 
@@ -268,11 +268,11 @@ fun case_34(x: Float?) {
     (l@ {
         if (true && true && true && x !== null) else return@l
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float & kotlin.Float?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float? & kotlin.Float"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float & kotlin.Float?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }).equals(l@ {
         if (true && true && true && x !== null) else return@l
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float & kotlin.Float?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float? & kotlin.Float"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Float & kotlin.Float?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     })
 }
 
@@ -281,7 +281,7 @@ fun case_35(x: Any?) {
     case_35 l@ {
         if (x == null) return@l
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Any"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -290,7 +290,7 @@ fun case_36(x: Any?) {
     case_36 l@ {
         if (x === null) return@l
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Any"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -298,7 +298,7 @@ fun case_36(x: Any?) {
 fun case_37(x: Any?): Any? = case_37 l@ {
     if (x === null) return@l
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Any"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
 }
 
 // TESTCASE NUMBER: 38
@@ -328,7 +328,7 @@ fun case_40(x: Collection<Collection<Collection<Collection<Collection<Collection
     val z = (l@ {
         if (x !== <!DEBUG_INFO_CONSTANT!>implicitNullableNothingProperty<!>) else { return@l }
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>> & kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>>?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>>? & kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>>"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>> & kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<kotlin.collections.Collection<*>>>>>>>?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     })()
 }
 
@@ -382,7 +382,7 @@ fun <T> case_46(x: T?) {
     (l@ {
         if (x === null) return@l
         <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("T? & T!!"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("T!! & T?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     })()
 }
 

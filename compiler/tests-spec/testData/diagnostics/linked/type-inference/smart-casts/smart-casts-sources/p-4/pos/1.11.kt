@@ -25,7 +25,7 @@ fun case_1() {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Byte & Double & Int & Long & Short}> & Number} & {Comparable<{Byte & Double & Int & Long & Short}> & Number}?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Byte & Double & Int & Long & Short}> & Number}? & {Comparable<{Byte & Double & Int & Long & Short}> & Number}"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Byte & Double & Int & Long & Short}> & Number} & {Comparable<{Byte & Double & Int & Long & Short}> & Number}?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -37,7 +37,7 @@ fun case_2(y: Int) {
 
     if (x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Double & Int}> & Number} & {Comparable<{Double & Int}> & Number}?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Double & Int}> & Number}? & {Comparable<{Double & Int}> & Number}"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Double & Int}> & Number} & {Comparable<{Double & Int}> & Number}?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
     }
 }
 
@@ -60,7 +60,7 @@ fun case_3(a: Int?, b: Float?, c: Double?, d: Boolean?) {
         <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Double & Float & Int}>? & Number?}")!>it<!>
         if (it != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Double & Float & Int}> & Number} & {Comparable<{Double & Float & Int}>? & Number?}")!>it<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Double & Float & Int}>? & Number?} & {Comparable<{Double & Float & Int}> & Number}"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
+            <!DEBUG_INFO_EXPRESSION_TYPE("{Comparable<{Double & Float & Int}> & Number} & {Comparable<{Double & Float & Int}>? & Number?}"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
         }
     }
 }
@@ -88,7 +88,7 @@ fun case_4(a: Interface1?, b: Interface2?, c: Boolean) {
         <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1? & Interface2?}")!>it<!>
         if (it != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & Interface2} & {Interface1? & Interface2?}")!>it<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1? & Interface2?} & {Interface1 & Interface2}"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
+            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & Interface2} & {Interface1? & Interface2?}"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
         }
     }
 }
@@ -114,7 +114,7 @@ fun case_5(a: Interface1?, b: Interface2?, d: Boolean) {
     x.let {
         if (it != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & Interface2} & {Interface1? & Interface2?}")!>it<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1? & Interface2?} & {Interface1 & Interface2}"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
+            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & Interface2} & {Interface1? & Interface2?}"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
         }
     }
 }
@@ -146,9 +146,9 @@ fun case_6(a: Interface1?, b: Interface2, d: Boolean) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & {Interface1 & Interface2} & {Interface1? & Interface2?}")!>it<!>
         if (<!SENSELESS_COMPARISON!>it != null<!>) {
             <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & {Interface1 & Interface2} & {Interface1? & Interface2?}")!>it<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1? & Interface2?} & Interface3"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
-            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1? & Interface2?} & {Interface1 & Interface2}"), DEBUG_INFO_SMARTCAST!>it<!>.itest1()
-            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1? & Interface2?} & {Interface1 & Interface2}"), DEBUG_INFO_SMARTCAST!>it<!>.itest2()
+            <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & {Interface1? & Interface2?}"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
+            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & Interface2} & {Interface1? & Interface2?}"), DEBUG_INFO_SMARTCAST!>it<!>.itest1()
+            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & Interface2} & {Interface1? & Interface2?}"), DEBUG_INFO_SMARTCAST!>it<!>.itest2()
         }
     }
 }
@@ -180,9 +180,9 @@ fun case_7(a: Interface1?, b: Interface2?, d: Boolean) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Interface3? & {Interface1? & Interface2?}")!>it<!>
         if (it != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & {Interface1 & Interface2} & {Interface1? & Interface2?}")!>it<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1? & Interface2?} & Interface3"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
-            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1? & Interface2?} & {Interface1 & Interface2}"), DEBUG_INFO_SMARTCAST!>it<!>.itest1()
-            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1? & Interface2?} & {Interface1 & Interface2}"), DEBUG_INFO_SMARTCAST!>it<!>.itest2()
+            <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & {Interface1? & Interface2?}"), DEBUG_INFO_SMARTCAST!>it<!>.equals(it)
+            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & Interface2} & {Interface1? & Interface2?}"), DEBUG_INFO_SMARTCAST!>it<!>.itest1()
+            <!DEBUG_INFO_EXPRESSION_TYPE("{Interface1 & Interface2} & {Interface1? & Interface2?}"), DEBUG_INFO_SMARTCAST!>it<!>.itest2()
         }
     }
 }
