@@ -34,8 +34,8 @@ public final class Class {
     public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
     public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
 
-    public final class _NestedClass {
-        public constructor _NestedClass()
+    public final class NestedClass {
+        public constructor NestedClass()
         public final val prop_4: kotlin.Int = 4
         public final val prop_5: kotlin.Int = 5
         public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean

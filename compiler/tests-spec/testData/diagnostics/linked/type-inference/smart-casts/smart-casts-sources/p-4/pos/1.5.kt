@@ -17,7 +17,7 @@
  *      paragraph 9 -> sentence 4
  * NUMBER: 5
  * DESCRIPTION: Smartcasts from nullability condition (value or reference equality) using if expression and simple intersection types from other smartcasts.
- * HELPERS: classes, interfaces
+ * HELPERS: classes, interfaces, properties, functions
  */
 
 // TESTCASE NUMBER: 1
@@ -25,7 +25,15 @@ fun case_1(x: Any?) {
     if (x is Number?) {
         if (x !== null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Number")!>x<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Number")!>x<!>.propNullableAny
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Number")!>x<!>.funNullableAny()
         }
     }
 }
@@ -34,7 +42,15 @@ fun case_1(x: Any?) {
 fun case_2(x: Any?) {
     if (x is Number? && x is Int? && x != null) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number")!>x<!>.propNullableAny
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number")!>x<!>.funNullableAny()
     }
 }
 
@@ -44,7 +60,15 @@ fun case_3(x: Any?) {
         if (x !== null) {
             if (x is Int?) {
                 <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number")!>x<!>
-                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number")!>x<!>.propNullableAny
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number")!>x<!>.funNullableAny()
             }
         }
     }
@@ -56,7 +80,15 @@ fun case_4(x: Any?) {
         if (x is Number) {
             if (x is Int?) {
                 <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number")!>x<!>
-                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number")!>x<!>.propNullableAny
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Number"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Int"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+                <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number")!>x<!>.funNullableAny()
             }
         }
     }
@@ -71,7 +103,15 @@ fun case_5(x: Any?) {
                     if (x is ClassLevel5?) {
                         if (x != null) {
                             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>
-                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.propNullableAny
+                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+                            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.funNullableAny()
                             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test1()
                             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel2 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test2()
                             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test3()
@@ -93,7 +133,15 @@ fun case_6(x: Any?) {
                 if (x != null && x is ClassLevel4?) {
                     if (x is ClassLevel5?) {
                         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>
-                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.propNullableAny
+                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+                        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.funNullableAny()
                         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test1()
                         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel2 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test2()
                         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test3()
@@ -111,7 +159,15 @@ fun case_7(x: Any?) {
     if (x is ClassLevel1? && x is ClassLevel2? && x is ClassLevel3?) {
         if (x is ClassLevel4? && x != null && x is ClassLevel5?) {
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.propNullableAny
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.funNullableAny()
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test1()
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel2 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test2()
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test3()
@@ -126,7 +182,15 @@ fun case_8(x: Any?) {
     if (x is ClassLevel1? && x is ClassLevel2? && x is ClassLevel3?) {
         if (x is ClassLevel4? && x != null && x is ClassLevel5?) {
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.propNullableAny
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.funNullableAny()
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test1()
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel2 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test2()
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test3()
@@ -140,7 +204,15 @@ fun case_8(x: Any?) {
 fun case_9(x: Any?) {
     if (x is ClassLevel1? && x is ClassLevel2? && x is ClassLevel3? && x is ClassLevel4? && x != null && x is ClassLevel5?) {
         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.propNullableAny
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.funNullableAny()
         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test1()
         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel2 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test2()
         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test3()
@@ -156,7 +228,15 @@ fun case_10(x: Any?) {
 
         } else if (x is ClassLevel5? && x != null) {
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.propNullableAny
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+            <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & ClassLevel2 & ClassLevel3 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.funNullableAny()
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel1 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test1()
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel2 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test2()
             <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test3()
@@ -165,7 +245,15 @@ fun case_10(x: Any?) {
         }
     } else if (x is ClassLevel4? && x != null && x is ClassLevel5?) {
         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(x)
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propT
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propAny
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.propNullableT
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.propNullableAny
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funT()
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funAny()
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel5 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.funNullableT()
+        <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & ClassLevel5 & kotlin.Any & kotlin.Any?")!>x<!>.funNullableAny()
         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test1()
         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test2()
         <!DEBUG_INFO_EXPRESSION_TYPE("ClassLevel4 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.test3()
@@ -285,12 +373,28 @@ fun case_15(x: Any?) {
 fun case_16(a: Any?, b: Int = if (a is Number? && a is Int? && a !== null) <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number"), DEBUG_INFO_SMARTCAST!>a<!> else 0) {
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>a<!>
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.equals(b)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.equals(null)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.propT
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.propAny
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.propNullableT
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.propNullableAny
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.funT()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.funAny()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.funNullableT()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.funNullableAny()
 }
 
 // TESTCASE NUMBER: 17
 fun case_17(a: Any?, b: Int = if (a !is Number? || a !is Int? || a == null) 0 else <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Int & kotlin.Number"), DEBUG_INFO_SMARTCAST!>a<!>) {
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>a<!>
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.equals(b)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.equals(null)
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.propT
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.propAny
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.propNullableT
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.propNullableAny
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.funT()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.funAny()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.funNullableT()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Int")!>b<!>.funNullableAny()
 }

@@ -874,6 +874,11 @@ public class DiagnosticsTestSpecGenerated extends AbstractDiagnosticsTestSpec {
                                 runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/neg/2.2.kt");
                             }
 
+                            @TestMetadata("2.3.kt")
+                            public void test2_3() throws Exception {
+                                runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/neg/2.3.kt");
+                            }
+
                             public void testAllFilesPresentInNeg() throws Exception {
                                 KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/neg"), Pattern.compile("^(.+)\\.kt$"), TargetBackend.ANY, true);
                             }
@@ -995,11 +1000,6 @@ public class DiagnosticsTestSpecGenerated extends AbstractDiagnosticsTestSpec {
                             @TestMetadata("2.4.kt")
                             public void test2_4() throws Exception {
                                 runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/pos/2.4.kt");
-                            }
-
-                            @TestMetadata("2.5.kt")
-                            public void test2_5() throws Exception {
-                                runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/pos/2.5.kt");
                             }
 
                             public void testAllFilesPresentInPos() throws Exception {

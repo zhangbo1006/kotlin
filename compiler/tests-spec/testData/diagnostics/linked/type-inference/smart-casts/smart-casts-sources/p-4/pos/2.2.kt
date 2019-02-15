@@ -32,7 +32,7 @@ fun case_2(x: Any) {
 fun case_3(x: Any?) {
     if (true && x !is Class) else {
         <!DEBUG_INFO_EXPRESSION_TYPE("Class & kotlin.Any & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & Class"), DEBUG_INFO_SMARTCAST!>x<!>.prop_1
+        <!DEBUG_INFO_EXPRESSION_TYPE("Class & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.prop_1
     }
 }
 
@@ -52,7 +52,7 @@ fun case_4(x: Any) {
 fun case_5(x: Any?) {
     if (false || !(x !is Class.NestedClass?)) {
         <!DEBUG_INFO_EXPRESSION_TYPE("Class.NestedClass? & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & Class.NestedClass?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_4
+        <!DEBUG_INFO_EXPRESSION_TYPE("Class.NestedClass? & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_4
     }
 }
 
@@ -72,7 +72,7 @@ fun case_6(x: Any?) {
 fun case_7(x: Any) {
     if (!(x is DeepObject.A.B.C.D.E.F.G.J) && true && true && true) else {
         <!DEBUG_INFO_EXPRESSION_TYPE("DeepObject.A.B.C.D.E.F.G.J & kotlin.Any")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & DeepObject.A.B.C.D.E.F.G.J"), DEBUG_INFO_SMARTCAST!>x<!>.prop_1
+        <!DEBUG_INFO_EXPRESSION_TYPE("DeepObject.A.B.C.D.E.F.G.J & kotlin.Any"), DEBUG_INFO_SMARTCAST!>x<!>.prop_1
     }
 }
 
@@ -100,8 +100,8 @@ fun case_9(x: Any?) {
 fun case_10(x: Any?) {
     if (true && !!(x !is Interface3) && true) else {
         <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & kotlin.Any & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & Interface3"), DEBUG_INFO_SMARTCAST!>x<!>.itest()
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & Interface3"), DEBUG_INFO_SMARTCAST!>x<!>.itest3()
+        <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.itest()
+        <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.itest3()
     }
 }
 
@@ -109,7 +109,7 @@ fun case_10(x: Any?) {
 fun case_11(x: Any?) {
     if (false || x is SealedMixedChildObject1? || false) {
         <!DEBUG_INFO_EXPRESSION_TYPE("SealedMixedChildObject1? & kotlin.Any?")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & SealedMixedChildObject1?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_1
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & SealedMixedChildObject1?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_2
+        <!DEBUG_INFO_EXPRESSION_TYPE("SealedMixedChildObject1? & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_1
+        <!DEBUG_INFO_EXPRESSION_TYPE("SealedMixedChildObject1? & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_2
     }
 }
