@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.idea.core.script
 
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
@@ -26,10 +27,14 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.wm.WindowManager
+import com.intellij.openapi.wm.ex.StatusBarEx
 import com.intellij.psi.PsiManager
 import com.intellij.util.Alarm
+import com.intellij.util.ui.UIUtil
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.core.script.dependencies.AsyncScriptDependenciesLoader
@@ -147,6 +152,35 @@ class ScriptDependenciesUpdater(
                 )
             }
         }, project.messageBus.connect())
+    }
+
+    private fun areDependenciesCached(file: VirtualFile): Boolean {
+        return cache[file] != null
+    }
+
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): ScriptDependenciesUpdater =
+            ServiceManager.getService(project, ScriptDependenciesUpdater::class.java)
+
+        fun areDependenciesCached(file: KtFile): Boolean {
+            return getInstance(file.project).areDependenciesCached(file.virtualFile)
+        }
+
+        fun showNotification(file: KtFile, message: String) {
+            UIUtil.invokeLaterIfNeeded {
+                val ideFrame = WindowManager.getInstance().getIdeFrame(getInstance(file.project).project)
+                if (ideFrame != null) {
+                    val statusBar = ideFrame.statusBar as StatusBarEx
+                    statusBar.notifyProgressByBalloon(
+                        MessageType.WARNING,
+                        message,
+                        null,
+                        null
+                    )
+                }
+            }
+        }
     }
 }
 
