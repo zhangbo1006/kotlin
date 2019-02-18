@@ -15,8 +15,8 @@ import org.jetbrains.kotlin.backend.common.ir.isSuspend
 import org.jetbrains.kotlin.backend.common.lower.createIrBuilder
 import org.jetbrains.kotlin.backend.common.lower.irBlockBody
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.ir.backend.js.JsIrBackendContext
+import org.jetbrains.kotlin.ir.backend.js.JsLoweredDeclarationOrigin
 import org.jetbrains.kotlin.ir.backend.js.ir.JsIrBuilder
 import org.jetbrains.kotlin.ir.backend.js.utils.asString
 import org.jetbrains.kotlin.ir.backend.js.utils.getJsName
@@ -99,7 +99,7 @@ class BridgesConstruction(val context: JsIrBackendContext) : ClassLoweringPass {
 
         val origin =
             if (bridge.isEffectivelyExternal())
-                IrDeclarationOrigin.BRIDGE_TO_EXTERNAL_FUNCTION
+                JsLoweredDeclarationOrigin.BRIDGE_TO_EXTERNAL_FUNCTION
             else
                 IrDeclarationOrigin.BRIDGE
 

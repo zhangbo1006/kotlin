@@ -41,7 +41,6 @@ interface IrDeclarationOrigin {
     object IR_EXTERNAL_JAVA_DECLARATION_STUB : IrDeclarationOriginImpl("IR_EXTERNAL_JAVA_DECLARATION_STUB")
     object IR_BUILTINS_STUB : IrDeclarationOriginImpl("IR_BUILTINS_STUB")
     object BRIDGE : IrDeclarationOriginImpl("BRIDGE")
-    object BRIDGE_TO_EXTERNAL_FUNCTION : IrDeclarationOriginImpl("BRIDGE_TO_EXTERNAL_FUNCTION")
 
     object FIELD_FOR_ENUM_ENTRY : IrDeclarationOriginImpl("FIELD_FOR_ENUM_ENTRY")
     object FIELD_FOR_ENUM_VALUES : IrDeclarationOriginImpl("FIELD_FOR_ENUM_VALUES")
