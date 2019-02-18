@@ -24,17 +24,20 @@ import org.jetbrains.kotlin.resolve.calls.inference.model.checkConstraint
 import org.jetbrains.kotlin.resolve.constants.IntegerValueTypeConstructor
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.checker.intersectTypes
+import org.jetbrains.kotlin.types.model.KotlinTypeMarker
+import org.jetbrains.kotlin.types.model.TypeSystemInferenceExtensionContext
 import org.jetbrains.kotlin.types.typeUtil.isPrimitiveNumberType
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class ResultTypeResolver(
     val typeApproximator: TypeApproximator,
     val trivialConstraintTypeInferenceOracle: TrivialConstraintTypeInferenceOracle
 ) {
-    interface Context {
-        fun isProperType(type: UnwrappedType): Boolean
+    interface Context : TypeSystemInferenceExtensionContext {
+        fun isProperType(type: KotlinTypeMarker): Boolean
     }
 
-    fun findResultType(c: Context, variableWithConstraints: VariableWithConstraints, direction: ResolveDirection): UnwrappedType {
+    fun findResultType(c: Context, variableWithConstraints: VariableWithConstraints, direction: ResolveDirection): KotlinTypeMarker {
         findResultTypeOrNull(c, variableWithConstraints, direction)?.let { return it }
 
         // no proper constraints
@@ -43,7 +46,7 @@ class ResultTypeResolver(
         }
     }
 
-    fun findResultTypeOrNull(c: Context, variableWithConstraints: VariableWithConstraints, direction: ResolveDirection): UnwrappedType? {
+    fun findResultTypeOrNull(c: Context, variableWithConstraints: VariableWithConstraints, direction: ResolveDirection): KotlinTypeMarker? {
         findResultIfThereIsEqualsConstraint(c, variableWithConstraints, allowedFixToNotProperType = false)?.let { return it }
 
         val subType = findSubType(c, variableWithConstraints)
@@ -58,10 +61,10 @@ class ResultTypeResolver(
     }
 
     private fun Context.resultType(
-        firstCandidate: UnwrappedType?,
-        secondCandidate: UnwrappedType?,
+        firstCandidate: KotlinTypeMarker?,
+        secondCandidate: KotlinTypeMarker?,
         variableWithConstraints: VariableWithConstraints
-    ): UnwrappedType? {
+    ): KotlinTypeMarker? {
         if (firstCandidate == null || secondCandidate == null) return firstCandidate ?: secondCandidate
 
         if (isSuitableType(firstCandidate, variableWithConstraints)) return firstCandidate
@@ -73,7 +76,7 @@ class ResultTypeResolver(
         }
     }
 
-    private fun Context.isSuitableType(resultType: UnwrappedType, variableWithConstraints: VariableWithConstraints): Boolean {
+    private fun Context.isSuitableType(resultType: KotlinTypeMarker, variableWithConstraints: VariableWithConstraints): Boolean {
         for (constraint in variableWithConstraints.constraints) {
             if (!isProperType(constraint.type)) continue
             if (!checkConstraint(constraint.type, constraint.kind, resultType)) return false
@@ -87,7 +90,7 @@ class ResultTypeResolver(
     private fun findSubType(c: Context, variableWithConstraints: VariableWithConstraints): UnwrappedType? {
         val lowerConstraints = variableWithConstraints.constraints.filter { it.kind == ConstraintKind.LOWER && c.isProperType(it.type) }
         if (lowerConstraints.isNotEmpty()) {
-            val commonSuperType = NewCommonSuperTypeCalculator.commonSuperType(lowerConstraints.map { it.type })
+            val commonSuperType = NewCommonSuperTypeCalculator.commonSuperType(lowerConstraints.map { it.type }.cast()) // TODO: SUB
             val adjustedCommonSuperType = adjustCommonSupertypeWithKnowledgeOfNumberTypes(commonSuperType)
             /**
              *
@@ -148,12 +151,13 @@ class ResultTypeResolver(
         }
     }
 
-    private fun findSuperType(c: Context, variableWithConstraints: VariableWithConstraints): UnwrappedType? {
+    private fun findSuperType(c: Context, variableWithConstraints: VariableWithConstraints): KotlinTypeMarker? = with(c) {
         val upperConstraints = variableWithConstraints.constraints.filter { it.kind == ConstraintKind.UPPER && c.isProperType(it.type) }
         if (upperConstraints.isNotEmpty()) {
             val upperType = intersectTypes(upperConstraints.map { it.type })
 
-            return typeApproximator.approximateToSubType(upperType, TypeApproximatorConfiguration.CapturedTypesApproximation) ?: upperType
+            // TODO: SUB
+            return typeApproximator.approximateToSubType(upperType as UnwrappedType, TypeApproximatorConfiguration.CapturedTypesApproximation) ?: upperType
         }
         return null
     }
@@ -162,13 +166,13 @@ class ResultTypeResolver(
         c: Context,
         variableWithConstraints: VariableWithConstraints,
         allowedFixToNotProperType: Boolean = false
-    ): UnwrappedType? {
+    ): KotlinTypeMarker? = with(c) {
         val properEqualsConstraint = variableWithConstraints.constraints.filter {
             it.kind == ConstraintKind.EQUALITY && c.isProperType(it.type)
         }
 
         if (properEqualsConstraint.isNotEmpty()) {
-            return properEqualsConstraint.map { it.type }.singleBestRepresentative()?.unwrap()
+            return properEqualsConstraint.map { it.type }.singleBestRepresentative()
                     ?: properEqualsConstraint.first().type // seems like constraint system has contradiction
         }
         if (!allowedFixToNotProperType) return null
