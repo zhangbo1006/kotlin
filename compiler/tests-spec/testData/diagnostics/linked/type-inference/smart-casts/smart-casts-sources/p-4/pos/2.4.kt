@@ -116,10 +116,46 @@ fun case_10(x: Any?) {
 // TESTCASE NUMBER: 11
 fun case_11(x: Any?) {
     if (x is SealedMixedChildObject1?) {
-        if (<!USELESS_IS_CHECK!>x is SealedMixedChildObject1?<!>) else {
+        if (<!USELESS_IS_CHECK!>x is SealedMixedChildObject1?<!>) {
             <!DEBUG_INFO_EXPRESSION_TYPE("SealedMixedChildObject1? & kotlin.Any?")!>x<!>
             <!DEBUG_INFO_EXPRESSION_TYPE("SealedMixedChildObject1? & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_1
             <!DEBUG_INFO_EXPRESSION_TYPE("SealedMixedChildObject1? & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_2
+        }
+    }
+}
+
+// TESTCASE NUMBER: 12
+inline fun <reified T, reified K>case_12(x: Any?) {
+    if (x is T) {
+        if (<!USELESS_IS_CHECK!>x is T<!> is K) {
+            <!DEBUG_INFO_EXPRESSION_TYPE("T & kotlin.Any?")!>x<!>
+        }
+    }
+}
+
+// TESTCASE NUMBER: 13
+inline fun <reified T, reified K>case_13(x: Any?) {
+    if (x is T) {
+        if (x is K) {
+            <!DEBUG_INFO_EXPRESSION_TYPE("K & T & kotlin.Any?")!>x<!>
+        }
+    }
+}
+
+// TESTCASE NUMBER: 14
+inline fun <reified T, reified K>case_14(x: Any?) {
+    if (x is T) {
+        if (<!USELESS_IS_CHECK!>x !is T<!>) {
+            <!DEBUG_INFO_EXPRESSION_TYPE("T & kotlin.Any?")!>x<!>
+        }
+    }
+}
+
+// TESTCASE NUMBER: 15
+inline fun <reified T, reified K>case_15(x: Any?) {
+    if (x !is T) {
+        if (x is T) {
+            <!DEBUG_INFO_EXPRESSION_TYPE("T & kotlin.Any?")!>x<!>
         }
     }
 }
