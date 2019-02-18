@@ -770,9 +770,9 @@ public class BoxJsTestGenerated extends AbstractBoxJsTest {
             runTest("js/js.translator/testData/box/coercion/bridgeChar.kt");
         }
 
-        @TestMetadata("charValParameter_legacy.kt")
-        public void testCharValParameter_legacy() throws Exception {
-            runTest("js/js.translator/testData/box/coercion/charValParameter_legacy.kt");
+        @TestMetadata("charValParameter.kt")
+        public void testCharValParameter() throws Exception {
+            runTest("js/js.translator/testData/box/coercion/charValParameter.kt");
         }
 
         @TestMetadata("classProperty.kt")
@@ -780,9 +780,9 @@ public class BoxJsTestGenerated extends AbstractBoxJsTest {
             runTest("js/js.translator/testData/box/coercion/classProperty.kt");
         }
 
-        @TestMetadata("defaultAccessors_legacy.kt")
-        public void testDefaultAccessors_legacy() throws Exception {
-            runTest("js/js.translator/testData/box/coercion/defaultAccessors_legacy.kt");
+        @TestMetadata("defaultAccessors.kt")
+        public void testDefaultAccessors() throws Exception {
+            runTest("js/js.translator/testData/box/coercion/defaultAccessors.kt");
         }
 
         @TestMetadata("derivedFunctionReturningChar.kt")
@@ -825,9 +825,9 @@ public class BoxJsTestGenerated extends AbstractBoxJsTest {
             runTest("js/js.translator/testData/box/coercion/loopOverUnits.kt");
         }
 
-        @TestMetadata("propertyBridgeChar_legacy.kt")
-        public void testPropertyBridgeChar_legacy() throws Exception {
-            runTest("js/js.translator/testData/box/coercion/propertyBridgeChar_legacy.kt");
+        @TestMetadata("propertyBridgeChar.kt")
+        public void testPropertyBridgeChar() throws Exception {
+            runTest("js/js.translator/testData/box/coercion/propertyBridgeChar.kt");
         }
 
         @TestMetadata("receiverSmartCast.kt")
