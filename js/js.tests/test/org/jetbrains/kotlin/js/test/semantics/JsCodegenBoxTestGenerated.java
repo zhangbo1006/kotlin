@@ -981,19 +981,9 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
             runTest("compiler/testData/codegen/box/bridges/jsName.kt");
         }
 
-        @TestMetadata("jsName_legacy.kt")
-        public void testJsName_legacy() throws Exception {
-            runTest("compiler/testData/codegen/box/bridges/jsName_legacy.kt");
-        }
-
         @TestMetadata("jsNative.kt")
         public void testJsNative() throws Exception {
             runTest("compiler/testData/codegen/box/bridges/jsNative.kt");
-        }
-
-        @TestMetadata("jsNative_legacy.kt")
-        public void testJsNative_legacy() throws Exception {
-            runTest("compiler/testData/codegen/box/bridges/jsNative_legacy.kt");
         }
 
         @TestMetadata("kt12416.kt")
