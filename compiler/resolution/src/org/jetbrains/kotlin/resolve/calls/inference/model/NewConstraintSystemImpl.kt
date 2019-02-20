@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.resolve.calls.inference.components.KotlinConstraintS
 import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.components.ResultTypeResolver
 import org.jetbrains.kotlin.resolve.calls.model.KotlinCallDiagnostic
+import org.jetbrains.kotlin.resolve.calls.model.PostponedResolvedAtom
 import org.jetbrains.kotlin.types.StubType
 import org.jetbrains.kotlin.types.TypeConstructor
 import org.jetbrains.kotlin.types.UnwrappedType
@@ -94,6 +95,16 @@ class NewConstraintSystemImpl(
             b,
             position
         )
+
+    override fun bindPostponedAtom(postponedAtom: PostponedResolvedAtom, type: UnwrappedType) {
+        val typeVariable = storage.allTypeVariables[type.constructor] ?: return
+        val postponedArguments = storage.postponedArgumentsWithExpectedTypeVariable[typeVariable]
+        if (postponedArguments == null) {
+            storage.postponedArgumentsWithExpectedTypeVariable.put(typeVariable, arrayListOf(postponedAtom))
+        } else {
+            postponedArguments.add(postponedAtom)
+        }
+    }
 
     override fun getProperSuperTypeConstructors(type: UnwrappedType): List<TypeConstructor> {
         checkState(State.BUILDING, State.COMPLETION, State.TRANSACTION)

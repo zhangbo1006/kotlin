@@ -69,6 +69,8 @@ class IncorporationConstraintPosition(val from: ConstraintPosition, val initialC
     override fun toString() = "Incorporate $initialConstraint from position $from"
 }
 
+class SpecialPosition : ConstraintPosition()
+
 class CoroutinePosition() : ConstraintPosition() {
     override fun toString(): String = "for coroutine call"
 }

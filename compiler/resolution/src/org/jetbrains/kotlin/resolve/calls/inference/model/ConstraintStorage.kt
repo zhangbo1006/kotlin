@@ -8,6 +8,8 @@ package org.jetbrains.kotlin.resolve.calls.inference.model
 import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.substitute
 import org.jetbrains.kotlin.resolve.calls.model.KotlinCallDiagnostic
+import org.jetbrains.kotlin.resolve.calls.model.LambdaWithTypeVariableAsExpectedTypeAtom
+import org.jetbrains.kotlin.resolve.calls.model.PostponedResolvedAtom
 import org.jetbrains.kotlin.types.TypeConstructor
 import org.jetbrains.kotlin.types.TypeSubstitutor
 import org.jetbrains.kotlin.types.UnwrappedType
@@ -44,6 +46,7 @@ interface ConstraintStorage {
     val hasContradiction: Boolean
     val fixedTypeVariables: Map<TypeConstructor, UnwrappedType>
     val postponedTypeVariables: List<NewTypeVariable>
+    val postponedArgumentsWithExpectedTypeVariable: Map<NewTypeVariable, List<PostponedResolvedAtom>>
 
     object Empty : ConstraintStorage {
         override val allTypeVariables: Map<TypeConstructor, NewTypeVariable> get() = emptyMap()
@@ -54,6 +57,7 @@ interface ConstraintStorage {
         override val hasContradiction: Boolean get() = false
         override val fixedTypeVariables: Map<TypeConstructor, UnwrappedType> get() = emptyMap()
         override val postponedTypeVariables: List<NewTypeVariable> get() = emptyList()
+        override val postponedArgumentsWithExpectedTypeVariable: Map<NewTypeVariable, List<PostponedResolvedAtom>> get() = emptyMap()
     }
 }
 

@@ -163,8 +163,8 @@ class KotlinConstraintSystemCompleter(
         fun ResolvedAtom.process(to: LinkedHashSet<TypeConstructor>) {
             val typeVariables = when (this) {
                 is ResolvedCallAtom -> substitutor.freshVariables
-                is ResolvedCallableReferenceAtom -> candidate?.freshSubstitutor?.freshVariables.orEmpty()
-                is ResolvedLambdaAtom -> listOfNotNull(typeVariableForLambdaReturnType)
+                is ResolvedCallableReferenceAtom -> listOfNotNull(specialReturnType) + candidate?.freshSubstitutor?.freshVariables.orEmpty()
+                is ResolvedLambdaAtom -> listOfNotNull(typeVariableForLambdaReturnType, typeVariableFromExpectedTransformedType)
                 else -> emptyList()
             }
             typeVariables.mapNotNullTo(to) {

@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.resolve.calls.inference.ConstraintSystemBuilder
 import org.jetbrains.kotlin.resolve.calls.inference.model.ArgumentConstraintPosition
 import org.jetbrains.kotlin.resolve.calls.inference.model.TypeVariableForLambdaReturnType
+import org.jetbrains.kotlin.resolve.calls.inference.model.TypeVariableForTransformedFunctionalReturnType
 import org.jetbrains.kotlin.resolve.calls.model.*
 import org.jetbrains.kotlin.types.UnwrappedType
 import org.jetbrains.kotlin.types.typeUtil.builtIns
@@ -49,10 +50,12 @@ private fun preprocessLambdaArgument(
     forceResolution: Boolean = false
 ): ResolvedAtom {
     if (expectedType != null && !forceResolution && csBuilder.isTypeVariable(expectedType)) {
-        return LambdaWithTypeVariableAsExpectedTypeAtom(argument, expectedType)
+        return LambdaWithTypeVariableAsExpectedTypeAtom(argument, expectedType).also {
+            csBuilder.bindPostponedAtom(it, expectedType)
+        }
     }
 
-    val resolvedArgument = extractLambdaInfoFromFunctionalType(expectedType, argument) ?: extraLambdaInfo(expectedType, argument, csBuilder)
+    val resolvedArgument = extractLambdaInfoFromFunctionalType(expectedType, argument, csBuilder) ?: extraLambdaInfo(expectedType, argument, csBuilder)
 
     if (expectedType != null) {
         val lambdaType = createFunctionType(
@@ -88,10 +91,29 @@ private fun extraLambdaInfo(
     val newTypeVariableUsed = returnType == typeVariable.defaultType
     if (newTypeVariableUsed) csBuilder.registerVariable(typeVariable)
 
-    return ResolvedLambdaAtom(argument, isSuspend, receiverType, parameters, returnType, typeVariable.takeIf { newTypeVariableUsed })
+    val specialConstructor = if (expectedType?.isBuiltinFunctionalType == true) expectedType.getReturnTypeFromFunctionType().constructor else null
+    val special = if (specialConstructor != null) {
+        csBuilder.currentStorage().notFixedTypeVariables[specialConstructor]?.typeVariable?.safeAs<TypeVariableForTransformedFunctionalReturnType>()
+    } else {
+        null
+    }
+
+    return ResolvedLambdaAtom(
+        argument,
+        isSuspend,
+        receiverType,
+        parameters,
+        returnType,
+        typeVariable.takeIf { newTypeVariableUsed },
+        special
+    )
 }
 
-private fun extractLambdaInfoFromFunctionalType(expectedType: UnwrappedType?, argument: LambdaKotlinCallArgument): ResolvedLambdaAtom? {
+private fun extractLambdaInfoFromFunctionalType(
+    expectedType: UnwrappedType?,
+    argument: LambdaKotlinCallArgument,
+    csBuilder: ConstraintSystemBuilder
+): ResolvedLambdaAtom? {
     if (expectedType == null || !expectedType.isBuiltinFunctionalType) return null
     val parameters = extractLambdaParameters(expectedType, argument)
 
@@ -99,13 +121,18 @@ private fun extractLambdaInfoFromFunctionalType(expectedType: UnwrappedType?, ar
     val receiverType = argumentAsFunctionExpression?.receiverType ?: expectedType.getReceiverTypeFromFunctionType()?.unwrap()
     val returnType = argumentAsFunctionExpression?.returnType ?: expectedType.getReturnTypeFromFunctionType().unwrap()
 
+    val specialConstructor = expectedType.getReturnTypeFromFunctionType().constructor
+    val special =
+        csBuilder.currentStorage().notFixedTypeVariables[specialConstructor]?.typeVariable?.safeAs<TypeVariableForTransformedFunctionalReturnType>()
+
     return ResolvedLambdaAtom(
         argument,
         expectedType.isSuspendFunctionType,
         receiverType,
         parameters,
         returnType,
-        typeVariableForLambdaReturnType = null
+        typeVariableForLambdaReturnType = null,
+        typeVariableFromExpectedTransformedType = special
     )
 }
 
@@ -136,8 +163,19 @@ private fun preprocessCallableReference(
     expectedType: UnwrappedType?,
     diagnosticsHolder: KotlinDiagnosticsHolder
 ): ResolvedAtom {
-    val result = ResolvedCallableReferenceAtom(argument, expectedType)
+    val special = if (expectedType?.isBuiltinFunctionalType == true) {
+        val specialConstructor = expectedType.getReturnTypeFromFunctionType().constructor
+        csBuilder.currentStorage().notFixedTypeVariables[specialConstructor]?.typeVariable?.safeAs<TypeVariableForTransformedFunctionalReturnType>()
+    } else {
+        null
+    }
+
+    val result = ResolvedCallableReferenceAtom(argument, expectedType, special)
     if (expectedType == null) return result
+
+    if (csBuilder.isTypeVariable(expectedType)) {
+        csBuilder.bindPostponedAtom(result, expectedType)
+    }
 
     val notCallableTypeConstructor =
         csBuilder.getProperSuperTypeConstructors(expectedType).firstOrNull { !ReflectionTypes.isPossibleExpectedCallableType(it) }

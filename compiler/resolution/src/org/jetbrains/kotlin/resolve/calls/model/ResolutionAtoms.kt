@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.resolve.calls.components.*
 import org.jetbrains.kotlin.resolve.calls.inference.components.FreshVariableNewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.model.ConstraintStorage
 import org.jetbrains.kotlin.resolve.calls.inference.model.TypeVariableForLambdaReturnType
+import org.jetbrains.kotlin.resolve.calls.inference.model.TypeVariableForTransformedFunctionalReturnType
 import org.jetbrains.kotlin.resolve.calls.tasks.ExplicitReceiverKind
 import org.jetbrains.kotlin.types.UnwrappedType
 
@@ -94,7 +95,8 @@ class ResolvedLambdaAtom(
     val receiver: UnwrappedType?,
     val parameters: List<UnwrappedType>,
     val returnType: UnwrappedType,
-    val typeVariableForLambdaReturnType: TypeVariableForLambdaReturnType?
+    val typeVariableForLambdaReturnType: TypeVariableForLambdaReturnType?,
+    val typeVariableFromExpectedTransformedType: TypeVariableForTransformedFunctionalReturnType?
 ) : PostponedResolvedAtom() {
     lateinit var resultArguments: List<KotlinCallArgument>
         private set
@@ -113,7 +115,8 @@ class ResolvedLambdaAtom(
 
 class ResolvedCallableReferenceAtom(
     override val atom: CallableReferenceKotlinCallArgument,
-    val expectedType: UnwrappedType?
+    val expectedType: UnwrappedType?,
+    val specialReturnType: TypeVariableForTransformedFunctionalReturnType?
 ) : PostponedResolvedAtom() {
     var candidate: CallableReferenceCandidate? = null
         private set
@@ -127,7 +130,7 @@ class ResolvedCallableReferenceAtom(
     }
 
     override val inputTypes: Collection<UnwrappedType>
-        get() = extractInputOutputTypesFromCallableReferenceExpectedType(expectedType)?.inputTypes ?: listOfNotNull(expectedType)
+        get() = extractInputOutputTypesFromCallableReferenceExpectedType(expectedType)?.inputTypes ?: emptyList()
 
     override val outputType: UnwrappedType?
         get() = extractInputOutputTypesFromCallableReferenceExpectedType(expectedType)?.outputType

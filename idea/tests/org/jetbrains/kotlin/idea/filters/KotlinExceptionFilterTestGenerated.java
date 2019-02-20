@@ -89,6 +89,11 @@ public class KotlinExceptionFilterTestGenerated extends AbstractKotlinExceptionF
         runTest("idea/testData/debugger/exceptionFilter/kt2489_2/");
     }
 
+    @TestMetadata("kt29871")
+    public void testKt29871() throws Exception {
+        runTest("idea/testData/debugger/exceptionFilter/kt29871/");
+    }
+
     @TestMetadata("librarySources1")
     public void testLibrarySources1() throws Exception {
         runTest("idea/testData/debugger/exceptionFilter/librarySources1/");

@@ -9813,6 +9813,11 @@ public class DiagnosticsUsingJavacTestGenerated extends AbstractDiagnosticsUsing
                     runTest("compiler/testData/diagnostics/tests/inference/commonSystem/nestedLambdas.kt");
                 }
 
+                @TestMetadata("severalLambdasAgainstOneTypeVariable.kt")
+                public void testSeveralLambdasAgainstOneTypeVariable() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/inference/commonSystem/severalLambdasAgainstOneTypeVariable.kt");
+                }
+
                 @TestMetadata("theSameFunctionInArgs.kt")
                 public void testTheSameFunctionInArgs() throws Exception {
                     runTest("compiler/testData/diagnostics/tests/inference/commonSystem/theSameFunctionInArgs.kt");

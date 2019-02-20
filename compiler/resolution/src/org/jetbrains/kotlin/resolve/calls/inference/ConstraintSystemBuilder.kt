@@ -36,6 +36,8 @@ interface ConstraintSystemOperation {
     fun addSubtypeConstraint(lowerType: UnwrappedType, upperType: UnwrappedType, position: ConstraintPosition)
     fun addEqualityConstraint(a: UnwrappedType, b: UnwrappedType, position: ConstraintPosition)
 
+    fun bindPostponedAtom(postponedAtom: PostponedResolvedAtom, type: UnwrappedType)
+
     fun isProperType(type: UnwrappedType): Boolean
     fun isTypeVariable(type: UnwrappedType): Boolean
     fun isPostponedTypeVariable(typeVariable: NewTypeVariable): Boolean

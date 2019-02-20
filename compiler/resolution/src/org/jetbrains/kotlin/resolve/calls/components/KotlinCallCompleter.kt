@@ -28,11 +28,9 @@ class KotlinCallCompleter(
         resolutionCallbacks: KotlinResolutionCallbacks
     ): CallResolutionResult {
         val diagnosticHolder = KotlinDiagnosticsHolder.SimpleHolder()
-        if (candidates.isEmpty()) {
-            diagnosticHolder.addDiagnostic(NoneCandidatesCallDiagnostic(factory.kotlinCall))
-        }
-        if (candidates.size > 1) {
-            diagnosticHolder.addDiagnostic(ManyCandidatesCallDiagnostic(factory.kotlinCall, candidates))
+        when {
+            candidates.isEmpty() -> diagnosticHolder.addDiagnostic(NoneCandidatesCallDiagnostic(factory.kotlinCall))
+            candidates.size > 1 -> diagnosticHolder.addDiagnostic(ManyCandidatesCallDiagnostic(factory.kotlinCall, candidates))
         }
 
         val candidate = prepareCandidateForCompletion(factory, candidates, resolutionCallbacks)

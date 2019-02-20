@@ -97,6 +97,11 @@ class KotlinResolutionCandidate(
         subResolvedAtoms.add(resolvedAtom)
     }
 
+    fun replaceAtom(atomToReplace: ResolvedAtom, newAtom: ResolvedAtom) {
+        subResolvedAtoms.remove(atomToReplace)
+        subResolvedAtoms.add(newAtom)
+    }
+
     private fun processParts(stopOnFirstError: Boolean) {
         if (stopOnFirstError && step > 0) return // error already happened
         if (step == stepCount) return

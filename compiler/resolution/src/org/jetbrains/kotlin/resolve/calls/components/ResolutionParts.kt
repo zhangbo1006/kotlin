@@ -5,12 +5,15 @@
 
 package org.jetbrains.kotlin.resolve.calls.components
 
+import org.jetbrains.kotlin.builtins.createFunctionType
 import org.jetbrains.kotlin.builtins.getReceiverTypeFromFunctionType
 import org.jetbrains.kotlin.builtins.functions.FunctionClassDescriptor
 import org.jetbrains.kotlin.builtins.getFunctionalClassKind
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.descriptors.impl.TypeAliasConstructorDescriptor
 import org.jetbrains.kotlin.resolve.calls.components.TypeArgumentsToParametersMapper.TypeArgumentsMapping.NoExplicitArguments
+import org.jetbrains.kotlin.resolve.calls.inference.ConstraintSystemBuilder
 import org.jetbrains.kotlin.resolve.calls.inference.ConstraintSystemOperation
 import org.jetbrains.kotlin.resolve.calls.inference.components.FreshVariableNewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.model.*
@@ -360,6 +363,65 @@ internal object CheckExternalArgument : ResolutionPart() {
         val argument = kotlinCall.externalArgument ?: return
 
         resolveKotlinArgument(argument, resolvedCall.argumentToCandidateParameter[argument], isReceiver = false)
+    }
+}
+
+internal object TypeVariableToFunctionalTypeTransformer : ResolutionPart() {
+    override fun KotlinResolutionCandidate.process(workIndex: Int) {
+        val storage = csBuilder.currentStorage()
+        for ((typeVariable, postponedArguments) in storage.postponedArgumentsWithExpectedTypeVariable) {
+            if (postponedArguments.isEmpty()) continue
+
+            val variableWithConstraints = storage.notFixedTypeVariables[typeVariable.freshTypeConstructor] ?: continue
+            if (!variableWithConstraints.constraints.all {
+                    it.position.from is DeclaredUpperBoundConstraintPosition || it.position.from is SpecialPosition
+                }
+            ) continue // TODO: this isn't correct!
+
+            // TODO: check expected type!
+
+            transformToFunctionalType(typeVariable, postponedArguments, csBuilder)
+        }
+    }
+
+    private fun KotlinResolutionCandidate.transformToFunctionalType(
+        typeVariable: NewTypeVariable,
+        postponedArguments: List<PostponedResolvedAtom>,
+        csBuilder: ConstraintSystemBuilder
+    ) {
+        val shapedArguments = postponedArguments.map {
+            if (it is LambdaWithTypeVariableAsExpectedTypeAtom) it.transformToResolvedLambda(csBuilder) else it
+        }
+
+        val fixedInputTypes = shapedArguments.first().inputTypes
+        val fixedOutputType = shapedArguments.first().outputType
+
+        if (shapedArguments.all { it.inputTypes == fixedInputTypes }) {
+            val freshReturnTypeVariable = TypeVariableForTransformedFunctionalReturnType(csBuilder.builtIns, "_O")
+            csBuilder.registerVariable(freshReturnTypeVariable)
+
+            val shaped = createFunctionType(
+                csBuilder.builtIns,
+                Annotations.EMPTY,
+                null,
+                fixedInputTypes.toList(),
+                null,
+                freshReturnTypeVariable.defaultType
+            )
+
+            csBuilder.addSubtypeConstraint(typeVariable.defaultType, shaped, SpecialPosition())
+            for (shapedArgument in shapedArguments) {
+                val argument =
+                    shapedArgument.safeAs<ResolvedLambdaAtom>()?.atom
+                        ?: shapedArgument.safeAs<ResolvedCallableReferenceAtom>()?.atom
+                        ?: continue
+
+                replaceAtom(
+                    shapedArgument,
+                    resolveKtPrimitive(csBuilder, argument, shaped, this, false)
+                )
+            }
+        }
     }
 }
 

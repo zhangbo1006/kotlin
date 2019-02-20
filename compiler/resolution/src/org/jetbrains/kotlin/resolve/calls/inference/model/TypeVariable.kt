@@ -64,3 +64,8 @@ class TypeVariableForLambdaReturnType(
     builtIns: KotlinBuiltIns,
     name: String
 ) : NewTypeVariable(builtIns, name)
+
+class TypeVariableForTransformedFunctionalReturnType(
+    builtIns: KotlinBuiltIns,
+    name: String
+) : NewTypeVariable(builtIns, name)
