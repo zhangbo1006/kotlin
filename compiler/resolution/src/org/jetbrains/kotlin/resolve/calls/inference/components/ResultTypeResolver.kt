@@ -90,8 +90,8 @@ class ResultTypeResolver(
     private fun findSubType(c: Context, variableWithConstraints: VariableWithConstraints): UnwrappedType? {
         val lowerConstraints = variableWithConstraints.constraints.filter { it.kind == ConstraintKind.LOWER && c.isProperType(it.type) }
         if (lowerConstraints.isNotEmpty()) {
-            val commonSuperType = NewCommonSuperTypeCalculator.commonSuperType(lowerConstraints.map { it.type }.cast()) // TODO: SUB
-            val adjustedCommonSuperType = adjustCommonSupertypeWithKnowledgeOfNumberTypes(commonSuperType)
+            val commonSuperType = with(NewCommonSuperTypeCalculator) { c.commonSuperType(lowerConstraints.map { it.type }) }
+            val adjustedCommonSuperType = adjustCommonSupertypeWithKnowledgeOfNumberTypes(commonSuperType.cast()) // TODO: SUB
             /**
              *
              * fun <T> Array<out T>.intersect(other: Iterable<T>) {
