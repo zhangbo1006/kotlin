@@ -87,7 +87,7 @@ class ResultTypeResolver(
         return true
     }
 
-    private fun findSubType(c: Context, variableWithConstraints: VariableWithConstraints): UnwrappedType? {
+    private fun findSubType(c: Context, variableWithConstraints: VariableWithConstraints): KotlinTypeMarker? {
         val lowerConstraints = variableWithConstraints.constraints.filter { it.kind == ConstraintKind.LOWER && c.isProperType(it.type) }
         if (lowerConstraints.isNotEmpty()) {
             val commonSuperType = with(NewCommonSuperTypeCalculator) { c.commonSuperType(lowerConstraints.map { it.type }) }
@@ -113,8 +113,7 @@ class ResultTypeResolver(
             return typeApproximator.approximateToSuperType(
                 adjustedCommonSuperType,
                 TypeApproximatorConfiguration.CapturedTypesApproximation
-            )
-                    ?: adjustedCommonSuperType
+            ) ?: adjustedCommonSuperType
         }
 
         return null
@@ -156,8 +155,7 @@ class ResultTypeResolver(
         if (upperConstraints.isNotEmpty()) {
             val upperType = intersectTypes(upperConstraints.map { it.type })
 
-            // TODO: SUB
-            return typeApproximator.approximateToSubType(upperType as UnwrappedType, TypeApproximatorConfiguration.CapturedTypesApproximation) ?: upperType
+            return typeApproximator.approximateToSubType(upperType, TypeApproximatorConfiguration.CapturedTypesApproximation) ?: upperType
         }
         return null
     }

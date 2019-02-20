@@ -27,7 +27,7 @@ internal val jvmCoercionToUnitPhase = makeIrFilePhase(
 class JvmCoercionToUnitPatcher(val context: JvmBackendContext) :
     InsertImplicitCasts(
         context.builtIns, context.irBuiltIns,
-        TypeTranslator(context.ir.symbols.externalSymbolTable, context.state.languageVersionSettings)
+        TypeTranslator(context.ir.symbols.externalSymbolTable, context.state.languageVersionSettings, context.builtIns)
     ),
     FileLoweringPass {
 
