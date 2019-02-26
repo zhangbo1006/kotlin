@@ -32,10 +32,8 @@ class ClassReferenceLowering(val context: JsIrBackendContext) : FileLoweringPass
     private fun primitiveClassProperty(name: String) =
         primitiveClassProperties.single { it.name == Name.identifier(name) }
 
-    private val primitiveClasses = mapOf(
-        IrType::isAny to "anyClass",
-        IrType::isNumber to "numberClass",
-        IrType::isNothing to "nothingClass",
+
+    private val finalPrimitiveClasses = mapOf(
         IrType::isBoolean to "booleanClass",
         IrType::isByte to "byteClass",
         IrType::isShort to "shortClass",
@@ -57,20 +55,41 @@ class ClassReferenceLowering(val context: JsIrBackendContext) : FileLoweringPass
         primitiveClassProperty(it.value).getter!!
     }
 
-    private fun callGetKClassFromExpression(returnType: IrType, typeArgument: IrType, argument: IrExpression) =
-        JsIrBuilder.buildCall(intrinsics.jsGetKClassFromExpression, returnType, listOf(typeArgument)).apply {
+    private val openPrimitiveClasses = mapOf(
+        IrType::isAny to "anyClass",
+        IrType::isNumber to "numberClass",
+        IrType::isNothing to "nothingClass"
+    ).mapValues {
+        primitiveClassProperty(it.value).getter!!
+    }
+
+    private fun callGetKClassFromExpression(returnType: IrType, typeArgument: IrType, argument: IrExpression): IrExpression {
+        val primitiveKClass = getFinalPrimitiveKClass(returnType, typeArgument)
+        if (primitiveKClass != null)
+            return JsIrBuilder.buildBlock(returnType, listOf(argument, primitiveKClass))
+
+        return JsIrBuilder.buildCall(intrinsics.jsGetKClassFromExpression, returnType, listOf(typeArgument)).apply {
             putValueArgument(0, argument)
         }
-
+    }
 
     private fun getPrimitiveClass(target: IrSimpleFunction, returnType: IrType) =
         JsIrBuilder.buildCall(target.symbol, returnType).apply {
             dispatchReceiver = JsIrBuilder.buildGetObjectValue(primitiveClassesObject.defaultType, primitiveClassesObject.symbol)
         }
 
-    private fun callGetKClass(returnType: IrType, typeArgument: IrType): IrCall {
+    private fun getFinalPrimitiveKClass(returnType: IrType, typeArgument: IrType): IrCall? {
+        for ((typePredicate, v) in finalPrimitiveClasses) {
+            if (typePredicate(typeArgument))
+                return getPrimitiveClass(v, returnType)
+        }
 
-        for ((typePredicate, v) in primitiveClasses) {
+        return null
+    }
+
+
+    private fun getOpenPrimitiveKClass(returnType: IrType, typeArgument: IrType): IrCall? {
+        for ((typePredicate, v) in openPrimitiveClasses) {
             if (typePredicate(typeArgument))
                 return getPrimitiveClass(v, returnType)
         }
@@ -82,6 +101,16 @@ class ClassReferenceLowering(val context: JsIrBackendContext) : FileLoweringPass
                 putValueArgument(0, JsIrBuilder.buildInt(context.irBuiltIns.intType, arity))
             }
         }
+
+        return null
+    }
+
+    private fun callGetKClass(returnType: IrType, typeArgument: IrType): IrCall {
+        val primitiveKClass =
+            getFinalPrimitiveKClass(returnType, typeArgument) ?: getOpenPrimitiveKClass(returnType, typeArgument)
+
+        if (primitiveKClass != null)
+            return primitiveKClass
 
         return JsIrBuilder.buildCall(intrinsics.jsGetKClass, returnType, listOf(typeArgument)).apply {
             putValueArgument(0, callJsClass(typeArgument))
