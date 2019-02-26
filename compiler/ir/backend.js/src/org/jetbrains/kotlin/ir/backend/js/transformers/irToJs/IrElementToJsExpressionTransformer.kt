@@ -162,7 +162,7 @@ class IrElementToJsExpressionTransformer : BaseIrElementToJsNodeTransformer<JsEx
             val targetName = context.getNameForSymbol(target.symbol)
             val qPrototype = JsNameRef(targetName, prototypeOf(qualifierName))
             val callRef = JsNameRef(Namer.CALL_FUNCTION, qPrototype)
-            return JsInvocation(callRef, jsDispatchReceiver?.let { listOf(it) + arguments } ?: arguments)
+            return JsInvocation(callRef, jsDispatchReceiver?.let { receiver -> listOf(receiver) + arguments } ?: arguments)
         }
 
         val varargParameterIndex = function.valueParameters.indexOfFirst { it.varargElementType != null }
@@ -189,10 +189,10 @@ class IrElementToJsExpressionTransformer : BaseIrElementToJsNodeTransformer<JsEx
             }
         } else if (isExternalVararg) {
 
-            // External vararg arguments expect represented in JS as multiple "plain" arguments (opposed to arrays in Kotlin)
+            // External vararg arguments should be represented in JS as multiple "plain" arguments (opposed to arrays in Kotlin)
             // We are using `Function.prototype.apply` function to pass all arguments as a single array.
             // For this purpose are concatenating non-vararg arguments with vararg.
-            // TODO: Don't use `Function.prototype.apply` when number of arguments is known at compile time (e.g. there are not spread operators)
+            // TODO: Don't use `Function.prototype.apply` when number of arguments is known at compile time (e.g. there are no spread operators)
             val arrayConcat = JsNameRef("concat", JsArrayLiteral())
             val arraySliceCall = JsNameRef("call", JsNameRef("slice", JsArrayLiteral()))
 
@@ -206,7 +206,7 @@ class IrElementToJsExpressionTransformer : BaseIrElementToJsNodeTransformer<JsEx
                         varargParameterIndex -> JsInvocation(arraySliceCall, argument)
 
                         // TODO: Don't wrap non-array-like arguments with array literal
-                        // TODO: Wrap ajacent non-vararg arguments in a single array literal
+                        // TODO: Wrap adjacent non-vararg arguments in a single array literal
                         else -> JsArrayLiteral(listOf(argument))
                     }
                 }
