@@ -1,5 +1,5 @@
 
-description = "Kotlin Scripting Compiler Plugin"
+description = "Kotlin Compiler Infrastructure for Scripting"
 
 plugins {
     kotlin("jvm")
@@ -12,14 +12,15 @@ dependencies {
     compileOnly(project(":compiler:psi"))
     compileOnly(project(":compiler:plugin-api"))
     compileOnly(project(":compiler:cli"))
-    compile(project(":kotlin-scripting-compiler-impl"))
+    compile(project(":kotlin-scripting-common"))
+    compile(project(":kotlin-scripting-jvm"))
     compile(kotlinStdlib())
     compileOnly(project(":kotlin-reflect-api"))
+    compile(commonDep("org.jetbrains.kotlinx", "kotlinx-coroutines-core")) { isTransitive = false }
     compileOnly(intellijCoreDep()) { includeJars("intellij-core") }
     compileOnly(intellijDep()) { includeJars("asm-all", rootProject = rootProject) }
 
     testCompile(project(":compiler:frontend"))
-    testCompile(project(":compiler:frontend.script"))
     testCompile(project(":compiler:plugin-api"))
     testCompile(project(":compiler:util"))
     testCompile(project(":compiler:cli"))
@@ -36,8 +37,8 @@ sourceSets {
 
 tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>> {
     kotlinOptions {
-        languageVersion = "1.2"
-        apiVersion = "1.2"
+        languageVersion = "1.3"
+        apiVersion = "1.3"
         freeCompilerArgs += "-Xskip-metadata-version-check"
     }
 }
