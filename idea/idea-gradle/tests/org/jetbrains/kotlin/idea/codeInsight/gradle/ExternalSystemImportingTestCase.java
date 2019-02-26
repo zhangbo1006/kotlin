@@ -92,7 +92,7 @@ public abstract class ExternalSystemImportingTestCase extends ExternalSystemTest
                 errMessage.append(String.format("[%s].[%s] type: %s <-\r\n", o, referencingFieldNames.get(o), o.getClass().toString()));
                 o = referencingObjects.get(o);
             }
-            LOG.error(errMessage.toString());
+            LOG.warn(errMessage.toString());
             //TODO uncomment after fixing IDEA-207782
             //fail(errMessage.toString());
             return false;
