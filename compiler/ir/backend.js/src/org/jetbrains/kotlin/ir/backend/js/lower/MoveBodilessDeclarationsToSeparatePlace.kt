@@ -13,40 +13,63 @@ import org.jetbrains.kotlin.ir.backend.js.utils.getJsQualifier
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.IrExternalPackageFragmentImpl
 import org.jetbrains.kotlin.ir.symbols.IrExternalPackageFragmentSymbol
+import org.jetbrains.kotlin.ir.util.getFqName
 import org.jetbrains.kotlin.ir.util.isEffectivelyExternal
 import org.jetbrains.kotlin.ir.util.transformFlat
 import org.jetbrains.kotlin.ir.util.kotlinPackageFqn
 import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.name.Name
+
+private val BODILESS_BUILTIN_CLASSES = listOf(
+    "kotlin.String",
+    "kotlin.Nothing",
+    "kotlin.Array",
+    "kotlin.Any",
+    "kotlin.ByteArray",
+    "kotlin.CharArray",
+    "kotlin.ShortArray",
+    "kotlin.IntArray",
+    "kotlin.LongArray",
+    "kotlin.FloatArray",
+    "kotlin.DoubleArray",
+    "kotlin.BooleanArray",
+    "kotlin.Boolean",
+    "kotlin.Byte",
+    "kotlin.Short",
+    "kotlin.Int",
+    "kotlin.Float",
+    "kotlin.Double",
+    "kotlin.Function"
+).map { FqName(it) }.toSet()
+
+private class DescriptorlessExternalPackageFragmentSymbol : IrExternalPackageFragmentSymbol {
+    override val descriptor: PackageFragmentDescriptor
+        get() = error("Operation is unsupported")
+
+    private var _owner: IrExternalPackageFragment? = null
+    override val owner get() = _owner!!
+
+    override val isBound get() = _owner != null
+
+    override fun bind(owner: IrExternalPackageFragment) {
+        _owner = owner
+    }
+}
 
 fun moveBodilessDeclarationsToSeparatePlace(context: JsIrBackendContext, module: IrModuleFragment) {
+    val externalPackageFragment = IrExternalPackageFragmentImpl(
+        DescriptorlessExternalPackageFragmentSymbol(),
+        FqName.ROOT
+    )
 
-    val builtInClasses = listOf(
-        "String",
-        "Nothing",
-        "Array",
-        "Any",
-        "ByteArray",
-        "CharArray",
-        "ShortArray",
-        "IntArray",
-        "LongArray",
-        "FloatArray",
-        "DoubleArray",
-        "BooleanArray",
-        "Boolean",
-        "Byte",
-        "Short",
-        "Int",
-        "Float",
-        "Double",
-        "Function"
-    ).map { Name.identifier(it) }.toSet()
-
-    fun isBuiltInClass(declaration: IrDeclaration): Boolean =
-        declaration is IrClass && declaration.name in builtInClasses
+    val bodilessBuiltInsPackageFragment = IrExternalPackageFragmentImpl(
+        DescriptorlessExternalPackageFragmentSymbol(),
+        FqName("kotlin")
+    )
 
     val packageFragmentMap = mutableMapOf<FqName, IrExternalPackageFragment>()
+
+    fun isBuiltInClass(declaration: IrDeclaration): Boolean =
+        declaration is IrClass && declaration.getFqName() in BODILESS_BUILTIN_CLASSES
 
     fun collectExternalClasses(container: IrDeclarationContainer, includeCurrentLevel: Boolean): List<IrClass> {
         val externalClasses =
@@ -90,13 +113,15 @@ fun moveBodilessDeclarationsToSeparatePlace(context: JsIrBackendContext, module:
         while (it.hasNext()) {
             val d = it.next()
 
-            if (d.isEffectivelyExternal() || isBuiltInClass(d)) {
-
+            if (isBuiltInClass(d)) {
+                it.remove()
+                bodilessBuiltInsPackageFragment.addChild(d)
+            } else if (d.isEffectivelyExternal()) {
                 if (d.getJsModule() != null)
                     context.declarationLevelJsModules.add(d)
 
                 it.remove()
-                packageFragment.addChild(d)
+                externalPackageFragment.addChild(d)
             }
         }
         return irFile
