@@ -132,7 +132,7 @@ class SearchNotPropertyCandidatesAction : AnAction() {
 
         val nonTrivial = mutableSetOf<FunctionDescriptor>()
         i = 0
-        descriptorToPsiBinding.forEach { t, u ->
+        descriptorToPsiBinding.forEach { (t, u) ->
             progress("Step 3: ${i++} of ${descriptorToPsiBinding.size}", "$t")
             val descriptors = t.overriddenDescriptors
             var impl = false

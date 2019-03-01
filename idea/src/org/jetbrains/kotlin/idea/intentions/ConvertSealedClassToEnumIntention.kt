@@ -85,7 +85,7 @@ class ConvertSealedClassToEnumIntention : SelfTargetingRangeIntention<KtClass>(K
         }
 
         if (subclassesByContainer.isNotEmpty()) {
-            subclassesByContainer.forEach { currentClass, currentSubclasses -> processClass(currentClass!!, currentSubclasses, project) }
+            subclassesByContainer.forEach { (currentClass, currentSubclasses) -> processClass(currentClass!!, currentSubclasses, project) }
         }
         else {
             processClass(klass, emptyList(), project)
