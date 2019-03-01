@@ -36,10 +36,10 @@ class ReplaceAssociateFunctionInspection : AbstractKotlinInspection() {
         val calleeExpression = callExpression.calleeExpression ?: return
 
         val context = dotQualifiedExpression.analyze(BodyResolveMode.PARTIAL)
-        val isAssociate = callExpression.isCalling(FqName("kotlin.collections.associate"), context)
-                || callExpression.isCalling(FqName("kotlin.sequences.associate"), context)
-        val isAssociateTo = callExpression.isCalling(FqName("kotlin.collections.associateTo"), context)
-                || callExpression.isCalling(FqName("kotlin.sequences.associateTo"), context)
+        val isAssociate =
+            callExpression.isCalling(COLLECTIONS_ASSOCIATE, context) || callExpression.isCalling(SEQUENCES_ASSOCIATE, context)
+        val isAssociateTo =
+            callExpression.isCalling(COLLECTIONS_ASSOCIATE_TO, context) || callExpression.isCalling(SEQUENCES_ASSOCIATE_TO, context)
         if (!isAssociate && !isAssociateTo) return
 
         val lambda = callExpression.lambda() ?: return
@@ -74,6 +74,13 @@ class ReplaceAssociateFunctionInspection : AbstractKotlinInspection() {
 
     private fun KtExpression.isReferenceTo(descriptor: ValueParameterDescriptor, context: BindingContext): Boolean {
         return (this as? KtNameReferenceExpression)?.getResolvedCall(context)?.resultingDescriptor == descriptor
+    }
+
+    companion object {
+        val COLLECTIONS_ASSOCIATE = FqName("kotlin.collections.associate")
+        val SEQUENCES_ASSOCIATE = FqName("kotlin.sequences.associate")
+        val COLLECTIONS_ASSOCIATE_TO = FqName("kotlin.collections.associateTo")
+        val SEQUENCES_ASSOCIATE_TO = FqName("kotlin.sequences.associateTo")
     }
 }
 
