@@ -239,7 +239,7 @@ private val transformations = listOf(
     "windowed",
     "withIndex",
     "zipWithNext"
-).associate { it to FqName("kotlin.collections.$it") }
+).associateWith { FqName("kotlin.collections.$it") }
 
 private val terminations = listOf(
     "all",
@@ -305,9 +305,9 @@ private val terminations = listOf(
     "toSet",
     "toSortedSet",
     "unzip"
-).associate {
+).associateWith {
     val pkg = if (it in listOf("contains", "indexOf", "lastIndexOf")) "kotlin.collections.List" else "kotlin.collections"
-    it to FqName("$pkg.$it")
+    FqName("$pkg.$it")
 }
 
 private val lazyTerminations = terminations.filter { (key, _) -> key == "groupingBy" }

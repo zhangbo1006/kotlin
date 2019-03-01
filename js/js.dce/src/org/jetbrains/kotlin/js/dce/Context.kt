@@ -32,7 +32,7 @@ class Context {
     val namesOfLocalVars = mutableSetOf<JsName>()
 
     fun addNodesForLocalVars(names: Collection<JsName>) {
-        nodes += names.filter { it !in nodes }.associate { it to Node(it) }
+        nodes += names.filter { it !in nodes }.associateWith { Node(it) }
     }
 
     fun markSpecialFunctions(root: JsNode) {

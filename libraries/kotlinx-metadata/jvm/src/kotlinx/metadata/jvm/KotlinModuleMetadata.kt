@@ -74,7 +74,7 @@ class KotlinModuleMetadata(@Suppress("CanBeParameter", "MemberVisibilityCanBePri
     fun accept(v: KmModuleVisitor) {
         for ((fqName, parts) in data.packageFqName2Parts) {
             val (fileFacades, multiFileClassParts) = parts.parts.partition { parts.getMultifileFacadeName(it) == null }
-            v.visitPackageParts(fqName, fileFacades, multiFileClassParts.associate { it to parts.getMultifileFacadeName(it)!! })
+            v.visitPackageParts(fqName, fileFacades, multiFileClassParts.associateWith { parts.getMultifileFacadeName(it)!! })
         }
 
         for (annotation in data.moduleData.annotations) {

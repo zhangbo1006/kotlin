@@ -280,7 +280,7 @@ class NewConstraintSystemImpl(
 
     override fun bindingStubsForPostponedVariables(): Map<NewTypeVariable, StubType> {
         checkState(State.BUILDING, State.COMPLETION)
-        return storage.postponedTypeVariables.associate { it to StubType(it.freshTypeConstructor, it.defaultType.isMarkedNullable) }
+        return storage.postponedTypeVariables.associateWith { StubType(it.freshTypeConstructor, it.defaultType.isMarkedNullable) }
     }
 
     override fun currentStorage(): ConstraintStorage {

@@ -168,9 +168,7 @@ internal class CallableReferenceLowering(val context: JvmBackendContext) : FileL
         private val boundCalleeParameters = irFunctionReference.getArgumentsWithIr().map { it.first }
         private val unboundCalleeParameters = calleeParameters - boundCalleeParameters
 
-        private val typeArgumentsMap = callee.typeParameters.associate { typeParam ->
-            typeParam to irFunctionReference.getTypeArgument(typeParam.index)!!
-        }
+        private val typeArgumentsMap = callee.typeParameters.associateWith { typeParam -> irFunctionReference.getTypeArgument(typeParam.index)!! }
 
 
         private lateinit var functionReferenceClass: IrClass
@@ -239,9 +237,7 @@ internal class CallableReferenceLowering(val context: JvmBackendContext) : FileL
 
             functionReferenceThis = functionReferenceClass.thisReceiver!!.symbol
 
-            argumentToFieldMap = boundCalleeParameters.associate {
-                it to buildField(it.name.safeName(), it.type)
-            }
+            argumentToFieldMap = boundCalleeParameters.associateWith { buildField(it.name.safeName(), it.type) }
 
             val constructor = createConstructor()
             functionReferenceClass.declarations.add(constructor)

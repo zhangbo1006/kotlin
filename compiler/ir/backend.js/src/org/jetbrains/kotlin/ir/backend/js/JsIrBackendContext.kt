@@ -168,12 +168,11 @@ class JsIrBackendContext(
         return numbers + listOf(Name.identifier("String"))
     }
 
-    val primitiveCompanionObjects = primitivesWithImplicitCompanionObject()
-        .associate {
-            it to symbolTable.lazyWrapper.referenceClass(
-                getClass(JS_INTERNAL_PACKAGE_FQNAME.child(Name.identifier("${it.identifier}CompanionObject")))
-            )
-        }
+    val primitiveCompanionObjects = primitivesWithImplicitCompanionObject().associateWith {
+        symbolTable.lazyWrapper.referenceClass(
+            getClass(JS_INTERNAL_PACKAGE_FQNAME.child(Name.identifier("${it.identifier}CompanionObject")))
+        )
+    }
 
     val suspendFunctions = (0..22).map { symbolTable.referenceClass(builtIns.getSuspendFunction(it)) }
 

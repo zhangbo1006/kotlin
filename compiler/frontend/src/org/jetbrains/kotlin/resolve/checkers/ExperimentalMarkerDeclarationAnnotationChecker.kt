@@ -66,7 +66,7 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
 
     private fun checkMarkerTargets(entries: List<KtAnnotationEntry>, trace: BindingTrace) {
         val targetEntry =
-            entries.associate { entry -> entry to trace.bindingContext.get(BindingContext.ANNOTATION, entry) }
+            entries.associateWith { entry -> trace.bindingContext.get(BindingContext.ANNOTATION, entry) }
                 .entries
                 .firstOrNull { (_, descriptor) -> descriptor != null && descriptor.fqName == KotlinBuiltIns.FQ_NAMES.target }
                     ?: return

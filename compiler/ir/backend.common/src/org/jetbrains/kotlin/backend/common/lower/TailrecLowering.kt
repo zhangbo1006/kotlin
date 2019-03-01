@@ -59,9 +59,7 @@ private fun lowerTailRecursionCalls(context: BackendContext, irFunction: IrFunct
 
     irFunction.body = builder.irBlockBody {
         // Define variables containing current values of parameters:
-        val parameterToVariable = parameters.associate {
-            it to irTemporaryVar(irGet(it), nameHint = it.symbol.suggestVariableName())
-        }
+        val parameterToVariable = parameters.associateWith { irTemporaryVar(irGet(it), nameHint = it.symbol.suggestVariableName()) }
         // (these variables are to be updated on any tail call).
 
         +irWhile().apply {
@@ -70,9 +68,9 @@ private fun lowerTailRecursionCalls(context: BackendContext, irFunction: IrFunct
 
             body = irBlock(startOffset, endOffset, resultType = context.irBuiltIns.unitType) {
                 // Read variables containing current values of parameters:
-                val parameterToNew = parameters.associate {
+                val parameterToNew = parameters.associateWith {
                     val variable = parameterToVariable[it]!!
-                    it to irTemporary(irGet(variable), nameHint = it.symbol.suggestVariableName())
+                    irTemporary(irGet(variable), nameHint = it.symbol.suggestVariableName())
                 }
 
                 val transformer = BodyTransformer(

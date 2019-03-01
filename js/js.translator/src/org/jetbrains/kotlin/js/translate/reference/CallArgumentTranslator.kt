@@ -171,9 +171,9 @@ class CallArgumentTranslator private constructor(
                 .flatMap { (param, args) -> args.arguments.map { param to it } }
                 .associate { (param, arg) -> arg to param }
 
-        val argumentContexts = resolvedCall.call.valueArguments.associate { it to context.innerBlock() }
+        val argumentContexts = resolvedCall.call.valueArguments.associateWith { context.innerBlock() }
 
-        var result = resolvedCall.call.valueArguments.associate { arg ->
+        var result = resolvedCall.call.valueArguments.associateWith { arg ->
             val argumentContext = argumentContexts[arg]!!
             val parenthisedArgumentExpression = arg.getArgumentExpression()
 
@@ -186,7 +186,7 @@ class CallArgumentTranslator private constructor(
                 argJs = TranslationUtils.coerce(context, argJs, parameterType)
             }
 
-            arg to argJs
+            argJs
         }
 
         val resolvedOrder = resolvedCall.valueArgumentsByIndex.orEmpty()

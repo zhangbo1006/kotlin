@@ -267,9 +267,9 @@ fun JsBlock.replaceSpecialReferencesInSimpleFunction(continuationParam: JsParame
 }
 
 fun List<CoroutineBlock>.collectVariablesSurvivingBetweenBlocks(localVariables: Set<JsName>, parameters: Set<JsName>): Set<JsName> {
-    val varDefinedIn = localVariables.associate { it to mutableSetOf<Int>() }
-    val varDeclaredIn = localVariables.associate { it to mutableSetOf<Int>() }
-    val varUsedIn = localVariables.associate { it to mutableSetOf<Int>() }
+    val varDefinedIn = localVariables.associateWith { mutableSetOf<Int>() }
+    val varDeclaredIn = localVariables.associateWith { mutableSetOf<Int>() }
+    val varUsedIn = localVariables.associateWith { mutableSetOf<Int>() }
 
     for ((blockIndex, block) in withIndex()) {
         for (statement in block.statements) {
@@ -357,7 +357,7 @@ fun JsBlock.replaceLocalVariables(context: CoroutineTransformationContext, local
                 val wrapperFunction = JsFunction(x.scope.parent, JsBlock(), "")
                 val wrapperInvocation = JsInvocation(wrapperFunction)
                 wrapperFunction.body.statements += JsReturn(x)
-                val nameMap = freeVars.associate { it to JsScope.declareTemporaryName(it.ident) }
+                val nameMap = freeVars.associateWith { JsScope.declareTemporaryName(it.ident) }
                 for (freeVar in freeVars) {
                     wrapperFunction.parameters += JsParameter(nameMap[freeVar]!!)
                     wrapperInvocation.arguments += JsNameRef(context.getFieldName(freeVar), JsThisRef())

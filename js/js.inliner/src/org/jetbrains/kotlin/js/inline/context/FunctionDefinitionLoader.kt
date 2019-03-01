@@ -95,7 +95,7 @@ class FunctionDefinitionLoader(
         }
     }
 
-    private val fragmentInfo = inliner.translationResult.newFragments.associateTo(mutableMapOf()) { it to it.loadInfo() }
+    private val fragmentInfo = inliner.translationResult.newFragments.associateWithTo(mutableMapOf()) { it.loadInfo() }
 
     private fun lookUpStaticFunction(functionName: JsName?, fragment: JsProgramFragment): FunctionWithWrapper? =
         fragmentInfo[fragment]?.run { functions[functionName] }

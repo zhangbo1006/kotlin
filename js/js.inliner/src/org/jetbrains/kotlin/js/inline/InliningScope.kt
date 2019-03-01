@@ -159,7 +159,7 @@ class ImportIntoFragmentInliningScope private constructor(
             fragment.mainFunction?.let { block.statements.add(it) }
         }
 
-    private val existingModules = fragment.importedModules.associateTo(mutableMapOf()) { it.key to it }
+    private val existingModules = fragment.importedModules.associateByTo(mutableMapOf()) { it.key }
 
     private val existingBindings = fragment.nameBindings.associateTo(mutableMapOf()) { it.key to it.name }
 

@@ -200,7 +200,7 @@ class ReplaceSingleLineLetIntention : SelfTargetingOffsetIndependentIntention<Kt
         val context = analyze(BodyResolveMode.PARTIAL)
         val parameterDescriptor = context[BindingContext.FUNCTION, this]?.valueParameters?.singleOrNull() ?: return emptyList()
         val variableDescriptorByName = if (parameterDescriptor is ValueParameterDescriptorImpl.WithDestructuringDeclaration)
-            parameterDescriptor.destructuringVariables.associate { it.name to it }
+            parameterDescriptor.destructuringVariables.associateBy { it.name }
         else
             mapOf(parameterDescriptor.name to parameterDescriptor)
 

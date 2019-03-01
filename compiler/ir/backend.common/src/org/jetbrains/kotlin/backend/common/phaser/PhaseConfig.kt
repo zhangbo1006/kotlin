@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.config.CompilerConfigurationKey
 
 class PhaseConfig(private val compoundPhase: CompilerPhase<*, *, *>, config: CompilerConfiguration) {
 
-    val phases = compoundPhase.getNamedSubphases().map { (_, phase) -> phase }.associate { it.name to it }
+    val phases = compoundPhase.getNamedSubphases().map { (_, phase) -> phase }.associateBy { it.name }
     private val enabledMut = computeEnabled(config).toMutableSet()
 
     val enabled: Set<AnyNamedPhase> get() = enabledMut

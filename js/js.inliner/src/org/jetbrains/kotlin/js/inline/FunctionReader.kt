@@ -325,7 +325,7 @@ class FunctionReader(
     }
 
     private fun markDefaultParams(function: JsFunction) {
-        val paramsByNames = function.parameters.associate { it.name to it }
+        val paramsByNames = function.parameters.associateBy { it.name }
         for (ifStatement in function.body.statements) {
             if (ifStatement !is JsIf || ifStatement.elseStatement != null) break
             val thenStatement = ifStatement.thenStatement as? JsExpressionStatement ?: break

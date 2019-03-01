@@ -487,9 +487,7 @@ internal class SuspendFunctionsLowering(val context: JsIrBackendContext): FileLo
 
             override fun buildIr(): IrConstructor {
                 // Save all arguments to fields.
-                argumentToPropertiesMap = functionParameters.associate {
-                    it to addField(it.name, it.type, false)
-                }
+                argumentToPropertiesMap = functionParameters.associateWith { addField(it.name, it.type, false) }
 
                 val completion = coroutineImplConstructorSymbol.owner.valueParameters[0]
 

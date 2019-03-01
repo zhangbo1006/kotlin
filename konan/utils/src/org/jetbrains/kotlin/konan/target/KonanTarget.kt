@@ -65,7 +65,7 @@ object PredefinedKonanTargets {
         KonanTarget.WASM32
     )
 
-    private val ALL_BY_NAME = ALL.associate { it.name to it }
+    private val ALL_BY_NAME = ALL.associateBy { it.name }
 
     fun getByName(name: String) = ALL_BY_NAME[name]
 }
@@ -153,7 +153,7 @@ open class HostManager(subtargetProvider: SubTargetProvider = NoSubTargets()) {
         PredefinedKonanTargets.ALL + configurableSubtargets
     }
 
-    val targets = targetValues.associate { it.visibleName to it }
+    val targets = targetValues.associateBy { it.visibleName }
 
     fun toKonanTargets(names: Iterable<String>): List<KonanTarget> {
         return names.map {

@@ -149,9 +149,7 @@ class IrBuiltIns(
     val greaterFunByOperandType = primitiveTypesWithComparisons.defineComparisonOperatorForEachType("greater")
 
     val ieee754equalsFunByOperandType =
-        primitiveFloatingPointTypes.associate {
-            it to defineOperator("ieee754equals", bool, listOf(it.makeNullable(), it.makeNullable()))
-        }
+        primitiveFloatingPointTypes.associateWith { defineOperator("ieee754equals", bool, listOf(it.makeNullable(), it.makeNullable())) }
 
     val eqeqeqFun = defineOperator("EQEQEQ", bool, listOf(anyN, anyN))
     val eqeqFun = defineOperator("EQEQ", bool, listOf(anyN, anyN))

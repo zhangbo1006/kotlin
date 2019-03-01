@@ -328,19 +328,17 @@ fun implementInterfaces(declarations: List<GenerateClass>) : List<GenerateClass>
 }
 
 private fun getUnimplementedMembers(declarations: List<GenerateClass>): Map<String, UnimplementedMembers> {
-    val declarationMap = declarations.associate { it.name to it }
+    val declarationMap = declarations.associateBy { it.name }
     val unimplementedMemberCache = mutableMapOf<String, UnimplementedMembers>()
 
     fun getForClass(className: String): UnimplementedMembers = unimplementedMemberCache.getOrPut(className) {
         val declaration = declarationMap[className] ?: return@getOrPut UnimplementedMembers(emptyList(), emptyList())
         val unimplementedInSuperClasses = declaration.superTypes.map { getForClass(it) }
         val attributeMap = unimplementedInSuperClasses
-                .flatMap { it.attributes }
-                .associate { it.name to it }
+            .flatMap { it.attributes }.associateBy { it.name }
                 .toMutableMap()
         val functionMap = unimplementedInSuperClasses
-                .flatMap { it.functions }
-                .associate { "${it.name}(${it.signature})" to it }
+            .flatMap { it.functions }.associateBy { "${it.name}(${it.signature})" }
                 .toMutableMap()
 
         val (implementedAttributes, unimplementedAttributes) = declaration.memberAttributes
