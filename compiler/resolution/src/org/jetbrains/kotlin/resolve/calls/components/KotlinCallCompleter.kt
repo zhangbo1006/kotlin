@@ -13,10 +13,8 @@ import org.jetbrains.kotlin.resolve.calls.inference.model.ExpectedTypeConstraint
 import org.jetbrains.kotlin.resolve.calls.model.*
 import org.jetbrains.kotlin.resolve.calls.tower.forceResolution
 import org.jetbrains.kotlin.resolve.constants.IntegerValueTypeConstructor
-import org.jetbrains.kotlin.types.ErrorUtils
-import org.jetbrains.kotlin.types.IntersectionTypeConstructor
-import org.jetbrains.kotlin.types.TypeUtils
-import org.jetbrains.kotlin.types.UnwrappedType
+import org.jetbrains.kotlin.types.*
+import org.jetbrains.kotlin.types.model.KotlinTypeMarker
 import org.jetbrains.kotlin.types.typeUtil.isPrimitiveNumberType
 
 class KotlinCallCompleter(
@@ -191,7 +189,8 @@ class KotlinCallCompleter(
         }
     }
 
-    private fun UnwrappedType.isIntegerValueType(): Boolean {
+    private fun KotlinTypeMarker.isIntegerValueType(): Boolean {
+        require(this is UnwrappedType)
         if (constructor is IntegerValueTypeConstructor) return true
         if (constructor is IntersectionTypeConstructor)
             return constructor.supertypes.all { it.isPrimitiveNumberType() }
