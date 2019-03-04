@@ -16,6 +16,7 @@ import org.gradle.api.internal.component.SoftwareComponentInternal
 import org.gradle.api.internal.component.UsageContext
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationToRunnableFiles
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetComponent
+import org.jetbrains.kotlin.gradle.utils.checkOtherProjectAppliesKotlinPluginFromSameClasses
 
 internal fun Project.rewritePomMppDependenciesToActualTargetModules(
     pomXml: XmlProvider,
@@ -115,6 +116,11 @@ private fun associateDependenciesWithActualModuleDependencies(
             when (dependency) {
                 is ProjectDependency -> {
                     val dependencyProject = dependency.dependencyProject
+
+                    if (!checkOtherProjectAppliesKotlinPluginFromSameClasses(project, dependencyProject)) {
+                        return@associate dependency to dependency
+                    }
+
                     val dependencyProjectKotlinExtension = dependencyProject.multiplatformExtension
                         ?: return@associate dependency to dependency
 

@@ -19,6 +19,8 @@ package org.jetbrains.kotlin.gradle
 import org.gradle.api.logging.LogLevel
 import org.jetbrains.kotlin.gradle.tasks.USING_JVM_INCREMENTAL_COMPILATION_MESSAGE
 import org.jetbrains.kotlin.gradle.util.*
+import org.jetbrains.kotlin.gradle.utils.MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING
+import org.jetbrains.kotlin.gradle.utils.MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING
 import org.junit.Test
 import java.io.File
 import java.util.zip.ZipFile
@@ -821,6 +823,46 @@ class KotlinGradleIT : BaseGradleIT() {
         build("jvm-app:build") {
             assertSuccessful()
             assertTasksExecuted(":jvm-app:compileKotlin")
+        }
+    }
+
+    @Test
+    fun testDetectingDifferentClassLoaders() = with(Project("kt-27059-pom-rewriting", GradleVersionRequired.AtLeast("4.10.2"))) {
+        setupWorkingDir()
+
+        gradleSettingsScript().modify { it.replace("include.*".toRegex(), "include 'mpp-lib', 'jvm-app'") }
+
+        val originalRootBuildScript = gradleBuildScript().readText()
+        gradleBuildScript().modify(::transformBuildScriptWithPluginsDsl)
+
+        build("publish", "-PmppProjectDependency=true") {
+            assertSuccessful()
+            assertNotContains(MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING)
+            assertNotContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING)
+        }
+
+        // Specify the plugin versions in the subprojects with different plugin sets – this will make Gradle use separate class loaders
+        gradleBuildScript().modify {
+            originalRootBuildScript.checkedReplace("id \"org.jetbrains.kotlin.multiplatform\"", "//")
+        }
+        gradleBuildScript("mpp-lib").modify {
+            it.checkedReplace(
+                "id \"org.jetbrains.kotlin.multiplatform\"",
+                "id \"org.jetbrains.kotlin.multiplatform\" version \"<pluginMarkerVersion>\""
+            ).let(::transformBuildScriptWithPluginsDsl)
+        }
+        gradleBuildScript("jvm-app").modify {
+            it.checkedReplace(
+                "id \"org.jetbrains.kotlin.jvm\"",
+                "id \"org.jetbrains.kotlin.jvm\" version \"<pluginMarkerVersion>\""
+            ).let(::transformBuildScriptWithPluginsDsl)
+        }
+
+        build("publish", "-PmppProjectDependency=true") {
+            assertSuccessful()
+            assertContains(MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING)
+            assertContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING + " ':mpp-lib'")
+            assertContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING + " ':jvm-app'")
         }
     }
 }

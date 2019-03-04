@@ -26,6 +26,7 @@ import org.gradle.api.tasks.SourceSet
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.logging.kotlinWarn
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
+import org.jetbrains.kotlin.gradle.utils.checkOtherProjectAppliesKotlinPluginFromSameClasses
 
 abstract class KotlinPlatformPluginBase(protected val platformName: String) : Plugin<Project> {
     companion object {
@@ -107,6 +108,8 @@ open class KotlinPlatformImplementationPluginBase(platformName: String) : Kotlin
                             "dependency to non-common project $commonProject"
                 )
             }
+
+            checkOtherProjectAppliesKotlinPluginFromSameClasses(platformProject, commonProject)
 
             // Since the two projects may add source sets in arbitrary order, and both may do that after the plugin is applied,
             // we need to handle all source sets of the two projects and connect them once we get a match:
