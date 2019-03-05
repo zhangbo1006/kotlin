@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.js.test
 
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.ir.backend.js.CompilationMode
 import org.jetbrains.kotlin.ir.backend.js.CompiledModule
 import org.jetbrains.kotlin.ir.backend.js.compile
@@ -21,8 +22,8 @@ private val defaultRuntimeKlibPath = "js/js.translator/testData/out/klibs/runtim
 
 private val JS_IR_RUNTIME_MODULE_NAME = "JS_IR_RUNTIME"
 
-private val fullRuntimeKlib = CompiledModule(JS_IR_RUNTIME_MODULE_NAME, null, null, fullRuntimeKlibPath, emptyList(), true)
-private val defaultRuntimeKlib = CompiledModule(JS_IR_RUNTIME_MODULE_NAME, null, null, defaultRuntimeKlibPath, emptyList(), true)
+private val fullRuntimeKlib = CompiledModule(JS_IR_RUNTIME_MODULE_NAME, true, fullRuntimeKlibPath, emptyList())
+private val defaultRuntimeKlib = CompiledModule(JS_IR_RUNTIME_MODULE_NAME, true, defaultRuntimeKlibPath, emptyList())
 
 abstract class BasicIrBoxTest(
     pathToTestDir: String,
@@ -84,11 +85,13 @@ abstract class BasicIrBoxTest(
 //            )
 //        )
 
-        val runtimeKlib = runtimes[runtime]
+        val runtimeKlib = runtimes[runtime]!!
 
         val dependencyNames = config.configuration[JSConfigurationKeys.LIBRARIES]!!.map { File(it).name }
-        val dependencies = listOfNotNull(runtimeKlib) + dependencyNames.mapNotNull {
-            compilationCache[it]
+
+        // TODO: Add proper depencencies
+        val dependencies = listOf(runtimeKlib) + dependencyNames.map {
+            compilationCache[it] ?: error("Can't find compiled module for dependency $it")
         }
 
 //        config.configuration.put(CommonConfigurationKeys.PHASES_TO_DUMP_STATE, setOf("UnitMaterializationLowering"))
@@ -101,20 +104,22 @@ abstract class BasicIrBoxTest(
         }
 
         val result = compile(
-            config.project,
-            filesToCompile,
-            config.configuration,
-            listOf(FqName((testPackage?.let { "$it." } ?: "") + testFunction)),
-            if (isMainModule) CompilationMode.JS_AGAINST_KLIB else CompilationMode.KLIB,
-            dependencies,
-            actualOutputFile
+            project = config.project,
+            files = filesToCompile,
+            configuration = config.configuration,
+            export = listOf(FqName((testPackage?.let { "$it." } ?: "") + testFunction)),
+            compileMode = if (isMainModule) CompilationMode.JS_AGAINST_KLIB else CompilationMode.KLIB,
+            dependencies = dependencies,
+            klibPath = actualOutputFile
         )
 
-        compilationCache[outputFile.name.replace(".js", ".meta.js")] = result
+        val moduleName = config.configuration.get(CommonConfigurationKeys.MODULE_NAME) as String
+        val module = CompiledModule(moduleName, false, actualOutputFile, dependencies)
 
-        val generatedCode = result.generatedCode
-        if (generatedCode != null) {
-            val wrappedCode = wrapWithModuleEmulationMarkers(generatedCode, moduleId = config.moduleId, moduleKind = config.moduleKind)
+        compilationCache[outputFile.name.replace(".js", ".meta.js")] = module
+
+        if (result != null) {
+            val wrappedCode = wrapWithModuleEmulationMarkers(result, moduleId = config.moduleId, moduleKind = config.moduleKind)
             outputFile.write(wrappedCode)
         }
     }

@@ -68,7 +68,7 @@ fun main() {
             outputPath
         )
 
-        result.generatedCode?.let { File(outputPath, "result.js").writeText(it) }
+        result?.let { File(outputPath, "result.js").writeText(it) }
     }
 
     buildKlib(JsIrTestRuntime.FULL.sources, fullRuntimeKlibPath)
