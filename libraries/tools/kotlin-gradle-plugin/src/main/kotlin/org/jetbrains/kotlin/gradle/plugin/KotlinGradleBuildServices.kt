@@ -153,10 +153,16 @@ internal class KotlinGradleBuildServices private constructor(
                 gradle.taskGraph.whenReady {
                     val loadedInProjects = (ext.get(loadedInProjectsPropertyName) as String).split(";")
                     if (loadedInProjects.size > 1) {
-                        project.logger.warn(MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING)
-                        loadedInProjects.forEach { projectPath ->
-                            project.logger.warn(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING + " '$projectPath'")
+                        if (PropertiesProvider(project).ignorePluginLoadedInMultipleProjects != true) {
+                            project.logger.warn(MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING)
+                            project.logger.warn(
+                                MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECTS_WARNING + loadedInProjects.joinToString(limit = 4) { "'$it'" }
+                            )
                         }
+                        project.logger.info(
+                            "$MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECTS_INFO: " +
+                                    loadedInProjects.joinToString { "'$it'" }
+                        )
                     }
                 }
             } else {
@@ -178,5 +184,7 @@ const val MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING: String =
 
             "See: https://docs.gradle.org/current/userguide/plugins.html#sec:subprojects_plugins_dsl"
 
-const val MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING: String =
-    " - the Kotlin plugin was loaded in project"
+const val MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECTS_WARNING: String =
+    "The Kotlin plugin was loaded in the following projects: "
+
+const val MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECTS_INFO: String = "The full list of projects that loaded the Kotlin plugin is: "

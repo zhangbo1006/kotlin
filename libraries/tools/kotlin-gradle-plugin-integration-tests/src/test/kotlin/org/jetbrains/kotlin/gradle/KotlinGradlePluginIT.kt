@@ -18,7 +18,7 @@ package org.jetbrains.kotlin.gradle
 
 import org.gradle.api.logging.LogLevel
 import org.jetbrains.kotlin.gradle.plugin.MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING
-import org.jetbrains.kotlin.gradle.plugin.MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING
+import org.jetbrains.kotlin.gradle.plugin.MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECTS_WARNING
 import org.jetbrains.kotlin.gradle.tasks.USING_JVM_INCREMENTAL_COMPILATION_MESSAGE
 import org.jetbrains.kotlin.gradle.util.*
 import org.junit.Test
@@ -836,7 +836,7 @@ class KotlinGradleIT : BaseGradleIT() {
         build("publish", "-PmppProjectDependency=true") {
             assertSuccessful()
             assertNotContains(MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING)
-            assertNotContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING)
+            assertNotContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECTS_WARNING)
         }
 
         // Specify the plugin versions in the subprojects with different plugin sets – this will make Gradle use separate class loaders
@@ -877,13 +877,18 @@ class KotlinGradleIT : BaseGradleIT() {
         build("publish", "-PmppProjectDependency=true") {
             assertSuccessful()
             assertContains(MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING)
-            assertContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING + " ':mpp-lib'")
-            assertContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING + " ':js-app'")
-            assertContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING + " ':jvm-app'")
 
-            // Check that the included build's root project is not reported as loading a duplicate plugin:
-            assertTasksExecuted(":allopenPluginsDsl:compileKotlin")
-            assertNotContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECT_WARNING + " ':'")
+            val specificProjectsReported = Regex("$MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECTS_WARNING((?:'.*'(?:, )?)+)")
+                .find(output)!!.groupValues[1].split(", ").map { it.removeSurrounding("'") }.toSet()
+
+            assertEquals(setOf(":mpp-lib", ":jvm-app", ":js-app"), specificProjectsReported)
+        }
+
+        // Test the flag that turns off the warnings
+        build("publish", "-PmppProjectDependency=true", "-Pkotlin.pluginLoadedInMultipleProjects.ignore=true") {
+            assertSuccessful()
+            assertNotContains(MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING)
+            assertNotContains(MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECTS_WARNING)
         }
     }
 }
