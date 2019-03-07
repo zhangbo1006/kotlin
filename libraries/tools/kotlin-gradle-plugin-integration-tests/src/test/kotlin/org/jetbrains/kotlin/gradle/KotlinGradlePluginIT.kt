@@ -876,7 +876,7 @@ class KotlinGradleIT : BaseGradleIT() {
 
         build("publish", "-PmppProjectDependency=true") {
             assertSuccessful()
-            assertContains(MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING)
+            assertContains(MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING.replace("<kotlinVersion>", defaultBuildOptions().kotlinVersion))
 
             val specificProjectsReported = Regex("$MULTIPLE_KOTLIN_PLUGINS_SPECIFIC_PROJECTS_WARNING((?:'.*'(?:, )?)+)")
                 .find(output)!!.groupValues[1].split(", ").map { it.removeSurrounding("'") }.toSet()

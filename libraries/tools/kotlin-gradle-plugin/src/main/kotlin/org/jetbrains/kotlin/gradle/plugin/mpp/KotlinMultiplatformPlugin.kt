@@ -10,15 +10,18 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.AttributeContainer
+import org.gradle.api.attributes.Usage
 import org.gradle.api.internal.FeaturePreviews
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.plugins.DslObject
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.publish.PublicationContainer
 import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.internal.publication.MavenPublicationInternal
 import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
+import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.jvm.tasks.Jar
@@ -30,6 +33,7 @@ import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.sources.DefaultLanguageSettingsBuilder
 import org.jetbrains.kotlin.gradle.utils.SingleWarningPerBuild
 import org.jetbrains.kotlin.gradle.utils.checkGradleCompatibility
+import org.jetbrains.kotlin.gradle.utils.isGradleVersionAtLeast
 import org.jetbrains.kotlin.gradle.utils.lowerCamelCaseName
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.presetName
@@ -192,28 +196,54 @@ class KotlinMultiplatformPlugin(
 
     private fun AbstractKotlinTarget.createMavenPublications(publications: PublicationContainer) {
         components
-            .filter { it.publishable }
-            .forEach { variant ->
-                val variantPublication = publications.create(variant.name, MavenPublication::class.java).apply {
+            .map { component -> component to kotlinComponents.single { it.name == component.name } }
+            .filter { (_, kotlinComponent) -> kotlinComponent.publishable }
+            .forEach { (component, kotlinComponent) ->
+                val variantPublication = publications.create(kotlinComponent.name, MavenPublication::class.java).apply {
                     // do this in whenEvaluated since older Gradle versions seem to check the files in the variant eagerly:
                     project.whenEvaluated {
-                        from(variant)
-                        variant.sourcesArtifacts.forEach { sourceArtifact ->
+                        from(component)
+                        kotlinComponent.sourcesArtifacts.forEach { sourceArtifact ->
                             artifact(sourceArtifact)
                         }
                     }
+
+                    if (isGradleVersionAtLeast(5, 3)) {
+                        mapJavaApiJarsAttributeToMavenCompileScope(project, pom)
+                    }
+
                     (this as MavenPublicationInternal).publishWithOriginalFileName()
-                    artifactId = variant.defaultArtifactId
+                    artifactId = kotlinComponent.defaultArtifactId
 
                     pom.withXml { xml ->
                         if (PropertiesProvider(project).keepMppDependenciesIntactInPoms != true)
-                            project.rewritePomMppDependenciesToActualTargetModules(xml, variant)
+                            project.rewritePomMppDependenciesToActualTargetModules(xml, kotlinComponent)
                     }
                 }
 
-                (variant as? KotlinTargetComponentWithPublication)?.publicationDelegate = variantPublication
+                (kotlinComponent as? KotlinTargetComponentWithPublication)?.publicationDelegate = variantPublication
                 publicationConfigureActions.all { it.execute(variantPublication) }
             }
+    }
+
+    // TODO this is a workaround for Gradle 5.3: when no Java plugin is applied, the JAVA_API usage is no longer sufficient or Gradle to
+    // map a configuration to the 'compile' Maven scope. Once we start using adhoc software components for publishing, we will be able to
+    // properly map each configuration to the appropriate Maven scope.
+    private fun mapJavaApiJarsAttributeToMavenCompileScope(project: Project, pom: MavenPom) {
+        project.whenEvaluated {
+            tasks.withType(GenerateMavenPom::class.java).matching { it.pom == pom }.all { task ->
+                val withCompileScopeAttributes = GenerateMavenPom::class.java.methods.find {
+                    it.name == "withCompileScopeAttributes" && it.parameterCount == 1
+                } ?: return@all
+
+                val attributesForCompileScope = configurations.maybeCreate("mavenCompileScopeAttributes").run {
+                    attributes.attribute(Usage.USAGE_ATTRIBUTE, usageByName("java-api-jars"))
+                    this.incoming.artifactView { }.attributes
+                }
+
+                withCompileScopeAttributes.invoke(task, attributesForCompileScope)
+            }
+        }
     }
 
     private fun configureSourceSets(project: Project) = with(project.kotlinExtension as KotlinMultiplatformExtension) {

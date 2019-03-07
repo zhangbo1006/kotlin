@@ -172,11 +172,14 @@ internal class KotlinGradleBuildServices private constructor(
     }
 }
 
+private const val MULTIPLE_KOTLIN_PLUGINS_VERSION_PLACEHOLDER = "<kotlinVersion>"
+
 const val MULTIPLE_KOTLIN_PLUGINS_LOADED_WARNING: String =
-    "\nThe Kotlin Gradle plugin was loaded multiple times in different subprojects, which is not supported and may break the build. \n" +
+    "\nThe Kotlin Gradle plugin version ${MULTIPLE_KOTLIN_PLUGINS_VERSION_PLACEHOLDER} was loaded multiple times in different " +
+            "subprojects, which is not supported and may break the build. \n" +
 
             "This might happen in subprojects that apply the Kotlin plugins with the Gradle 'plugins { ... }' DSL if they specify " +
-            "explicit versions, even if the versions are equal.\n" +
+            "explicit version." +
 
             "Please add the Kotlin plugin to the common parent project or the root project, then remove the versions in the subprojects.\n" +
 

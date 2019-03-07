@@ -38,7 +38,10 @@ internal abstract class KotlinSourceSetFactory<T : KotlinSourceSet> internal con
 
     private fun defineSourceSetConfigurations(project: Project, sourceSet: KotlinSourceSet) = with(project.configurations) {
         sourceSet.relatedConfigurationNames.forEach { configurationName ->
-            maybeCreate(configurationName)
+            maybeCreate(configurationName).apply {
+                isCanBeResolved = false
+                isCanBeConsumed = false
+            }
         }
     }
 
