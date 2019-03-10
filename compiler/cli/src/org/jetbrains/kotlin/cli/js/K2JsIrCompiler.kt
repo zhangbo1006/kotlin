@@ -8,8 +8,6 @@ package org.jetbrains.kotlin.cli.js
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.text.StringUtil
-import com.intellij.openapi.vfs.VfsUtilCore
-import com.intellij.util.ExceptionUtil
 import com.intellij.util.SmartList
 import org.jetbrains.kotlin.cli.common.*
 import org.jetbrains.kotlin.cli.common.ExitCode.COMPILATION_ERROR
@@ -30,18 +28,16 @@ import org.jetbrains.kotlin.incremental.components.ExpectActualTracker
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.js.IncrementalDataProvider
 import org.jetbrains.kotlin.incremental.js.IncrementalResultsConsumer
+import org.jetbrains.kotlin.ir.backend.js.CompilationMode
+import org.jetbrains.kotlin.ir.backend.js.compile
 import org.jetbrains.kotlin.js.analyze.TopDownAnalyzerFacadeForJS
 import org.jetbrains.kotlin.js.analyzer.JsAnalysisResult
-//import org.jetbrains.kotlin.js.config.EcmaVersion
-//import org.jetbrains.kotlin.js.config.JSConfigurationKeys
-//import org.jetbrains.kotlin.js.config.JsConfig
-//import org.jetbrains.kotlin.js.config.SourceMapSourceEmbedding
-//import org.jetbrains.kotlin.js.facade.K2JSTranslator
-//import org.jetbrains.kotlin.js.facade.MainCallParameters
-//import org.jetbrains.kotlin.js.facade.TranslationResult
-//import org.jetbrains.kotlin.js.facade.TranslationUnit
-//import org.jetbrains.kotlin.js.facade.exceptions.TranslationException
-//import org.jetbrains.kotlin.js.sourceMap.SourceFilePathResolver
+import org.jetbrains.kotlin.js.config.EcmaVersion
+import org.jetbrains.kotlin.js.config.JSConfigurationKeys
+import org.jetbrains.kotlin.js.config.JsConfig
+import org.jetbrains.kotlin.js.config.SourceMapSourceEmbedding
+import org.jetbrains.kotlin.js.facade.MainCallParameters
+import org.jetbrains.kotlin.js.facade.TranslationResult
 import org.jetbrains.kotlin.metadata.deserialization.BinaryVersion
 import org.jetbrains.kotlin.progress.ProgressIndicatorAndCompilationCanceledStatus
 import org.jetbrains.kotlin.psi.KtFile
@@ -50,15 +46,6 @@ import org.jetbrains.kotlin.utils.*
 import java.io.File
 import java.io.IOException
 import java.util.*
-//import org.jetbrains.kotlin.ir.backend.js.*
-import org.jetbrains.kotlin.js.config.EcmaVersion
-import org.jetbrains.kotlin.js.config.JSConfigurationKeys
-import org.jetbrains.kotlin.js.config.JsConfig
-import org.jetbrains.kotlin.js.config.SourceMapSourceEmbedding
-import org.jetbrains.kotlin.js.facade.MainCallParameters
-import org.jetbrains.kotlin.js.facade.TranslationResult
-import org.jetbrains.kotlin.js.facade.TranslationUnit
-import org.jetbrains.kotlin.js.sourceMap.SourceFilePathResolver
 
 class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
 
@@ -195,8 +182,32 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
 
         //val x = ::compile
 
+//        fun compile(
+//            project: Project,
+//            files: List<KtFile>,
+//            configuration: CompilerConfiguration,
+//            export: List<FqName> = emptyList(),
+//            compileMode: CompilationMode,
+//            dependencies: List<CompiledModule> = emptyList(),
+//            klibPath: String
+//        ): CompiledModule {
+//
+//        }
+
+        val compiledModule = compile(
+            project,
+            sourcesFiles,
+            configuration,
+            compileMode = CompilationMode.KLIB_WITH_JS,
+            dependencies = emptyList(),
+            klibPath = "/Users/jetbrains/klibdbg"
+        )
+
+        println("Compiled module: $compiledModule")
+
         val translationResult: TranslationResult = try {
             TODO("Implement")
+
             // translate(reporter, sourcesFiles, jsAnalysisResult, mainCallParameters, config)
         } catch (e: Exception) {
             throw rethrow(e)
@@ -316,7 +327,7 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
     }
 
     override fun executableScriptFileName(): String {
-        return "kotlinc-js"
+        return "kotlinc-js-ir"
     }
 
     override fun createMetadataVersion(versionArray: IntArray): BinaryVersion {

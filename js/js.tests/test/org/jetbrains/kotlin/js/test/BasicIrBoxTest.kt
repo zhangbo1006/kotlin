@@ -21,8 +21,8 @@ private val defaultRuntimeKlibPath = "js/js.translator/testData/out/klibs/runtim
 
 private val JS_IR_RUNTIME_MODULE_NAME = "JS_IR_RUNTIME"
 
-private val fullRuntimeKlib = CompiledModule(JS_IR_RUNTIME_MODULE_NAME, null, null, fullRuntimeKlibPath, emptyList(), true)
-private val defaultRuntimeKlib = CompiledModule(JS_IR_RUNTIME_MODULE_NAME, null, null, defaultRuntimeKlibPath, emptyList(), true)
+private val fullRuntimeKlib = CompiledModule(JS_IR_RUNTIME_MODULE_NAME, true, fullRuntimeKlibPath, emptyList())
+private val defaultRuntimeKlib = CompiledModule(JS_IR_RUNTIME_MODULE_NAME, true, defaultRuntimeKlibPath, emptyList())
 
 abstract class BasicIrBoxTest(
     pathToTestDir: String,
