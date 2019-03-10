@@ -87,9 +87,7 @@ private fun deserializeModuleFromKlib(
     builtinsModule: ModuleDescriptorImpl?
 ): JsKlib {
     val klibDirFile = File(locationDir)
-    val md = dependenciesDescriptors[]
-
-    loadKlibMetadata(
+    val md: ModuleDescriptorImpl = loadKlibMetadata(
         moduleName,
         locationDir,
         builtinsModule == null,
@@ -98,7 +96,7 @@ private fun deserializeModuleFromKlib(
         metadataVersion,
         languageVersionSettings,
         builtinsModule,
-        dependencies,
+        dependencies.map { dependenciesDescriptors[it] }
     )
 
     val st = SymbolTable()
@@ -128,8 +126,9 @@ fun compile(
     export: List<FqName> = emptyList(),
     compileMode: CompilationMode,
     dependencies: List<CompiledModule> = emptyList(),
-    klibPath: String
-): CompiledModule {
+    klibPath: String,
+    isBuiltIn: Boolean = false
+): String? {
     val metadataVersion = configuration.get(CommonConfigurationKeys.METADATA_VERSION)  as? JsKlibMetadataVersion
         ?: JsKlibMetadataVersion.INSTANCE
     val lookupTracker = LookupTracker.DO_NOTHING
@@ -140,8 +139,7 @@ fun compile(
 
     val moduleName = configuration.get(CommonConfigurationKeys.MODULE_NAME) as String
 
-    val thisModule = CompiledModule(moduleName, )
-
+    val thisModule = CompiledModule(moduleName, isBuiltIn, klibPath, dependencies)
     val depsDescriptors = DependencyDescriptors(lookupTracker, metadataVersion, languageSettings, storageManager)
 
     val builtInsDep = dependencies.firstOrNull()
@@ -203,7 +201,7 @@ fun compile(
                 metadataVersion,
                 languageSettings,
                 dependencies,
-                dependenciesDescriptors,
+                depsDescriptors,
                 builtInModule
             ).let {
                 deserializer = it.deserializer
@@ -214,7 +212,7 @@ fun compile(
                 }
             }
         } else {
-            return CompiledModule(moduleName, builtInModule == null, klibPath, dependencies)
+            return null // CompiledModule(moduleName, builtInModule == null, klibPath, dependencies)
         }
     } else JsIrBackendContext(moduleDescriptor, irBuiltIns, symbolTable, moduleFragment, configuration, compileMode)
 
@@ -246,7 +244,7 @@ fun compile(
         moduleFragment.accept(IrModuleToJsTransformer(context), null)
     } else null
 
-    return CompiledModule(moduleName, builtInModule == null, klibPath, dependencies)
+    return jsProgram?.toString()
 
 }
 
@@ -259,7 +257,7 @@ private fun loadKlibMetadata(
     metadataVersion: JsKlibMetadataVersion,
     languageVersionSettings: LanguageVersionSettings,
     builtinsModule: ModuleDescriptorImpl?,
-    dependencies: List<ModuleDescriptorImpl>,
+    dependencies: List<ModuleDescriptorImpl>
 ): ModuleDescriptorImpl {
     assert(isBuiltIn == (builtinsModule === null))
 
@@ -308,7 +306,7 @@ class DependencyDescriptors(
             metadataVersion,
             languageVersionSettings,
             runtimeModule,
-            current.dependencies
+            current.dependencies.map { get(it) }
         ).also {
             if (current.isBuiltIn) runtimeModule = it
         }

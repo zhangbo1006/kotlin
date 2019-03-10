@@ -84,10 +84,12 @@ abstract class BasicIrBoxTest(
 //            )
 //        )
 
-        val runtimeKlib = runtimes[runtime]
+        val runtimeKlib = runtimes[runtime]!!
 
         val dependencyNames = config.configuration[JSConfigurationKeys.LIBRARIES]!!.map { File(it).name }
-        val dependencies = listOfNotNull(runtimeKlib) + dependencyNames.mapNotNull {
+
+        // TODO: Add proper depencencies
+        val dependencies = listOf(runtimeKlib) + dependencyNames.mapNotNull {
             compilationCache[it]
         }
 
@@ -110,11 +112,8 @@ abstract class BasicIrBoxTest(
             actualOutputFile
         )
 
-        compilationCache[outputFile.name.replace(".js", ".meta.js")] = result
-
-        val generatedCode = result.generatedCode
-        if (generatedCode != null) {
-            val wrappedCode = wrapWithModuleEmulationMarkers(generatedCode, moduleId = config.moduleId, moduleKind = config.moduleKind)
+        if (result != null) {
+            val wrappedCode = wrapWithModuleEmulationMarkers(result, moduleId = config.moduleId, moduleKind = config.moduleKind)
             outputFile.write(wrappedCode)
         }
     }
