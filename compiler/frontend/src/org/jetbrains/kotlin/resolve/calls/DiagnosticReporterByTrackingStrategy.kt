@@ -49,6 +49,7 @@ class DiagnosticReporterByTrackingStrategy(
             )
             InstantiationOfAbstractClass::class.java -> tracingStrategy.instantiationOfAbstractClass(trace)
             AbstractSuperCall::class.java -> tracingStrategy.abstractSuperCall(trace)
+            OnlyInputTypesDiagnostic::class.java -> tracingStrategy.abstractSuperCall(trace)
         }
     }
 
