@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.ir.backend.js.CompilationMode
+import org.jetbrains.kotlin.ir.backend.js.TranslationResult
 import org.jetbrains.kotlin.ir.backend.js.compile
 import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 import org.jetbrains.kotlin.js.test.JsIrTestRuntime
@@ -58,17 +59,25 @@ fun main() {
 
 
     fun buildKlib(sources: List<String>, outputPath: String) {
+         compile(
+             environment.project,
+             sources.map(::createPsiFile),
+             buildConfiguration(environment),
+             CompilationMode.KLIB,
+             emptyList(),
+             outputPath
+         )
+
         val result = compile(
             environment.project,
             sources.map(::createPsiFile),
             buildConfiguration(environment),
-            emptyList(),
-            CompilationMode.KLIB_WITH_JS,
+            CompilationMode.JS,
             emptyList(),
             outputPath
-        )
+        ) as TranslationResult.CompiledJsCode
 
-        result?.let { File(outputPath, "result.js").writeText(it) }
+        File(outputPath, "result.js").writeText(result.jsCode)
     }
 
     buildKlib(JsIrTestRuntime.FULL.sources, fullRuntimeKlibPath)
