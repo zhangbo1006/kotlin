@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.cli.common.messages.AnalyzerWithCompilerReport
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.*
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.common.messages.MessageUtil
-import org.jetbrains.kotlin.cli.common.output.writeAll
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.plugins.PluginCliParser
@@ -37,7 +36,6 @@ import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 import org.jetbrains.kotlin.js.config.JsConfig
 import org.jetbrains.kotlin.js.config.SourceMapSourceEmbedding
 import org.jetbrains.kotlin.js.facade.MainCallParameters
-import org.jetbrains.kotlin.js.facade.TranslationResult
 import org.jetbrains.kotlin.metadata.deserialization.BinaryVersion
 import org.jetbrains.kotlin.progress.ProgressIndicatorAndCompilationCanceledStatus
 import org.jetbrains.kotlin.psi.KtFile
@@ -198,40 +196,32 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
             project,
             sourcesFiles,
             configuration,
-            compileMode = CompilationMode.KLIB_WITH_JS,
+            compileMode = CompilationMode.JS,
             dependencies = emptyList(),
-            klibPath = "/Users/jetbrains/klibdbg"
+            outputKlibPath = "/Users/jetbrains/klibdbg"
         )
 
         println("Compiled module: $compiledModule")
 
-        val translationResult: TranslationResult = try {
-            TODO("Implement")
+        ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
 
-            // translate(reporter, sourcesFiles, jsAnalysisResult, mainCallParameters, config)
-        } catch (e: Exception) {
-            throw rethrow(e)
-        }
+//        AnalyzerWithCompilerReport.reportDiagnostics(translationResult.diagnostics, messageCollector)
+//
+//        if (translationResult !is TranslationResult.Success) return ExitCode.COMPILATION_ERROR
+//
+//        val outputFiles = translationResult.getOutputFiles(outputFile, outputPrefixFile, outputPostfixFile)
+//
+//        if (outputFile.isDirectory) {
+//            messageCollector.report(ERROR, "Cannot open output file '" + outputFile.path + "': is a directory", null)
+//            return ExitCode.COMPILATION_ERROR
+//        }
 
         ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
 
-        AnalyzerWithCompilerReport.reportDiagnostics(translationResult.diagnostics, messageCollector)
-
-        if (translationResult !is TranslationResult.Success) return ExitCode.COMPILATION_ERROR
-
-        val outputFiles = translationResult.getOutputFiles(outputFile, outputPrefixFile, outputPostfixFile)
-
-        if (outputFile.isDirectory) {
-            messageCollector.report(ERROR, "Cannot open output file '" + outputFile.path + "': is a directory", null)
-            return ExitCode.COMPILATION_ERROR
-        }
-
-        ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
-
-        outputFiles.writeAll(
-            outputDir, messageCollector,
-            configuration.getBoolean(CommonConfigurationKeys.REPORT_OUTPUT_FILES)
-        )
+//        outputFiles.writeAll(
+//            outputDir, messageCollector,
+//            configuration.getBoolean(CommonConfigurationKeys.REPORT_OUTPUT_FILES)
+//        )
 
         return OK
     }

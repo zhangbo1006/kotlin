@@ -8,12 +8,12 @@ package org.jetbrains.kotlin.js.test
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.ir.backend.js.CompilationMode
 import org.jetbrains.kotlin.ir.backend.js.CompiledModule
+import org.jetbrains.kotlin.ir.backend.js.TranslationResult
 import org.jetbrains.kotlin.ir.backend.js.compile
 import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 import org.jetbrains.kotlin.js.config.JsConfig
 import org.jetbrains.kotlin.js.facade.MainCallParameters
 import org.jetbrains.kotlin.js.facade.TranslationUnit
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.test.TargetBackend
 import java.io.File
 
@@ -103,14 +103,13 @@ abstract class BasicIrBoxTest(
             if (!isMainModule) it.replace("_v5.js", "/") else it
         }
 
-        val result = compile(
+        val result: TranslationResult = compile(
             project = config.project,
             files = filesToCompile,
             configuration = config.configuration,
-            export = listOf(FqName((testPackage?.let { "$it." } ?: "") + testFunction)),
-            compileMode = if (isMainModule) CompilationMode.JS_AGAINST_KLIB else CompilationMode.KLIB,
+            compileMode = if (isMainModule) CompilationMode.JS else CompilationMode.KLIB,
             dependencies = dependencies,
-            klibPath = actualOutputFile
+            outputKlibPath = actualOutputFile
         )
 
         val moduleName = config.configuration.get(CommonConfigurationKeys.MODULE_NAME) as String
@@ -118,8 +117,8 @@ abstract class BasicIrBoxTest(
 
         compilationCache[outputFile.name.replace(".js", ".meta.js")] = module
 
-        if (result != null) {
-            val wrappedCode = wrapWithModuleEmulationMarkers(result, moduleId = config.moduleId, moduleKind = config.moduleKind)
+        if (result is TranslationResult.CompiledJsCode) {
+            val wrappedCode = wrapWithModuleEmulationMarkers(result.jsCode, moduleId = config.moduleId, moduleKind = config.moduleKind)
             outputFile.write(wrappedCode)
         }
     }
