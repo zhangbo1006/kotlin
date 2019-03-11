@@ -2661,11 +2661,6 @@ public class DiagnosticsTestWithStdLibUsingJavacGenerated extends AbstractDiagno
             runTest("compiler/testData/diagnostics/testsWithStdLib/inference/kt1558.kt");
         }
 
-        @TestMetadata("kt29307.kt")
-        public void testKt29307() throws Exception {
-            runTest("compiler/testData/diagnostics/testsWithStdLib/inference/kt29307.kt");
-        }
-
         @TestMetadata("kt3458.kt")
         public void testKt3458() throws Exception {
             runTest("compiler/testData/diagnostics/testsWithStdLib/inference/kt3458.kt");
@@ -2696,6 +2691,11 @@ public class DiagnosticsTestWithStdLibUsingJavacGenerated extends AbstractDiagno
             @TestMetadata("internalAnnotationsOnTypes.kt")
             public void testInternalAnnotationsOnTypes() throws Exception {
                 runTest("compiler/testData/diagnostics/testsWithStdLib/inference/annotationsForResolve/internalAnnotationsOnTypes.kt");
+            }
+
+            @TestMetadata("kt29307.kt")
+            public void testKt29307() throws Exception {
+                runTest("compiler/testData/diagnostics/testsWithStdLib/inference/annotationsForResolve/kt29307.kt");
             }
 
             @TestMetadata("noInferAndLowPriority.kt")

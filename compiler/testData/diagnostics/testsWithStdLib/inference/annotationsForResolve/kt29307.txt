@@ -1,0 +1,13 @@
+package
+
+public fun test_1(/*0*/ map: kotlin.collections.Map<kotlin.String, kotlin.String>): kotlin.Unit
+public fun test_2(/*0*/ map: kotlin.collections.Map<A, kotlin.String>): kotlin.Unit
+public fun test_3(/*0*/ m: kotlin.collections.Map<*, kotlin.String>): kotlin.Unit
+public fun test_4(/*0*/ m: kotlin.collections.Map<out kotlin.Number, kotlin.String>): kotlin.Unit
+
+public final class A {
+    public constructor A()
+    public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+    public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+    public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+}

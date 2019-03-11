@@ -5,12 +5,12 @@
 
 package org.jetbrains.kotlin.resolve.calls.inference.model
 
-import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.trimToSize
 import org.jetbrains.kotlin.resolve.calls.model.KotlinCallDiagnostic
 import org.jetbrains.kotlin.resolve.calls.tower.isSuccess
 import org.jetbrains.kotlin.types.TypeConstructor
 import org.jetbrains.kotlin.types.UnwrappedType
+import org.jetbrains.kotlin.types.checker.NewCapturedType
 import kotlin.collections.ArrayList
 import kotlin.collections.LinkedHashMap
 
@@ -26,6 +26,16 @@ class MutableVariableWithConstraints(
             }
             return simplifiedConstraints!!
         }
+
+    val inputTypes: Collection<UnwrappedType> by lazy {
+        mutableConstraints.filter {
+            val position = it.position.from
+            position is ArgumentConstraintPosition || position is ReceiverConstraintPosition || position is ExpectedTypeConstraintPosition
+        }.map { it.type }.map {
+            if (it is NewCapturedType) it.constructor.projection.type.unwrap()
+            else it
+        }
+    }
 
     private val mutableConstraints = ArrayList(constraints)
 

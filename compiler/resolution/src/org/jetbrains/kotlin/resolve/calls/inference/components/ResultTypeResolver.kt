@@ -57,15 +57,6 @@ class ResultTypeResolver(
         } else {
             c.resultType(superType, subType, variableWithConstraints)
         }
-        if (result != null && variableWithConstraints.typeVariable.hasOnlyInputTypesAnnotation()) {
-            val inputTypes = variableWithConstraints.constraints
-                .filter { it.position.from is ArgumentConstraintPosition }
-                .map { it.type }
-            if (!inputTypes.any { NewKotlinTypeChecker.equalTypes(it, result) }) {
-                c.safeAs<KotlinConstraintSystemCompleter.Context>()
-                    ?.addError(OnlyInputTypesDiagnostic(variableWithConstraints.typeVariable))
-            }
-        }
         return result
     }
 
