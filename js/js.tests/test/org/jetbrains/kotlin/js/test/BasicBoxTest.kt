@@ -617,7 +617,7 @@ abstract class BasicBoxTest(
         }
 
         configuration.put(JSConfigurationKeys.LIBRARIES, libraries)
-        configuration.put(JSConfigurationKeys.ALL_LIBRARIES, allDependencies)
+        configuration.put(JSConfigurationKeys.TRANSITIVE_LIBRARIES, allDependencies)
         configuration.put(JSConfigurationKeys.FRIEND_PATHS, friends)
 
         configuration.put(CommonConfigurationKeys.MODULE_NAME, module.name.removeSuffix(OLD_MODULE_SUFFIX))

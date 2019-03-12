@@ -87,16 +87,15 @@ abstract class BasicIrBoxTest(
 
         val runtimeKlib = runtimes[runtime]!!
 
-        val dependencyNames = config.configuration[JSConfigurationKeys.LIBRARIES]!!.map { File(it).name }
-        val allDependencyNames = config.configuration[JSConfigurationKeys.ALL_LIBRARIES]!!.map { File(it).name }
-
+        val libraries = config.configuration[JSConfigurationKeys.LIBRARIES]!!.map { File(it).name }
+        val transitiveLibraries = config.configuration[JSConfigurationKeys.TRANSITIVE_LIBRARIES]!!.map { File(it).name }
 
         // TODO: Add proper depencencies
-        val dependencies = listOf(runtimeKlib) + dependencyNames.map {
+        val dependencies = listOf(runtimeKlib) + libraries.map {
             compilationCache[it] ?: error("Can't find compiled module for dependency $it")
         }
 
-        val allDependencies = listOf(runtimeKlib) + allDependencyNames.map {
+        val allDependencies = listOf(runtimeKlib) + transitiveLibraries.map {
             compilationCache[it] ?: error("Can't find compiled module for dependency $it")
         }
 
@@ -114,8 +113,8 @@ abstract class BasicIrBoxTest(
             files = filesToCompile,
             configuration = config.configuration,
             compileMode = if (isMainModule) CompilationMode.JS else CompilationMode.KLIB,
-            dependencies = dependencies,
-            allModules = allDependencies,
+            immediateDependencies = dependencies,
+            allDependencies = allDependencies,
             outputKlibPath = actualOutputFile
         )
 

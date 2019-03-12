@@ -72,31 +72,25 @@ fun compile(
     files: List<KtFile>,
     configuration: CompilerConfiguration,
     compileMode: CompilationMode,
-    dependencies: List<KlibModuleRef> = emptyList(),
-    allModules: List<KlibModuleRef> = emptyList(),
+    immediateDependencies: List<KlibModuleRef>,
+    allDependencies: List<KlibModuleRef>,
     outputKlibPath: String
 ): TranslationResult {
 
-    println("Deps: $dependencies")
-    println("allDeps: $allModules")
-
     val deserializedModuleParts: Map<KlibModuleRef, JsKlibMetadataParts> =
-        allModules.associateWith { loadKlibMetadataParts(it) }
+        allDependencies.associateWith { loadKlibMetadataParts(it) }
 
     fun findModuleByName(name: String): KlibModuleRef =
-        allModules.find { it.moduleName == name } ?: error("Module is not found: $name")
+        allDependencies.find { it.moduleName == name } ?: error("Module is not found: $name")
 
     val moduleDependencies: Map<KlibModuleRef, List<KlibModuleRef>> =
         deserializedModuleParts.mapValues { (_, parts) ->
             parts.importedModules.map(::findModuleByName)
         }
 
-    val sortedDeps: List<KlibModuleRef> = DFS.topologicalOrder(dependencies) { moduleDependencies.getValue(it) }.reversed()
-//
-//    run {
-//        val builtInsDeps = sortedDeps.filter { it.isBuiltIn }
-//        assert(builtInsDeps.size == 1)
-//    }
+    val sortedImmediateDependencies: List<KlibModuleRef> =
+        DFS.topologicalOrder(immediateDependencies) { moduleDependencies.getValue(it) }
+            .reversed()
 
     val depsDescriptors = ModulesStructure(
         LookupTracker.DO_NOTHING,
@@ -105,18 +99,22 @@ fun compile(
         moduleDependencies
     )
 
-    val builtInsDep = sortedDeps.firstOrNull()
-    val builtInModule = if (builtInsDep != null) depsDescriptors.getModuleDescriptor(builtInsDep) else null // null in case compiling builtInModule itself
+    val builtInsDep = sortedImmediateDependencies.firstOrNull()
+    val builtInModuleDescriptor =
+        if (builtInsDep != null)
+            depsDescriptors.getModuleDescriptor(builtInsDep)
+        else
+            null // null in case compiling builtInModule itself
 
     val analysisResult =
         TopDownAnalyzerFacadeForJS.analyzeFiles(
             files,
             project,
             configuration,
-            sortedDeps.map { depsDescriptors.getModuleDescriptor(it) },
+            sortedImmediateDependencies.map { depsDescriptors.getModuleDescriptor(it) },
             friendModuleDescriptors = emptyList(),
-            thisIsBuiltInsModule = builtInModule == null,
-            customBuiltInsModule = builtInModule
+            thisIsBuiltInsModule = builtInModuleDescriptor == null,
+            customBuiltInsModule = builtInModuleDescriptor
         )
 
     ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
@@ -131,9 +129,14 @@ fun compile(
 
     val deserializer = IrKlibProtoBufModuleDeserializer(moduleDescriptor, logggg, irBuiltIns, symbolTable, null)
 
-    val deserializedModuleFragments = sortedDeps.map {
+    val deserializedModuleFragments = sortedImmediateDependencies.map {
         val moduleFile = File(it.klibPath, moduleHeaderFileName)
-        deserializer.deserializeIrModule(depsDescriptors.getModuleDescriptor(it), moduleFile.readBytes(), File(it.klibPath), false)
+        deserializer.deserializeIrModule(
+            moduleDescriptor = depsDescriptors.getModuleDescriptor(it),
+            byteArray = moduleFile.readBytes(),
+            klibLocation = File(it.klibPath),
+            deserializeAllDeclarations = false
+        )
     }
 
     val moduleFragment = psi2IrTranslator.generateModuleFragment(psi2IrContext, files, deserializer)
@@ -151,7 +154,7 @@ fun compile(
             psi2IrContext.symbolTable,
             psi2IrContext.bindingContext,
             outputKlibPath,
-            dependencies,
+            immediateDependencies,
             moduleFragment
         )
 

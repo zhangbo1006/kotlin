@@ -12,11 +12,9 @@ import com.intellij.util.SmartList
 import org.jetbrains.kotlin.cli.common.*
 import org.jetbrains.kotlin.cli.common.ExitCode.COMPILATION_ERROR
 import org.jetbrains.kotlin.cli.common.ExitCode.OK
-import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JSIRCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JsArgumentConstants
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
-import org.jetbrains.kotlin.cli.common.messages.AnalyzerWithCompilerReport
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.*
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.common.messages.MessageUtil
@@ -32,15 +30,12 @@ import org.jetbrains.kotlin.ir.backend.js.CompilationMode
 import org.jetbrains.kotlin.ir.backend.js.KlibModuleRef
 import org.jetbrains.kotlin.ir.backend.js.TranslationResult
 import org.jetbrains.kotlin.ir.backend.js.compile
-import org.jetbrains.kotlin.js.analyze.TopDownAnalyzerFacadeForJS
-import org.jetbrains.kotlin.js.analyzer.JsAnalysisResult
 import org.jetbrains.kotlin.js.config.EcmaVersion
 import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 import org.jetbrains.kotlin.js.config.JsConfig
 import org.jetbrains.kotlin.js.config.SourceMapSourceEmbedding
 import org.jetbrains.kotlin.js.facade.MainCallParameters
 import org.jetbrains.kotlin.metadata.deserialization.BinaryVersion
-import org.jetbrains.kotlin.progress.ProgressIndicatorAndCompilationCanceledStatus
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.serialization.js.ModuleKind
 import org.jetbrains.kotlin.utils.*
@@ -83,7 +78,7 @@ class K2JsIrCompiler : CLICompiler<K2JSIRCompilerArguments>() {
         val libraries = configureLibraries(arguments.libraries)
         val allLibraries = (configureLibraries(arguments.allLibraries) + libraries).distinct()
         configuration.put(JSConfigurationKeys.LIBRARIES, configureLibraries(arguments.libraries))
-        configuration.put(JSConfigurationKeys.ALL_LIBRARIES, configureLibraries(arguments.allLibraries))
+        configuration.put(JSConfigurationKeys.TRANSITIVE_LIBRARIES, configureLibraries(arguments.allLibraries))
 
         val commonSourcesArray = arguments.commonSources
         val commonSources = commonSourcesArray?.let { setOf(it) } ?: emptySet()
@@ -135,24 +130,6 @@ class K2JsIrCompiler : CLICompiler<K2JSIRCompilerArguments>() {
             }
         }
 
-//        if (config.checkLibFilesAndReportErrors(reporter)) {
-//            return COMPILATION_ERROR
-//        }
-
-//        val analyzerWithCompilerReport = AnalyzerWithCompilerReport(
-//            messageCollector, configuration.languageVersionSettings
-//        )
-//        analyzerWithCompilerReport.analyzeAndReport(sourcesFiles) { TopDownAnalyzerFacadeForJS.analyzeFiles(sourcesFiles, config) }
-//        if (analyzerWithCompilerReport.hasErrors()) {
-//            return COMPILATION_ERROR
-//        }
-//
-//        ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
-//
-//        val analysisResult = analyzerWithCompilerReport.analysisResult
-//        assert(analysisResult is JsAnalysisResult) { "analysisResult should be instance of JsAnalysisResult, but $analysisResult" }
-//        val jsAnalysisResult = analysisResult as JsAnalysisResult
-
         val outputPrefix = arguments.outputPrefix
         var outputPrefixFile: File? = null
         if (outputPrefix != null) {
@@ -180,6 +157,7 @@ class K2JsIrCompiler : CLICompiler<K2JSIRCompilerArguments>() {
             return ExitCode.COMPILATION_ERROR
         }
 
+        // TODO: Handle
         val mainCallParameters = createMainCallParameters(arguments.main)
 
         val compilationMode = when (arguments.produce) {
@@ -200,36 +178,14 @@ class K2JsIrCompiler : CLICompiler<K2JSIRCompilerArguments>() {
             sourcesFiles,
             configuration,
             compilationMode,
-            dependencies = libraries.map { it.toKlibRef() },
-            allModules = allLibraries.map { it.toKlibRef() },
+            immediateDependencies = libraries.map { it.toKlibRef() },
+            allDependencies = allLibraries.map { it.toKlibRef() },
             outputKlibPath = outputFile.absolutePath
         )
 
         if (compiledModule is TranslationResult.CompiledJsCode) {
             outputFile.writeText(compiledModule.jsCode)
         }
-
-        println("Compiled module: $compiledModule")
-
-        ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
-
-//        AnalyzerWithCompilerReport.reportDiagnostics(translationResult.diagnostics, messageCollector)
-//
-//        if (translationResult !is TranslationResult.Success) return ExitCode.COMPILATION_ERROR
-//
-//        val outputFiles = translationResult.getOutputFiles(outputFile, outputPrefixFile, outputPostfixFile)
-//
-//        if (outputFile.isDirectory) {
-//            messageCollector.report(ERROR, "Cannot open output file '" + outputFile.path + "': is a directory", null)
-//            return ExitCode.COMPILATION_ERROR
-//        }
-
-        ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
-
-//        outputFiles.writeAll(
-//            outputDir, messageCollector,
-//            configuration.getBoolean(CommonConfigurationKeys.REPORT_OUTPUT_FILES)
-//        )
 
         return OK
     }
