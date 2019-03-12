@@ -25,6 +25,9 @@ import java.io.File;
 import java.util.List;
 
 public class JSConfigurationKeys {
+    public static final CompilerConfigurationKey<List<String>> ALL_LIBRARIES =
+            CompilerConfigurationKey.create("all library file paths including transitive dependencies");
+
     public static final CompilerConfigurationKey<List<String>> LIBRARIES =
             CompilerConfigurationKey.create("library file paths");
 

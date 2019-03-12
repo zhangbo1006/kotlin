@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.cli.common.*
 import org.jetbrains.kotlin.cli.common.ExitCode.COMPILATION_ERROR
 import org.jetbrains.kotlin.cli.common.ExitCode.OK
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.K2JSIRCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JsArgumentConstants
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.messages.AnalyzerWithCompilerReport
@@ -28,6 +29,8 @@ import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.js.IncrementalDataProvider
 import org.jetbrains.kotlin.incremental.js.IncrementalResultsConsumer
 import org.jetbrains.kotlin.ir.backend.js.CompilationMode
+import org.jetbrains.kotlin.ir.backend.js.KlibModuleRef
+import org.jetbrains.kotlin.ir.backend.js.TranslationResult
 import org.jetbrains.kotlin.ir.backend.js.compile
 import org.jetbrains.kotlin.js.analyze.TopDownAnalyzerFacadeForJS
 import org.jetbrains.kotlin.js.analyzer.JsAnalysisResult
@@ -45,17 +48,17 @@ import java.io.File
 import java.io.IOException
 import java.util.*
 
-class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
+class K2JsIrCompiler : CLICompiler<K2JSIRCompilerArguments>() {
 
     override val performanceManager: CommonCompilerPerformanceManager =
         object : CommonCompilerPerformanceManager("Kotlin to JS (IR) Compiler") {}
 
-    override fun createArguments(): K2JSCompilerArguments {
-        return K2JSCompilerArguments()
+    override fun createArguments(): K2JSIRCompilerArguments {
+        return K2JSIRCompilerArguments()
     }
 
     override fun doExecute(
-        arguments: K2JSCompilerArguments,
+        arguments: K2JSIRCompilerArguments,
         configuration: CompilerConfiguration,
         rootDisposable: Disposable,
         paths: KotlinPaths?
@@ -77,7 +80,10 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
         )
         if (pluginLoadResult != ExitCode.OK) return pluginLoadResult
 
-        configuration.put(JSConfigurationKeys.LIBRARIES, configureLibraries(arguments, paths, messageCollector))
+        val libraries = configureLibraries(arguments.libraries)
+        val allLibraries = (configureLibraries(arguments.allLibraries) + libraries).distinct()
+        configuration.put(JSConfigurationKeys.LIBRARIES, configureLibraries(arguments.libraries))
+        configuration.put(JSConfigurationKeys.ALL_LIBRARIES, configureLibraries(arguments.allLibraries))
 
         val commonSourcesArray = arguments.commonSources
         val commonSources = commonSourcesArray?.let { setOf(it) } ?: emptySet()
@@ -128,23 +134,24 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
                 messageCollector.report(STRONG_WARNING, message, null)
             }
         }
-        if (config.checkLibFilesAndReportErrors(reporter)) {
-            return COMPILATION_ERROR
-        }
 
-        val analyzerWithCompilerReport = AnalyzerWithCompilerReport(
-            messageCollector, configuration.languageVersionSettings
-        )
-        analyzerWithCompilerReport.analyzeAndReport(sourcesFiles) { TopDownAnalyzerFacadeForJS.analyzeFiles(sourcesFiles, config) }
-        if (analyzerWithCompilerReport.hasErrors()) {
-            return COMPILATION_ERROR
-        }
+//        if (config.checkLibFilesAndReportErrors(reporter)) {
+//            return COMPILATION_ERROR
+//        }
 
-        ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
-
-        val analysisResult = analyzerWithCompilerReport.analysisResult
-        assert(analysisResult is JsAnalysisResult) { "analysisResult should be instance of JsAnalysisResult, but $analysisResult" }
-        val jsAnalysisResult = analysisResult as JsAnalysisResult
+//        val analyzerWithCompilerReport = AnalyzerWithCompilerReport(
+//            messageCollector, configuration.languageVersionSettings
+//        )
+//        analyzerWithCompilerReport.analyzeAndReport(sourcesFiles) { TopDownAnalyzerFacadeForJS.analyzeFiles(sourcesFiles, config) }
+//        if (analyzerWithCompilerReport.hasErrors()) {
+//            return COMPILATION_ERROR
+//        }
+//
+//        ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
+//
+//        val analysisResult = analyzerWithCompilerReport.analysisResult
+//        assert(analysisResult is JsAnalysisResult) { "analysisResult should be instance of JsAnalysisResult, but $analysisResult" }
+//        val jsAnalysisResult = analysisResult as JsAnalysisResult
 
         val outputPrefix = arguments.outputPrefix
         var outputPrefixFile: File? = null
@@ -165,12 +172,9 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
             }
         }
 
-        var outputDir: File? = outputFile.parentFile
-        if (outputDir == null) {
-            outputDir = outputFile.absoluteFile.parentFile
-        }
+        val outputDir: File = outputFile.parentFile ?: outputFile.absoluteFile.parentFile!!
         try {
-            config.configuration.put(JSConfigurationKeys.OUTPUT_DIR, outputDir!!.canonicalFile)
+            config.configuration.put(JSConfigurationKeys.OUTPUT_DIR, outputDir.canonicalFile)
         } catch (e: IOException) {
             messageCollector.report(ERROR, "Could not resolve output directory", null)
             return ExitCode.COMPILATION_ERROR
@@ -178,28 +182,32 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
 
         val mainCallParameters = createMainCallParameters(arguments.main)
 
-        //val x = ::compile
+        val compilationMode = when (arguments.produce) {
+            "klib" -> CompilationMode.KLIB
+            "js" -> CompilationMode.JS
+            else -> {
+                messageCollector.report(ERROR, "Unknown output format: ${arguments.produce}. Use { klib, js }", null)
+                return ExitCode.COMPILATION_ERROR
+            }
+        }
 
-//        fun compile(
-//            project: Project,
-//            files: List<KtFile>,
-//            configuration: CompilerConfiguration,
-//            export: List<FqName> = emptyList(),
-//            compileMode: CompilationMode,
-//            dependencies: List<CompiledModule> = emptyList(),
-//            klibPath: String
-//        ): CompiledModule {
-//
-//        }
+        fun String.toKlibRef() = File(this).let { f ->
+            KlibModuleRef(f.nameWithoutExtension, f.parent)
+        }
 
         val compiledModule = compile(
             project,
             sourcesFiles,
             configuration,
-            compileMode = CompilationMode.JS,
-            dependencies = emptyList(),
-            outputKlibPath = "/Users/jetbrains/klibdbg"
+            compilationMode,
+            dependencies = libraries.map { it.toKlibRef() },
+            allModules = allLibraries.map { it.toKlibRef() },
+            outputKlibPath = outputFile.absolutePath
         )
+
+        if (compiledModule is TranslationResult.CompiledJsCode) {
+            outputFile.writeText(compiledModule.jsCode)
+        }
 
         println("Compiled module: $compiledModule")
 
@@ -227,7 +235,7 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
     }
 
     override fun setupPlatformSpecificArgumentsAndServices(
-        configuration: CompilerConfiguration, arguments: K2JSCompilerArguments,
+        configuration: CompilerConfiguration, arguments: K2JSIRCompilerArguments,
         services: Services
     ) {
         val messageCollector = configuration.getNotNull(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
@@ -344,17 +352,6 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
             CLITool.doMain(K2JsIrCompiler(), args)
         }
 
-//        private fun translate(
-//            reporter: JsConfig.Reporter,
-//            allKotlinFiles: List<KtFile>,
-//            jsAnalysisResult: JsAnalysisResult,
-//            mainCallParameters: MainCallParameters,
-//            config: JsConfig
-//        ): TranslationResult {
-//            allKotlinFiles.sortedBy { ktFile -> VfsUtilCore.virtualToIoFile(ktFile.virtualFile) }
-//            return translator.translate(reporter, allKotlinFiles, mainCallParameters, jsAnalysisResult)
-//        }
-
         private fun reportCompiledSourcesList(messageCollector: MessageCollector, sourceFiles: List<KtFile>) {
             val fileNames = sourceFiles.map { file ->
                 val virtualFile = file.virtualFile
@@ -368,21 +365,10 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
         }
 
         private fun configureLibraries(
-            arguments: K2JSCompilerArguments,
-            paths: KotlinPaths?,
-            messageCollector: MessageCollector
+            libraryString: String?
         ): List<String> {
             val libraries = SmartList<String>()
-            if (!arguments.noStdlib) {
-                val stdlibJar = getLibraryFromHome(
-                    paths, KotlinPaths::jsStdLibJarPath, PathUtil.JS_LIB_JAR_NAME, messageCollector, "'-no-stdlib'"
-                )
-                if (stdlibJar != null) {
-                    libraries.add(stdlibJar.absolutePath)
-                }
-            }
-
-            val argumentsLibraries = arguments.libraries
+            val argumentsLibraries = libraryString
             if (argumentsLibraries != null) {
                 libraries.addAll(
                     argumentsLibraries
@@ -392,6 +378,7 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
                         .filterNot { it.isEmpty() }
                 )
             }
+
             return libraries
         }
 

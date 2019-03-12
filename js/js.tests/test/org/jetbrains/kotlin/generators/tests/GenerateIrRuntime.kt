@@ -65,6 +65,7 @@ fun main() {
              buildConfiguration(environment),
              CompilationMode.KLIB,
              emptyList(),
+             emptyList(),
              outputPath
          )
 
@@ -73,6 +74,7 @@ fun main() {
             sources.map(::createPsiFile),
             buildConfiguration(environment),
             CompilationMode.JS,
+            emptyList(),
             emptyList(),
             outputPath
         ) as TranslationResult.CompiledJsCode
