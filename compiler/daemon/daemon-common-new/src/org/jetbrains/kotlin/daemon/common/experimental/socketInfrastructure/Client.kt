@@ -11,21 +11,17 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
 import java.util.logging.Logger
+import org.jetbrains.kotlin.daemon.common.experimental.socketInfrastructure.Server.*
 
 interface Client<ServerType : ServerBase> : Serializable, AutoCloseable {
 
     @Throws(Exception::class)
     suspend fun connectToServer()
 
-    suspend fun sendMessage(msg: Server.AnyMessage<out ServerType>): Int // returns message unique id
-    suspend fun sendNoReplyMessage(msg: Server.AnyMessage<out ServerType>)
+    suspend fun sendMessage(msg: AnyMessage<out ServerType>): Int // returns message unique id
+    suspend fun sendNoReplyMessage(msg: AnyMessage<out ServerType>)
     suspend fun <T> readMessage(id: Int): T
 
-}
-
-internal fun Logger.info_and_print(msg: String?) {
-    this.info(msg)
-//    println(msg)
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -48,8 +44,24 @@ abstract class DefaultAuthorizableClient<ServerType : ServerBase>(
 
     abstract suspend fun authorizeOnServer(serverOutputChannel: ByteWriteChannelWrapper): Boolean
     abstract suspend fun clientHandshake(input: ByteReadChannelWrapper, output: ByteWriteChannelWrapper, log: Logger): Boolean
-    abstract suspend fun startKeepAlives()
-    abstract suspend fun delayKeepAlives()
+
+    /*
+     The purpose of ths function is the following : a client starts sending keep-alive requests to the server.
+     It sends a request every K seconds and awaits a response after K/2 seconds.
+     In case of not receiving the response from the server we stop waiting for other responses.
+     This resolves the case when the server is down but the client is still waiting for some calculations.
+     Keep-alives run in a separate thread on client and on server, hence we can assume that the calculations on server
+     shouldn't delay keep-alive responses too much
+    */
+    abstract fun startKeepAlives()
+
+    /*
+     `delayKeepAlives` resolves another issue. Imagine that a server and a client have too many short requests/responses,
+     say, 1000 requests/responses and 0.001 seconds of latency. Then we can miss keep-alive response because of a socket workload,
+     or, say, if a scheduler decides not to schedule on a keep-alive thread.
+     In this case we say that any response can stand for a keep-alive message, as well. delayKeepAlives() serves this purpose.
+    */
+    abstract fun delayKeepAlives()
 
     override fun close() {
         socket?.close()
@@ -62,8 +74,8 @@ abstract class DefaultAuthorizableClient<ServerType : ServerBase>(
     protected class ReceiveReplyQuery(val reply: MessageReply<*>) : ReadActorQuery
 
     protected interface WriteActorQuery
-    protected data class SendNoreplyMessageQuery(val message: Server.AnyMessage<*>) : WriteActorQuery
-    protected data class SendMessageQuery(val message: Server.AnyMessage<*>, val messageId: CompletableDeferred<Any>) : WriteActorQuery
+    protected data class SendNoreplyMessageQuery(val message: AnyMessage<*>) : WriteActorQuery
+    protected data class SendMessageQuery(val message: AnyMessage<*>, val messageId: CompletableDeferred<Any>) : WriteActorQuery
 
     protected class StopAllRequests : ReadActorQuery, WriteActorQuery
 
@@ -73,38 +85,28 @@ abstract class DefaultAuthorizableClient<ServerType : ServerBase>(
     @kotlin.jvm.Transient
     private lateinit var writeActor: SendChannel<WriteActorQuery>
 
-    override suspend fun sendMessage(msg: Server.AnyMessage<out ServerType>): Int {
-        log.info_and_print("send message : $msg")
+    override suspend fun sendMessage(msg: AnyMessage<out ServerType>): Int {
         val id = CompletableDeferred<Any>()
         writeActor.send(SendMessageQuery(msg, id))
         val idVal = id.await()
         if (idVal is IOException) {
-            log.info_and_print("write exception : ${idVal.message}")
             throw idVal
         }
-        log.info_and_print("idVal = $idVal")
         return idVal as Int
     }
 
-    override suspend fun sendNoReplyMessage(msg: Server.AnyMessage<out ServerType>) {
-        log.info_and_print("sendNoReplyMessage $msg")
-        log.info_and_print("readActor: $readActor")
-        log.info_and_print("closed 4 send : ${readActor.isClosedForSend}")
+    override suspend fun sendNoReplyMessage(msg: AnyMessage<out ServerType>) {
         writeActor.send(SendNoreplyMessageQuery(msg))
     }
 
     override suspend fun <T> readMessage(id: Int): T {
-        log.info("readMessage with_id$id")
         val result = CompletableDeferred<MessageReply<*>>()
-        log.info("result : $result with_id$id")
         try {
             readActor.send(ExpectReplyQuery(id, result))
         } catch (e: ClosedSendChannelException) {
             throw IOException("failed to read message (channel was closed)")
         }
-        log.info("sent with_id$id")
         val actualResult = result.await().reply
-        log.info("actualResult : $actualResult with_id$id")
         if (actualResult is IOException) {
             throw actualResult
         }
@@ -119,7 +121,6 @@ abstract class DefaultAuthorizableClient<ServerType : ServerBase>(
                 when (query) {
                     is SendMessageQuery -> {
                         val id = firstFreeMessageId++
-                        log.info_and_print("[${log.name}, ${this@DefaultAuthorizableClient}] : sending message : ${query.message} (predicted id = ${id})")
                         try {
                             output.writeObject(query.message.withId(id))
                             query.messageId.complete(id)
@@ -128,7 +129,6 @@ abstract class DefaultAuthorizableClient<ServerType : ServerBase>(
                         }
                     }
                     is SendNoreplyMessageQuery -> {
-                        log.info_and_print("[${log.name}] : sending noreply : ${query.message}")
                         output.writeObject(query.message.withId(-1))
                     }
                     is StopAllRequests -> {
@@ -145,14 +145,10 @@ abstract class DefaultAuthorizableClient<ServerType : ServerBase>(
             consumeEach {
                 try {
                     val reply = input.nextObject()
-                    if (reply is Server.ServerDownMessage<*>) {
-                        throw IOException("connection closed by server")
-                    } else if (reply !is MessageReply<*>) {
-                        log.info_and_print("replyAny as MessageReply<*> - failed!")
-                        throw IOException("contrafact message (expected MessageReply<*>)")
-                    } else {
-                        log.info_and_print("[${log.name}] : received reply ${reply.reply} (id = ${reply.messageId})}")
-                        readActor.send(ReceiveReplyQuery(reply))
+                    when (reply) {
+                        is ServerDownMessage<*> -> throw IOException("connection closed by server")
+                        !is MessageReply<*> -> throw IOException("contrafact message (expected MessageReply<*>)")
+                        else -> readActor.send(ReceiveReplyQuery(reply))
                     }
                 } catch (e: IOException) {
                     readActor.send(StopAllRequests())
@@ -176,21 +172,17 @@ abstract class DefaultAuthorizableClient<ServerType : ServerBase>(
             consumeEach { query ->
                 when (query) {
                     is ExpectReplyQuery -> {
-                        log.info_and_print("[${log.name}] : expect message with id = ${query.messageId}")
                         receivedMessages[query.messageId]?.also { reply ->
                             query.result.complete(reply)
                         } ?: expectedMessages.put(query.messageId, query).also {
-                            log.info_and_print("[${log.name}] : intermediateActor.send(ReceiveReplyQuery())")
                             objectReaderActor.send(nextObjectQuery)
                         }
                     }
                     is ReceiveReplyQuery -> {
                         val reply = query.reply
-                        log.info_and_print("[${log.name}] : got ReceiveReplyQuery")
                         expectedMessages[reply.messageId]?.also { expectedMsg ->
                             expectedMsg.result.complete(reply)
                         } ?: receivedMessages.put(reply.messageId, reply).also {
-                            log.info_and_print("[${log.name}] : intermediateActor.send(ReceiveReplyQuery())")
                             objectReaderActor.send(nextObjectQuery)
                         }
                         delayKeepAlives()
@@ -205,28 +197,22 @@ abstract class DefaultAuthorizableClient<ServerType : ServerBase>(
 
 
 
-        log.info_and_print("connectToServer (port = $serverPort | host = $serverHost)")
         try {
             socket = LoopbackNetworkInterface.clientLoopbackSocketFactoryKtor.createSocket(
                 serverHost,
                 serverPort
             )
         } catch (e: Throwable) {
-            log.info_and_print("EXCEPTION while connecting to server ($e)")
             close()
             throw e
         }
-        log.info_and_print("connected (port = $serverPort, serv =$serverPort)")
         socket?.openIO(log)?.also {
-            log.info_and_print("OK serv.openIO() |port=$serverPort|")
             input = it.input
             output = it.output
             if (!clientHandshake(input, output, log)) {
-                log.info_and_print("failed handshake($serverPort)")
                 throw ConnectionResetException("failed to establish connection with server (handshake failed)")
             }
             if (!authorizeOnServer(output)) {
-                log.info_and_print("failed authorization($serverPort)")
                 throw ConnectionResetException("failed to establish connection with server (authorization failed)")
             }
         }
@@ -256,17 +242,17 @@ class DefaultClient<ServerType : ServerBase>(
 ) : DefaultAuthorizableClient<ServerType>(serverPort, serverHost) {
     override suspend fun clientHandshake(input: ByteReadChannelWrapper, output: ByteWriteChannelWrapper, log: Logger) = true
     override suspend fun authorizeOnServer(output: ByteWriteChannelWrapper): Boolean = true
-    override suspend fun startKeepAlives() {}
-    override suspend fun delayKeepAlives() {}
+    override fun startKeepAlives() {}
+    override fun delayKeepAlives() {}
 }
 
 class DefaultClientRMIWrapper<ServerType : ServerBase> : Client<ServerType> {
 
     override suspend fun connectToServer() {}
-    override suspend fun sendMessage(msg: Server.AnyMessage<out ServerType>) =
+    override suspend fun sendMessage(msg: AnyMessage<out ServerType>) =
         throw UnsupportedOperationException("sendMessage is not supported for RMI wrappers")
 
-    override suspend fun sendNoReplyMessage(msg: Server.AnyMessage<out ServerType>) =
+    override suspend fun sendNoReplyMessage(msg: AnyMessage<out ServerType>) =
         throw UnsupportedOperationException("sendMessage is not supported for RMI wrappers")
 
     override suspend fun <T> readMessage(id: Int) = throw UnsupportedOperationException("readMessage is not supported for RMI wrappers")

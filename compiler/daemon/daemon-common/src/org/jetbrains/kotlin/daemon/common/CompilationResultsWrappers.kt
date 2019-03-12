@@ -25,12 +25,6 @@ class CompilationResultsRMIWrapper(val clientSide: CompilationResultsAsync) : Co
         clientSide.add(compilationResultCategory, value)
     }
 
-//    init {
-//        runBlocking {
-//            clientSide.connectToServer()
-//        }
-//    }
-
 }
 
 fun CompilationResults.toClient() =

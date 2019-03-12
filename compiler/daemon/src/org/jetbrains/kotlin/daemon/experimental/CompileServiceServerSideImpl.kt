@@ -39,14 +39,13 @@ import org.jetbrains.kotlin.daemon.LazyClasspathWatcher
 import org.jetbrains.kotlin.daemon.common.*
 import org.jetbrains.kotlin.daemon.common.experimental.*
 import org.jetbrains.kotlin.daemon.common.experimental.socketInfrastructure.*
-import org.jetbrains.kotlin.daemon.common.impls.DummyProfilerAsync
-import org.jetbrains.kotlin.daemon.common.impls.ProfilerAsync
-import org.jetbrains.kotlin.daemon.common.impls.WallAndThreadAndMemoryTotalProfilerAsync
-import org.jetbrains.kotlin.daemon.common.impls.WallAndThreadTotalProfilerAsync
+import org.jetbrains.kotlin.daemon.common.DummyProfilerAsync
+import org.jetbrains.kotlin.daemon.common.ProfilerAsync
+import org.jetbrains.kotlin.daemon.common.WallAndThreadAndMemoryTotalProfilerAsync
+import org.jetbrains.kotlin.daemon.common.WallAndThreadTotalProfilerAsync
 import org.jetbrains.kotlin.daemon.nowSeconds
 import org.jetbrains.kotlin.daemon.report.experimental.CompileServicesFacadeMessageCollector
 import org.jetbrains.kotlin.daemon.report.experimental.DaemonMessageReporterAsync
-import org.jetbrains.kotlin.daemon.report.experimental.RemoteICReporterAsync
 import org.jetbrains.kotlin.daemon.report.experimental.getICReporterAsync
 import org.jetbrains.kotlin.incremental.*
 import org.jetbrains.kotlin.incremental.components.LookupTracker
@@ -112,7 +111,7 @@ class CompileServiceServerSideImpl(
 
     }
 
-    override suspend fun securityCheck(clientInputChannel: ByteReadChannelWrapper): Boolean = runWithTimeout {
+    override suspend fun checkClientCanReadFile(clientInputChannel: ByteReadChannelWrapper): Boolean = runWithTimeout {
         getSignatureAndVerify(clientInputChannel, securityData.token, securityData.publicKey)
     } ?: false
 
@@ -1089,9 +1088,9 @@ class CompileServiceServerSideImpl(
 
 
     private fun <R> checkedCompile(
-            daemonMessageReporterAsync: DaemonMessageReporterAsync,
-            rpcProfiler: ProfilerAsync,
-            body: suspend () -> R
+        daemonMessageReporterAsync: DaemonMessageReporterAsync,
+        rpcProfiler: ProfilerAsync,
+        body: suspend () -> R
     ): Deferred<R> = GlobalScope.async {
         try {
             log.info("checkedCompile")

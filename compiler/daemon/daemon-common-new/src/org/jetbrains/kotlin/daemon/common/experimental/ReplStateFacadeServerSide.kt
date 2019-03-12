@@ -14,27 +14,27 @@ interface ReplStateFacadeServerSide: ReplStateFacadeAsync, Server<ReplStateFacad
 
     // Query messages:
     class GetIdMessage : Server.Message<ReplStateFacadeServerSide>() {
-        override suspend fun processImpl(server: ReplStateFacadeServerSide, printObject: (Any?) -> Unit) =
-            printObject(server.getId())
+        override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
+            writeObject(server.getId())
     }
 
     class GetHistorySizeMessage : Server.Message<ReplStateFacadeServerSide>() {
-        override suspend fun processImpl(server: ReplStateFacadeServerSide, printObject: (Any?) -> Unit) =
-            printObject(server.getHistorySize())
+        override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
+            writeObject(server.getHistorySize())
     }
 
     class HistoryGetMessage(val index: Int) : Server.Message<ReplStateFacadeServerSide>() {
-        override suspend fun processImpl(server: ReplStateFacadeServerSide, printObject: (Any?) -> Unit) =
-            printObject(server.historyGet(index))
+        override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
+            writeObject(server.historyGet(index))
     }
 
     class HistoryResetMessage : Server.Message<ReplStateFacadeServerSide>() {
-        override suspend fun processImpl(server: ReplStateFacadeServerSide, printObject: (Any?) -> Unit) =
-            printObject(server.historyReset())
+        override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
+            writeObject(server.historyReset())
     }
 
     class HistoryResetToMessage(val id: ILineId) : Server.Message<ReplStateFacadeServerSide>() {
-        override suspend fun processImpl(server: ReplStateFacadeServerSide, printObject: (Any?) -> Unit) =
-            printObject(server.historyResetTo(id))
+        override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
+            writeObject(server.historyResetTo(id))
     }
 }

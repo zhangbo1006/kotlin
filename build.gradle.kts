@@ -15,7 +15,7 @@ buildscript {
     repositories.withRedirector(project) {
         bootstrapKotlinRepo?.let(::maven)
         maven("https://plugins.gradle.org/m2")
-        maven("http://dl.bintray.com/kotlin/ktor")
+        maven("https://dl.bintray.com/kotlin/ktor")
     }
 
     // a workaround for kotlin compiler classpath in kotlin project: sometimes gradle substitutes
@@ -91,6 +91,17 @@ val ideaUltimateSandboxDir = "$commonLocalDataDir/ideaUltimateSandbox"
 val artifactsDir = "$distDir/artifacts"
 val ideaPluginDir = "$artifactsDir/ideaPlugin/Kotlin"
 val ideaUltimatePluginDir = "$artifactsDir/ideaUltimatePlugin/Kotlin"
+
+extra["ktorExcludesForDaemon"] = listOf(
+    "org.jetbrains.kotlin" to "kotlin-reflect",
+    "org.jetbrains.kotlin" to "kotlin-stdlib",
+    "org.jetbrains.kotlin" to "kotlin-stdlib-common",
+    "org.jetbrains.kotlin" to "kotlin-stdlib-jdk8",
+    "org.jetbrains.kotlin" to "kotlin-stdlib-jdk7",
+    "org.jetbrains.kotlinx" to "kotlinx-coroutines-jdk8",
+    "org.jetbrains.kotlinx" to "kotlinx-coroutines-core",
+    "org.jetbrains.kotlinx" to "kotlinx-coroutines-core-common"
+)
 
 // TODO: use "by extra()" syntax where possible
 extra["distLibDir"] = project.file(distLibDir)
@@ -308,7 +319,7 @@ allprojects {
         bootstrapKotlinRepo?.let(::maven)
         jcenter()
         maven(protobufRepo)
-        maven("http://dl.bintray.com/kotlin/ktor")
+        maven("https://dl.bintray.com/kotlin/ktor")
     }
 
     configureJvmProject(javaHome!!, jvmTarget!!)

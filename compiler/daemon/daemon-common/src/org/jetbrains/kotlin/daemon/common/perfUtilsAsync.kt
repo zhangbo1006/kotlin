@@ -3,10 +3,9 @@
  * that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.daemon.common.impls
+package org.jetbrains.kotlin.daemon.common
 
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.kotlin.daemon.common.*
 import java.lang.management.ManagementFactory
 import java.lang.management.ThreadMXBean
 
@@ -79,17 +78,17 @@ suspend fun <R> withMeasureWallAndThreadTimesAsync(
 
 class WallAndThreadTotalProfilerAsync : TotalProfilerAsync() {
     override suspend fun <R> withMeasure(obj: Any?, body: suspend () -> R): R =
-            withMeasureWallAndThreadTimesAsync(
-                    total,
-                    threadMXBean,
-                    body
-            )
+        withMeasureWallAndThreadTimesAsync(
+            total,
+            threadMXBean,
+            body
+        )
 }
 
 
 class WallAndThreadAndMemoryTotalProfilerAsync(val withGC: Boolean) : TotalProfilerAsync() {
     override suspend fun <R> withMeasure(obj: Any?, body: suspend () -> R): R =
-            withMeasureWallAndThreadTimesAndMemoryAsync(total, withGC, threadMXBean, body)
+        withMeasureWallAndThreadTimesAndMemoryAsync(total, withGC, threadMXBean, body)
 }
 
 

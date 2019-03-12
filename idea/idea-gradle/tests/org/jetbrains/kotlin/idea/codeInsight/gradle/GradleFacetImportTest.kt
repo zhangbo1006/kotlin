@@ -2149,7 +2149,7 @@ compileTestKotlin {
         )
         importProject()
 
-        // Version is indeed 1.2
+        // version is indeed 1.2
         Assert.assertEquals(LanguageVersion.KOTLIN_1_2, facetSettings.languageLevel)
 
         // We haven't lost internal argument during importing to facet

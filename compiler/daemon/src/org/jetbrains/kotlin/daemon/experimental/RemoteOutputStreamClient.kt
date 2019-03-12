@@ -7,8 +7,8 @@ package org.jetbrains.kotlin.daemon.experimental
 
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.daemon.common.experimental.RemoteOutputStreamAsyncClientSide
-import org.jetbrains.kotlin.daemon.common.impls.DummyProfilerAsync
-import org.jetbrains.kotlin.daemon.common.impls.ProfilerAsync
+import org.jetbrains.kotlin.daemon.common.DummyProfilerAsync
+import org.jetbrains.kotlin.daemon.common.ProfilerAsync
 import java.io.OutputStream
 
 class RemoteOutputStreamClient(val remote: RemoteOutputStreamAsyncClientSide, val profiler: ProfilerAsync = DummyProfilerAsync()) : OutputStream() {

@@ -13,11 +13,6 @@ import java.util.logging.Logger
  * that can be found in the license/LICENSE.txt file.
  */
 
-private fun Logger.info_and_print(msg: String) {
-    this.info(msg)
-//    println(msg)
-}
-
 data class ServerSocketWrapper(val port: Int, val socket: ServerSocket)
 
 interface ServerBase
@@ -38,42 +33,37 @@ interface Server<out T : ServerBase> : ServerBase {
 
     fun processMessage(msg: AnyMessage<in T>, output: ByteWriteChannelWrapper): State =
         when (msg) {
-            is Server.Message<in T> -> Server.State.WORKING.also {
+            is Message<in T> -> State.WORKING.also {
                 msg.process(this as T, output)
             }
-            is Server.EndConnectionMessage<in T> -> {
-                log.info_and_print("!EndConnectionMessage!")
-                Server.State.CLOSED
+            is EndConnectionMessage<in T> -> {
+                State.CLOSED
             }
-            is Server.ServerDownMessage<in T> -> Server.State.CLOSED
-            else -> Server.State.ERROR
+            is ServerDownMessage<in T> -> State.CLOSED
+            else -> State.ERROR
         }
 
+    // TODO: replace GlobalScope here and below with smth. more explicit
     fun attachClient(client: Socket): Deferred<State> = GlobalScope.async {
         val (input, output) = client.openIO(log)
         if (!serverHandshake(input, output, log)) {
-            log.info_and_print("failed to establish connection with client (handshake failed)")
-            return@async Server.State.UNVERIFIED
+            return@async State.UNVERIFIED
         }
-        if (!securityCheck(input)) {
-            log.info_and_print("failed to check securitay")
-            return@async Server.State.UNVERIFIED
+        if (!checkClientCanReadFile(input)) {
+            return@async State.UNVERIFIED
         }
-        log.info_and_print("   client verified ($client)")
         clients[client] = ClientInfo(client, input, output)
-        log.info_and_print("   ($client)client in clients($clients)")
-        var finalState = Server.State.WORKING
+        var finalState = State.WORKING
         val keepAliveAcknowledgement = KeepAliveAcknowledgement<T>()
         loop@
         while (true) {
-            log.info_and_print("   reading message from ($client)")
             val message = input.nextObject()
             when (message) {
-                is Server.ServerDownMessage<*> -> {
-                    downClient(client)
+                is ServerDownMessage<*> -> {
+                    shutdownClient(client)
                     break@loop
                 }
-                is Server.KeepAliveMessage<*> -> Server.State.WORKING.also {
+                is KeepAliveMessage<*> -> State.WORKING.also {
                     output.writeObject(
                         DefaultAuthorizableClient.MessageReply(
                             message.messageId!!,
@@ -81,19 +71,16 @@ interface Server<out T : ServerBase> : ServerBase {
                         )
                     )
                 }
-                !is Server.AnyMessage<*> -> {
-                    log.info_and_print("contrafact message")
-                    finalState = Server.State.ERROR
+                !is AnyMessage<*> -> {
+                    finalState = State.ERROR
                     break@loop
                 }
                 else -> {
-                    log.info_and_print("message ($client): $message")
-                    val state = processMessage(message as Server.AnyMessage<T>, output)
+                    val state = processMessage(message as AnyMessage<T>, output)
                     when (state) {
-                        Server.State.WORKING -> continue@loop
-                        Server.State.ERROR -> {
-                            log.info_and_print("ERROR after processing message")
-                            finalState = Server.State.ERROR
+                        State.WORKING -> continue@loop
+                        State.ERROR -> {
+                            finalState = State.ERROR
                             break@loop
                         }
                         else -> {
@@ -143,36 +130,27 @@ interface Server<out T : ServerBase> : ServerBase {
 
     val clients: HashMap<Socket, ClientInfo>
 
+    private fun dealWithClient(client: Socket) = GlobalScope.async {
+        val state = attachClient(client).await()
+        when (state) {
+            State.CLOSED, State.UNVERIFIED -> shutdownClient(client)
+            State.DOWNING -> shutdownServer()
+            else -> shutdownClient(client)
+        }
+    }
+
     fun runServer(): Deferred<Unit> {
-        log.info_and_print("binding to address(${serverSocketWithPort.port})")
         val serverSocket = serverSocketWithPort.socket
         return GlobalScope.async {
             serverSocket.use {
-                log.info_and_print("accepting clientSocket...")
                 while (true) {
-                    val client = serverSocket.accept()
-                    log.info_and_print("client accepted! (${client.remoteAddress})")
-                    GlobalScope.async {
-                        val state = attachClient(client).await()
-                        log.info_and_print("finished ($client) with state : $state")
-                        when (state) {
-                            Server.State.CLOSED, State.UNVERIFIED -> {
-                                downClient(client)
-                            }
-                            Server.State.DOWNING -> {
-                                downServer()
-                            }
-                            else -> {
-                                downClient(client)
-                            }
-                        }
-                    }
+                    dealWithClient(serverSocket.accept())
                 }
             }
         }
     }
 
-    fun downServer() {
+    fun shutdownServer() {
         clients.forEach { socket, info ->
             runBlockingWithTimeout {
                 info.output.writeObject(ServerDownMessage<T>())
@@ -184,12 +162,17 @@ interface Server<out T : ServerBase> : ServerBase {
         serverSocketWithPort.socket.close()
     }
 
-    private fun downClient(client: Socket) {
+    private fun shutdownClient(client: Socket) {
         clients.remove(client)
         client.close()
     }
 
-    suspend fun securityCheck(clientInputChannel: ByteReadChannelWrapper): Boolean = true
+    /*
+        This function writes some message in the server file, and awaits the confirmation from the client that it has read the message
+        correctly. The purpose here is to check whether the client can actually access file system and read file contents.
+    */
+    suspend fun checkClientCanReadFile(clientInputChannel: ByteReadChannelWrapper): Boolean = true
+
     suspend fun serverHandshake(input: ByteReadChannelWrapper, output: ByteWriteChannelWrapper, log: Logger) = true
 
 }
@@ -206,26 +189,22 @@ suspend fun <T> runWithTimeout(
 
 //@Throws(ConnectionResetException::class)
 suspend fun tryAcquireHandshakeMessage(input: ByteReadChannelWrapper, log: Logger): Boolean {
-    log.info_and_print("tryAcquireHandshakeMessage")
     val bytes = runWithTimeout {
         input.nextBytes()
-    } ?: return false.also { log.info_and_print("tryAcquireHandshakeMessage - FAIL") }
-    log.info_and_print("bytes : ${bytes.toList()}")
-    if (bytes.zip(FIRST_HANDSHAKE_BYTE_TOKEN).any { it.first != it.second }) {
-        log.info_and_print("invalid token received")
-        return false
+    } ?: return false.also {
+        if (bytes.zip(FIRST_HANDSHAKE_BYTE_TOKEN).any { it.first != it.second }) {
+            return false
+        }
+        return true
     }
-    log.info_and_print("tryAcquireHandshakeMessage - SUCCESS")
-    return true
 }
 
 
 //@Throws(ConnectionResetException::class)
 suspend fun trySendHandshakeMessage(output: ByteWriteChannelWrapper, log: Logger): Boolean {
-    log.info_and_print("trySendHandshakeMessage")
     runWithTimeout {
         output.printBytesAndLength(FIRST_HANDSHAKE_BYTE_TOKEN.size, FIRST_HANDSHAKE_BYTE_TOKEN)
-    } ?: return false.also { log.info_and_print("trySendHandshakeMessage - FAIL") }
-    log.info_and_print("trySendHandshakeMessage - SUCCESS")
-    return true
+    } ?: return false.also {
+        return true
+    }
 }

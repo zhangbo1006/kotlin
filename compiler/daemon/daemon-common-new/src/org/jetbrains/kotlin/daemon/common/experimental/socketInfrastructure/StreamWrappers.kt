@@ -44,6 +44,7 @@ class ByteReadChannelWrapper(readChannel: ByteReadChannel, private val log: Logg
             null
         }
 
+    // TODO : replace GlobalScope with something more explicit here and below.
     private val readActor = GlobalScope.actor<ReadQuery>(capacity = Channel.UNLIMITED) {
         consumeEach { message ->
             if (!readChannel.isClosedForRead) {
@@ -82,7 +83,7 @@ class ByteReadChannelWrapper(readChannel: ByteReadChannel, private val log: Logg
      * after deafault timeout returns <tt>DEFAULT_BYTE_ARRAY</tt> */
     suspend fun readBytes(length: Int): ByteArray = runWithTimeout {
         val expectedBytes = CompletableDeferred<ByteArray>()
-//        readActor.send(GivenLengthBytesQuery(length, expectedBytes))
+        readActor.send(GivenLengthBytesQuery(length, expectedBytes))
         expectedBytes.await()
     } ?: DEFAULT_BYTE_ARRAY
 
@@ -140,7 +141,7 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
 
     private class CloseMessage : WriteActorQuery
 
-    private suspend fun tryPrint(b: ByteArray, writeChannel: ByteWriteChannel) {
+    private suspend fun tryWrite(b: ByteArray, writeChannel: ByteWriteChannel) {
         if (!writeChannel.isClosedForWrite) {
             try {
                 writeChannel.writeFully(b)
@@ -161,7 +162,7 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
                         writeChannel.close()
                     }
                     is ByteData -> {
-                        tryPrint(message.toByteArray(), writeChannel)
+                        tryWrite(message.toByteArray(), writeChannel)
                         if (!writeChannel.isClosedForWrite) {
                             try {
                                 writeChannel.flush()
@@ -177,7 +178,7 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
         }
     }
 
-    suspend fun printBytesAndLength(length: Int, bytes: ByteArray) {
+    suspend fun writeBytesAndLength(length: Int, bytes: ByteArray) {
         writeActor.send(
             ObjectWithLength(
                 getLengthBytes(length),
@@ -186,20 +187,20 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
         )
     }
 
-    private suspend fun printObjectImpl(obj: Any?) =
+    private suspend fun writeObjectImpl(obj: Any?) =
         ByteArrayOutputStream().use { bos ->
             ObjectOutputStream(bos).use { objOut ->
                 objOut.writeObject(obj)
                 objOut.flush()
                 val bytes = bos.toByteArray()
-                printBytesAndLength(bytes.size, bytes)
+                writeBytesAndLength(bytes.size, bytes)
             }
         }
             .also {
                 log.info("sent object : $obj")
             }
 
-    private suspend fun printString(s: String) = printBytesAndLength(-s.length, s.toByteArray())
+    private suspend fun writeString(s: String) = writeBytesAndLength(-s.length, s.toByteArray())
 
     fun getLengthBytes(length: Int) =
         ByteBuffer
@@ -212,8 +213,8 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
 
     suspend fun writeObject(obj: Any?) {
 //        println("write object : $obj")
-        if (obj is String) printString(obj)
-        else printObjectImpl(obj)
+        if (obj is String) writeString(obj)
+        else writeObjectImpl(obj)
     }
 
     suspend fun close() = writeActor.send(CloseMessage())

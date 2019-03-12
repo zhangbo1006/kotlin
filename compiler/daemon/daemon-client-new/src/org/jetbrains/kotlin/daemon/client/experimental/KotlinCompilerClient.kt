@@ -142,24 +142,15 @@ class KotlinCompilerClient : KotlinCompilerDaemonClient {
 
             ensureServerHostnameIsSetUp()
             val (service, newJVMOptions) =
-                    tryFindSuitableDaemonOrNewOpts(
-                        File(daemonOptions.runFilesPath),
-                        compilerId,
-                        daemonJVMOptions,
-                        { cat, msg -> GlobalScope.async { reportingTargets.report(cat, msg) } }).await()
+                    tryFindSuitableDaemonOrNewOpts(File(daemonOptions.runFilesPath), compilerId, daemonJVMOptions) { cat, msg ->
+                        GlobalScope.async { reportingTargets.report(cat, msg) }
+                    }.await()
             if (service != null) {
-//                service.connectToServer()
                 service.leaseImpl().await()
             } else {
                 if (!isLastAttempt && autostart) {
                     log.info("starting daemon...")
-                    if (startDaemon(
-                            compilerId,
-                            newJVMOptions,
-                            daemonOptions,
-                            reportingTargets
-                        )
-                    ) {
+                    if (startDaemon(compilerId, newJVMOptions, daemonOptions, reportingTargets)) {
                         reportingTargets.report(DaemonReportCategory.DEBUG, "new daemon started, trying to find it")
                     }
                 }
@@ -187,16 +178,16 @@ class KotlinCompilerClient : KotlinCompilerDaemonClient {
     }
 
     override suspend fun compile(
-            compilerService: CompileServiceAsync,
-            sessionId: Int,
-            targetPlatform: CompileService.TargetPlatform,
-            args: Array<out String>,
-            messageCollector: MessageCollector,
-            outputsCollector: ((File, List<File>) -> Unit)?,
-            compilerMode: CompilerMode,
-            reportSeverity: ReportSeverity,
-            port: Int,
-            profiler: Profiler
+        compilerService: CompileServiceAsync,
+        sessionId: Int,
+        targetPlatform: CompileService.TargetPlatform,
+        args: Array<out String>,
+        messageCollector: MessageCollector,
+        outputsCollector: ((File, List<File>) -> Unit)?,
+        compilerMode: CompilerMode,
+        reportSeverity: ReportSeverity,
+        port: Int,
+        profiler: Profiler
     ): Int = profiler.withMeasure(this) {
         val services = BasicCompilerServicesWithResultsFacadeServerServerSide(
             messageCollector,
@@ -206,22 +197,22 @@ class KotlinCompilerClient : KotlinCompilerDaemonClient {
         runBlocking {
             services.runServer()
             compilerService.compile(
-                    sessionId,
-                    args,
-                    CompilationOptions(
-                            compilerMode,
-                            targetPlatform,
-                            arrayOf(
-                                    ReportCategory.COMPILER_MESSAGE.code,
-                                    ReportCategory.DAEMON_MESSAGE.code,
-                                    ReportCategory.EXCEPTION.code,
-                                    ReportCategory.OUTPUT_MESSAGE.code
-                            ),
-                            reportSeverity.code,
-                            emptyArray()
+                sessionId,
+                args,
+                CompilationOptions(
+                    compilerMode,
+                    targetPlatform,
+                    arrayOf(
+                        ReportCategory.COMPILER_MESSAGE.code,
+                        ReportCategory.DAEMON_MESSAGE.code,
+                        ReportCategory.EXCEPTION.code,
+                        ReportCategory.OUTPUT_MESSAGE.code
                     ),
-                    services.clientSide,
-                    createCompResults().clientSide
+                    reportSeverity.code,
+                    emptyArray()
+                ),
+                services.clientSide,
+                createCompResults().clientSide
             ).get()
         }
     }
@@ -271,7 +262,6 @@ class KotlinCompilerClient : KotlinCompilerDaemonClient {
 
             if (!clientOptions.stop) {
                 if (compilerId.compilerClasspath.none()) {
-                    // attempt to find compiler to use
                     // attempt to find compiler to use
                     System.err.println("compiler wasn't explicitly specified, attempt to find appropriate jar")
                     detectCompilerClasspath()
@@ -341,7 +331,6 @@ class KotlinCompilerClient : KotlinCompilerDaemonClient {
                         val memAfter = daemon.getUsedMemory().get() / 1024
                         log.info("Compilation time: " + TimeUnit.NANOSECONDS.toMillis(endTime - startTime) + " ms")
                         log.info("Used memory $memAfter (${"%+d".format(memAfter - memBefore)} kb)")
-//                    serverRun.await()
                     } finally {
                         // TODO ??
                     }

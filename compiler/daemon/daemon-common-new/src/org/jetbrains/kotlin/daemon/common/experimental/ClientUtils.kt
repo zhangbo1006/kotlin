@@ -28,8 +28,8 @@ private const val ORPHANED_RUN_FILE_AGE_THRESHOLD_MS = 1000000L
 data class DaemonWithMetadataAsync(val daemon: CompileServiceAsync, val runFile: File, val jvmOptions: DaemonJVMOptions)
 
 val log = Logger.getLogger("client utils")
-internal fun String.info(msg: String) = {}()//log.info("[$this] : $msg")
 
+// TODO: replace mapNotNull in walkDaemonsAsync with this method.
 private suspend fun <T, R : Any> List<T>.mapNotNullAsync(transform: suspend (T) -> R?): List<R> =
     this
         .map { GlobalScope.async { transform(it) } }
@@ -48,36 +48,17 @@ suspend fun walkDaemonsAsync(
     report: (DaemonReportCategory, String) -> Unit = { _, _ -> },
     useRMI: Boolean = true,
     useSockets: Boolean = true
-): List<DaemonWithMetadataAsync> {//Deferred<List<DaemonWithMetadataAsync>> {
-    // : Sequence<DaemonWithMetadataAsync>
+): List<DaemonWithMetadataAsync> { // TODO: replace with Deferred<List<DaemonWithMetadataAsync>> and use mapNotNullAsync to speed this up
     val classPathDigest = compilerId.compilerClasspath.map { File(it).absolutePath }.distinctStringsDigest().toHexString()
     val portExtractor = makePortFromRunFilenameExtractor(classPathDigest)
-    log.info("\nssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\n")
     return registryDir.walk().toList() // list, since walk returns Sequence and Sequence.map{...} is not inline => coroutines dont work
         .map { Pair(it, portExtractor(it.name)) }
         .filter { (file, port) -> port != null && filter(file, port) }
         .mapNotNull { (file, port) ->
-            //.mapNotNull { (file, port) ->
             // all actions process concurrently
-            log.info("\n<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>\n")
-            log.info("(port = $port, file = $file)")
-            log.info("(port = $port, file = $file)")
-            log.info("fileToCompareTimestamp = $fileToCompareTimestamp")
-            log.info("port != null : ${port != null}")
-            log.info("port in RANGE : ${(port ?: -1) in 1..(MAX_PORT_NUMBER - 1)}")
             assert(port!! in 1..(MAX_PORT_NUMBER - 1))
-            log.info("lastModified()")
-            log.info("file.lastModified() : ${file.lastModified()}")
-            log.info("fileToCompareTimestamp.lastModified() : ${fileToCompareTimestamp.lastModified()}")
             val relativeAge = fileToCompareTimestamp.lastModified() - file.lastModified()
-            log.info("after ASSERT - relativeAge : $relativeAge")
-//            report(
-//                DaemonReportCategory.DEBUG,
-//                "found daemon on socketPort $port ($relativeAge ms old), trying to connect"
-//            )
-            log.info("found daemon on socketPort $port ($relativeAge ms old), trying to connect")
             val daemon = tryConnectToDaemonAsync(port, report, file, useRMI, useSockets)
-            log.info("daemon = $daemon (port= $port)")
             // cleaning orphaned file; note: daemon should shut itself down if it detects that the runServer file is deleted
             if (daemon == null) {
                 if (relativeAge - ORPHANED_RUN_FILE_AGE_THRESHOLD_MS <= 0) {
@@ -99,27 +80,18 @@ suspend fun walkDaemonsAsync(
                 }
             }
             try {
-                log.info("try daemon = ...   ($daemon(port=$port)), daemon != null : ${daemon != null}")
-                daemon
-                    ?.let {
-                        DaemonWithMetadataAsync(it, file, it.getDaemonJVMOptions().get())
-                    }
-                    .also {
-                        log.info("($port)DaemonWithMetadataAsync == $it)")
-                    }
+                daemon?.let {
+                    DaemonWithMetadataAsync(it, file, it.getDaemonJVMOptions().get())
+                }
             } catch (e: Exception) {
-                log.info("($port)<error_in_client_utils> : " + e.message)
                 report(
                     DaemonReportCategory.INFO,
                     "ERROR: unable to retrieve daemon JVM options, assuming daemon is dead: ${e.message}"
                 )
                 null
-            }.also {
-                log.info("\n\n_______________________________________________________________________________________________________\n\n")
             }
         }
 }
-//}
 
 private inline fun tryConnectToDaemonByRMI(port: Int, report: (DaemonReportCategory, String) -> Unit): CompileServiceAsync? {
     try {
@@ -177,5 +149,5 @@ private suspend fun tryConnectToDaemonAsync(
     useSockets: Boolean = true
 ): CompileServiceAsync? =
     useSockets.takeIf { it }?.let { tryConnectToDaemonBySockets(port, file, report) }
-            ?: (useRMI.takeIf { it }?.let { tryConnectToDaemonByRMI(port, report) })
+        ?: (useRMI.takeIf { it }?.let { tryConnectToDaemonByRMI(port, report) })
 

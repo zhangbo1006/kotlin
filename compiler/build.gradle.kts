@@ -31,6 +31,8 @@ fun configureFreeCompilerArg(isEnabled: Boolean, compilerArgument: String) {
 
 val antLauncherJar by configurations.creating
 
+val ktorExcludesForDaemon : List<Pair<String, String>> by rootProject.extra
+
 dependencies {
     testRuntime(intellijDep()) // Should come before compiler, because of "progarded" stuff needed for tests
 
@@ -54,14 +56,9 @@ dependencies {
     testCompileOnly(project(":kotlin-reflect-api"))
     testCompile(commonDep("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8")) { isTransitive = false }
     testCompile(commonDep("io.ktor", "ktor-network")) {
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-jdk8")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-common")
+        ktorExcludesForDaemon.forEach { (group, module) ->
+            exclude(group = group, module = module)
+        }
     }
     otherCompilerModules.forEach {
         testCompileOnly(project(it))
@@ -77,14 +74,9 @@ dependencies {
         isTransitive = false
     }
     testRuntime(commonDep("io.ktor", "ktor-network")) {
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-jdk8")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-common")
+        ktorExcludesForDaemon.forEach { (group, module) ->
+            exclude(group = group, module = module)
+        }
 
     }
     testRuntime(androidDxJar())

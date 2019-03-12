@@ -31,13 +31,12 @@ class CompileServiceClientSideImpl(
         @Volatile
         private var lastUsedMilliSeconds: Long = nowMillieconds()
 
-        private fun deltaTime() = nowMillieconds() - lastUsedMilliSeconds
+        private fun millisecondsSinceLastUsed() = nowMillieconds() - lastUsedMilliSeconds
 
-        private fun keepAliveSuccess() = deltaTime() < KEEPALIVE_PERIOD
+        private fun keepAliveSuccess() = millisecondsSinceLastUsed() < KEEPALIVE_PERIOD
 
         override suspend fun authorizeOnServer(serverOutputChannel: ByteWriteChannelWrapper): Boolean =
             runWithTimeout {
-                log.info("in authoriseOnServer(serverFile=$serverFile)")
                 val signature = serverFile.inputStream().use(::readTokenKeyPairAndSign)
                 sendSignature(serverOutputChannel, signature)
                 true
@@ -47,30 +46,25 @@ class CompileServiceClientSideImpl(
             return trySendHandshakeMessage(output, log) && tryAcquireHandshakeMessage(input, log)
         }
 
-        override suspend fun startKeepAlives() {
+        override fun startKeepAlives() {
             val keepAliveMessage = Server.KeepAliveMessage<CompileServiceServerSide>()
             GlobalScope.async(newSingleThreadContext("keepAliveThread")) {
                 delay(KEEPALIVE_PERIOD * 4)
                 while (true) {
                     delay(KEEPALIVE_PERIOD)
-//                    println("[$this] KEEPALIVE_PERIOD")
                     while (keepAliveSuccess()) {
-//                        println("[$this] remained ${KEEPALIVE_PERIOD - deltaTime()}")
-                        delay(KEEPALIVE_PERIOD - deltaTime())
+                        delay(KEEPALIVE_PERIOD - millisecondsSinceLastUsed())
                     }
                     runWithTimeout(timeout = KEEPALIVE_PERIOD / 2) {
-                        //                        println("[$this] sent keepalive")
                         val id = sendMessage(keepAliveMessage)
                         readMessage<Server.KeepAliveAcknowledgement<*>>(id)
                     } ?: if (!keepAliveSuccess()) readActor.send(StopAllRequests()).also {
-                        //                        println("[$this] got keepalive")
                     }
                 }
             }
         }
 
-        override suspend fun delayKeepAlives() {
-//            println("[$this] delayKeepAlives")
+        override fun delayKeepAlives() {
             lastUsedMilliSeconds = nowMillieconds()
         }
 
@@ -80,8 +74,6 @@ class CompileServiceClientSideImpl(
         return readMessage(id)
     }
 
-    val log = Logger.getLogger("CompileServiceClientSideImpl")
-
     override suspend fun compile(
         sessionId: Int,
         compilerArguments: Array<out String>,
@@ -89,7 +81,6 @@ class CompileServiceClientSideImpl(
         servicesFacade: CompilerServicesFacadeBaseAsync,
         compilationResults: CompilationResultsAsync?
     ): CompileService.CallResult<Int> {
-        log.info("override fun compile(")
         val id = sendMessage(CompileMessage(
             sessionId,
             compilerArguments,
@@ -97,7 +88,6 @@ class CompileServiceClientSideImpl(
             servicesFacade,
             compilationResults
         ))
-        log.info("override fun compile(: id = $id")
         return readMessage(id)
     }
 
@@ -150,18 +140,12 @@ class CompileServiceClientSideImpl(
     }
 
     override suspend fun getDaemonJVMOptions(): CompileService.CallResult<DaemonJVMOptions> {
-        log.info("sending message (GetDaemonJVMOptionsMessage) ... (deaemon port = $serverPort)")
         val id = sendMessage(GetDaemonJVMOptionsMessage())
-        log.info("message is sent!")
-        log.info("reading message...")
         val res = readMessage<CompileService.CallResult<DaemonJVMOptions>>(id)
-        log.info("reply : $res")
         return res
     }
 
     override suspend fun registerClient(aliveFlagPath: String?): CompileService.CallResult<Nothing> {
-        log.info("registerClient")
-//        println("client's fun registerClient")
         val id = sendMessage(RegisterClientMessage(aliveFlagPath))
         return readMessage(id)
     }
@@ -191,9 +175,7 @@ class CompileServiceClientSideImpl(
 
     override suspend fun shutdown(): CompileService.CallResult<Nothing> {
         val id = sendMessage(ShutdownMessage())
-        log.info("ShutdownMessage_id = $id")
         val res = readMessage<CompileService.CallResult<Nothing>>(id)
-        log.info("ShutdownMessage_res : $res")
         return res
     }
 

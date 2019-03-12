@@ -26782,7 +26782,7 @@ public final class DebugProtoBuf {
      * <code>optional int32 version_full = 2;</code>
      *
      * <pre>
-     * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+     * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
      * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
      * </pre>
      */
@@ -26791,7 +26791,7 @@ public final class DebugProtoBuf {
      * <code>optional int32 version_full = 2;</code>
      *
      * <pre>
-     * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+     * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
      * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
      * </pre>
      */
@@ -27216,7 +27216,7 @@ public final class DebugProtoBuf {
      * <code>optional int32 version_full = 2;</code>
      *
      * <pre>
-     * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+     * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
      * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
      * </pre>
      */
@@ -27227,7 +27227,7 @@ public final class DebugProtoBuf {
      * <code>optional int32 version_full = 2;</code>
      *
      * <pre>
-     * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+     * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
      * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
      * </pre>
      */
@@ -27704,7 +27704,7 @@ public final class DebugProtoBuf {
        * <code>optional int32 version_full = 2;</code>
        *
        * <pre>
-       * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+       * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
        * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
        * </pre>
        */
@@ -27715,7 +27715,7 @@ public final class DebugProtoBuf {
        * <code>optional int32 version_full = 2;</code>
        *
        * <pre>
-       * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+       * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
        * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
        * </pre>
        */
@@ -27726,7 +27726,7 @@ public final class DebugProtoBuf {
        * <code>optional int32 version_full = 2;</code>
        *
        * <pre>
-       * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+       * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
        * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
        * </pre>
        */
@@ -27740,7 +27740,7 @@ public final class DebugProtoBuf {
        * <code>optional int32 version_full = 2;</code>
        *
        * <pre>
-       * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+       * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
        * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
        * </pre>
        */
@@ -34443,7 +34443,7 @@ public final class DebugProtoBuf {
       "tbrains.kotlin.metadata.VersionRequireme" +
       "nt.Level:\005ERROR\022\022\n\nerror_code\030\004 \001(\005\022\025\n\007m" +
       "essage\030\005 \001(\005B\004\230\265\030\001\022e\n\014version_kind\030\006 \001(\016" +
-      "2=.org.jetbrains.kotlin.metadata.Version" +
+      "2=.org.jetbrains.kotlin.metadata.version" +
       "Requirement.VersionKind:\020LANGUAGE_VERSIO" +
       "N\"+\n\005Level\022\013\n\007WARNING\020\000\022\t\n\005ERROR\020\001\022\n\n\006HI" +
       "DDEN\020\002\"J\n\013VersionKind\022\024\n\020LANGUAGE_VERSIO" +
@@ -34615,7 +34615,7 @@ public final class DebugProtoBuf {
     internal_static_org_jetbrains_kotlin_metadata_VersionRequirement_fieldAccessorTable = new
       org.jetbrains.kotlin.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_org_jetbrains_kotlin_metadata_VersionRequirement_descriptor,
-        new java.lang.String[] { "Version", "VersionFull", "Level", "ErrorCode", "Message", "VersionKind", });
+        new java.lang.String[] { "DaemonProtocolVariant", "VersionFull", "Level", "ErrorCode", "Message", "VersionKind", });
     internal_static_org_jetbrains_kotlin_metadata_VersionRequirementTable_descriptor =
       getDescriptor().getMessageTypes().get(15);
     internal_static_org_jetbrains_kotlin_metadata_VersionRequirementTable_fieldAccessorTable = new

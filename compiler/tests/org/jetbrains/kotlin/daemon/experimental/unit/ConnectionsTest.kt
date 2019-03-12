@@ -34,7 +34,7 @@ import kotlin.concurrent.schedule
 
 class ConnectionsTest : KotlinIntegrationTestBase() {
 
-    val kotlinCompilerClient = KotlinCompilerDaemonClient.instantiate(Version.RMI) // TODO(SOCKETS)
+    val kotlinCompilerClient = KotlinCompilerDaemonClient.instantiate(DaemonProtocolVariant.RMI) // TODO(SOCKETS)
 
     private val logFile = createTempFile("/Users/jetbrains/Documents/kotlin/my_fork/kotlin", ".txt").also {
         println("client log file path : ${it.loggerCompatiblePath}")

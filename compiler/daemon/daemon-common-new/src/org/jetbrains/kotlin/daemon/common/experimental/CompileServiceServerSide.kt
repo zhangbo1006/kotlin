@@ -10,5 +10,4 @@ import org.jetbrains.kotlin.daemon.common.experimental.socketInfrastructure.Serv
 
 interface CompileServiceServerSide : CompileServiceAsync, Server<CompileServiceServerSide> {
     override val serverPort: Int
-        get
 }

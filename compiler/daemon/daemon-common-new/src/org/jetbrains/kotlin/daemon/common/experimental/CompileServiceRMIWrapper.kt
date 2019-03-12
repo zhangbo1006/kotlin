@@ -47,10 +47,7 @@ class CompileServiceRMIWrapper(val server: CompileServiceServerSide, daemonOptio
     }
 
     override fun getDaemonJVMOptions() = runBlocking {
-        log.info("in wrapper's getDaemonJVMOptions")
-        server.getDaemonJVMOptions().also {
-            log.info("server returned ${if (it.isGood) it.get() else it}")
-        }
+        server.getDaemonJVMOptions()
     }
 
     override fun registerClient(aliveFlagPath: String?) = runBlocking {
@@ -190,15 +187,11 @@ class CompileServiceRMIWrapper(val server: CompileServiceServerSide, daemonOptio
     }
 
     init {
-        // assuming logically synchronized
-        log.info("<init>")
         try {
             // cleanup for the case of incorrect restart and many other situations
             UnicastRemoteObject.unexportObject(this, false)
-            log.info("unexportObject_________________________________")
         } catch (e: NoSuchObjectException) {
             // ignoring if object already exported
-            log.info("// ignoring if object already exported_________________________________")
         }
 
         val (registry, port) = findPortAndCreateRegistry(
@@ -207,8 +200,6 @@ class CompileServiceRMIWrapper(val server: CompileServiceServerSide, daemonOptio
             RMI_WRAPPER_PORTS_RANGE_END
         )
 
-        log.info("port = $port , registry = $registry")
-
         val stub = UnicastRemoteObject.exportObject(
             this,
             port,
@@ -216,10 +207,7 @@ class CompileServiceRMIWrapper(val server: CompileServiceServerSide, daemonOptio
             LoopbackNetworkInterface.serverLoopbackSocketFactory
         ) as CompileService
 
-        log.info("stub = $stub")
-
         registry.rebind(COMPILER_SERVICE_RMI_NAME, stub)
-        log.info("rebinded!")
 
         // create file :
         val runFileDir = File(daemonOptions.runFilesPathOrDefault)

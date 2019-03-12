@@ -46,6 +46,6 @@ public class JavaRuntimePresentationProvider extends LibraryPresentationProvider
     @Override
     public LibraryVersionProperties detect(@NotNull List<VirtualFile> classesRoots) {
         String version = JavaRuntimeDetectionUtil.getJavaRuntimeVersion(classesRoots);
-        return version == null ? null : new LibraryVersionProperties(version);
+        return version == null ? null : new LibraryVersionProperties(daemonProtocolVariant);
     }
 }

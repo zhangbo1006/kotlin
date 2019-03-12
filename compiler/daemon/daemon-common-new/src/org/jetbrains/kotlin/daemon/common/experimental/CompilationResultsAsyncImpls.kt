@@ -16,7 +16,7 @@ interface CompilationResultsServerSide : CompilationResultsAsync, Server<Compila
         val compilationResultCategory: Int,
         val value: Serializable
     ) : Server.Message<CompilationResultsServerSide>() {
-        override suspend fun processImpl(server: CompilationResultsServerSide, printObject: (Any?) -> Unit) {
+        override suspend fun processImpl(server: CompilationResultsServerSide, sendReply: (Any?) -> Unit) {
             server.add(compilationResultCategory, value)
         }
     }
@@ -34,12 +34,7 @@ class CompilationResultsClientSideImpl(val socketPort: Int) : CompilationResults
         sendMessage(CompilationResultsServerSide.AddMessage(compilationResultCategory, value))
     }
 
-//    init {
-//        runBlocking {
-//            connectToServer()
-//        }
-//    }
-
+    // TODO: consider connecting to server in init-block
 }
 
 enum class CompilationResultCategory(val code: Int) {

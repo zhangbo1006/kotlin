@@ -16,10 +16,7 @@ class CompilerServicesFacadeBaseClientSideImpl(val serverPort: Int) :
     CompilerServicesFacadeBaseClientSide,
     Client<CompilerServicesFacadeBaseServerSide> by DefaultClient(serverPort) {
 
-    init {
-//        runBlocking { connectToServer() }
-        log.info("CompilerServicesFacadeBaseClientSideImpl on $serverPort - inited")
-    }
+    // TODO: consider invoking connectToServer() in init block
 
     override suspend fun report(category: Int, severity: Int, message: String?, attachment: Serializable?) {
         log.info("client $serverPort - fun report")

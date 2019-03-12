@@ -7,6 +7,8 @@ plugins {
     id("jps-compatible")
 }
 
+val ktorExcludesForDaemon : List<Pair<String, String>> by rootProject.extra
+
 dependencies {
     compile(project(":compiler:cli"))
     compile(project(":compiler:daemon-common"))
@@ -21,15 +23,10 @@ dependencies {
     runtime(project(":kotlin-reflect"))
     compileOnly(project(":kotlin-reflect-api"))
     compile(commonDep("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8")) { isTransitive = false }
-    compile(commonDep("io.ktor", "ktor-network")) {
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-jdk8")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-common")
+    compileOnly(commonDep("io.ktor", "ktor-network")) {
+        ktorExcludesForDaemon.forEach { (group, module) ->
+            exclude(group = group, module = module)
+        }
     }
 }
 

@@ -222,7 +222,7 @@ protected constructor(
                 module.project,
                 "This language feature requires version $requiredStdlibVersion or later of the Kotlin runtime library. " +
                         "Please update the version in your build script.",
-                "Update Language Version"
+                "Update Language version"
             )
             return
         }
@@ -232,7 +232,7 @@ protected constructor(
             Messages.showErrorDialog(
                 module.project,
                 "Failed to update.pom.xml. Please update the file manually.",
-                "Update Language Version"
+                "Update Language version"
             )
         } else {
             OpenFileDescriptor(module.project, element.containingFile.virtualFile, element.textRange.startOffset).navigate(true)

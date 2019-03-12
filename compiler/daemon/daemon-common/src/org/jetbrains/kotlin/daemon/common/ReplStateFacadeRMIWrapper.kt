@@ -20,13 +20,7 @@ class ReplStateFacadeRMIWrapper(val clientSide: ReplStateFacadeAsync) : ReplStat
     override fun historyReset() = runBlocking { clientSide.historyReset() }
 
     override fun historyResetTo(id: ILineId) = runBlocking { clientSide.historyResetTo(id) }
-
-//    init {
-//        runBlocking {
-//            clientSide.connectToServer()
-//        }
-//    }
-
+    
 }
 
 fun ReplStateFacadeAsync.toRMI() = ReplStateFacadeRMIWrapper(this)

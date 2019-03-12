@@ -18,6 +18,8 @@ plugins {
 
 jvmTarget = "1.6"
 
+val ktorExcludesForDaemon : List<Pair<String, String>> by rootProject.extra
+
 dependencies {
     compile(project(":core:descriptors"))
     compile(project(":core:descriptors.jvm"))
@@ -31,15 +33,10 @@ dependencies {
     compile(commonDep("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8")) {
         isTransitive = false
     }
-    compile(commonDep("io.ktor", "ktor-network")) {
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
-        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-jdk8")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-common")
+    compileOnly(commonDep("io.ktor", "ktor-network")) {
+        ktorExcludesForDaemon.forEach { (group, module) ->
+            exclude(group = group, module = module)
+        }
     }
 }
 

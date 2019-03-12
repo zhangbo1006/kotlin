@@ -261,7 +261,7 @@ abstract class AbstractDiagnosticsTest : BaseDiagnosticsTest() {
     }
 
     /**
-     * Version settings used when no test data files have overriding version directives
+     * version settings used when no test data files have overriding version directives
      */
     protected open fun defaultLanguageVersionSettings(): LanguageVersionSettings {
         return CompilerTestLanguageVersionSettings(

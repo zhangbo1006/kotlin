@@ -5,9 +5,6 @@
 
 package org.jetbrains.kotlin.daemon.common
 
-import java.io.Serializable
-
-interface CompilationResultsAsync {
-    suspend fun add(compilationResultCategory: Int, value: Serializable)
-    val clientSide: CompilationResultsAsync
+enum class DaemonProtocolVariant {
+    RMI, SOCKETS
 }

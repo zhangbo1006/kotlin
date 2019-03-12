@@ -9,8 +9,8 @@ import org.jetbrains.kotlin.daemon.common.experimental.CompilerCallbackServicesF
 import org.jetbrains.kotlin.load.kotlin.incremental.components.IncrementalCache
 import org.jetbrains.kotlin.load.kotlin.incremental.components.IncrementalCompilationComponents
 import org.jetbrains.kotlin.modules.TargetId
-import org.jetbrains.kotlin.daemon.common.impls.DummyProfilerAsync
-import org.jetbrains.kotlin.daemon.common.impls.ProfilerAsync
+import org.jetbrains.kotlin.daemon.common.DummyProfilerAsync
+import org.jetbrains.kotlin.daemon.common.ProfilerAsync
 
 class RemoteIncrementalCompilationComponentsClient(val facade: CompilerCallbackServicesFacadeClientSide, eventManager: EventManager, val profiler: ProfilerAsync = DummyProfilerAsync()) : IncrementalCompilationComponents {
     override fun getIncrementalCache(target: TargetId): IncrementalCache = RemoteIncrementalCacheClient(facade, target, profiler)

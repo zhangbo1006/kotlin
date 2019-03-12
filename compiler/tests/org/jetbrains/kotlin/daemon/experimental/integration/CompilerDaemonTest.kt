@@ -59,7 +59,7 @@ val TIMEOUT_DAEMON_RUNNER_EXIT_MS = 10000L
 
 class CompilerDaemonTest : KotlinIntegrationTestBase() {
 
-    val kotlinCompilerClientInstance = KotlinCompilerDaemonClient.instantiate(Version.RMI) // TODO(SOCKETS)
+    val kotlinCompilerClientInstance = KotlinCompilerDaemonClient.instantiate(DaemonProtocolVariant.RMI) // TODO(SOCKETS)
 
     private fun createNewLogFile(): File {
         println("creating logFile")

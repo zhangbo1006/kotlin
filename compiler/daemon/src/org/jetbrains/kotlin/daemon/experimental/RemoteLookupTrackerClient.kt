@@ -8,8 +8,8 @@ package org.jetbrains.kotlin.daemon.experimental
 import com.intellij.util.containers.StringInterner
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.daemon.common.experimental.CompilerCallbackServicesFacadeClientSide
-import org.jetbrains.kotlin.daemon.common.impls.DummyProfilerAsync
-import org.jetbrains.kotlin.daemon.common.impls.ProfilerAsync
+import org.jetbrains.kotlin.daemon.common.DummyProfilerAsync
+import org.jetbrains.kotlin.daemon.common.ProfilerAsync
 import org.jetbrains.kotlin.incremental.components.LookupInfo
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.incremental.components.Position

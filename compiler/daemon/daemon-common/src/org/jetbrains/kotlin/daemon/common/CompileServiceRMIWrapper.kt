@@ -20,52 +20,54 @@ class CompileServiceClientRMIWrapper(
         asyncCompileService.classesFqNamesByFiles(sessionId, sourceFiles)
     }
 
+    private fun reportNotImplemented(): Nothing = throw IllegalStateException("Unexpected call to deprecated method")
+
     // deprecated methods :
     override fun remoteCompile(
-            sessionId: Int,
-            targetPlatform: CompileService.TargetPlatform,
-            args: Array<out String>,
-            servicesFacade: CompilerCallbackServicesFacade,
-            compilerOutputStream: RemoteOutputStream,
-            outputFormat: CompileService.OutputFormat,
-            serviceOutputStream: RemoteOutputStream,
-            operationsTracer: RemoteOperationsTracer?
+        sessionId: Int,
+        targetPlatform: CompileService.TargetPlatform,
+        args: Array<out String>,
+        servicesFacade: CompilerCallbackServicesFacade,
+        compilerOutputStream: RemoteOutputStream,
+        outputFormat: CompileService.OutputFormat,
+        serviceOutputStream: RemoteOutputStream,
+        operationsTracer: RemoteOperationsTracer?
     ): CompileService.CallResult<Int> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        reportNotImplemented()
     }
 
     override fun remoteIncrementalCompile(
-            sessionId: Int,
-            targetPlatform: CompileService.TargetPlatform,
-            args: Array<out String>,
-            servicesFacade: CompilerCallbackServicesFacade,
-            compilerOutputStream: RemoteOutputStream,
-            compilerOutputFormat: CompileService.OutputFormat,
-            serviceOutputStream: RemoteOutputStream,
-            operationsTracer: RemoteOperationsTracer?
+        sessionId: Int,
+        targetPlatform: CompileService.TargetPlatform,
+        args: Array<out String>,
+        servicesFacade: CompilerCallbackServicesFacade,
+        compilerOutputStream: RemoteOutputStream,
+        compilerOutputFormat: CompileService.OutputFormat,
+        serviceOutputStream: RemoteOutputStream,
+        operationsTracer: RemoteOperationsTracer?
     ): CompileService.CallResult<Int> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        reportNotImplemented()
     }
 
     override fun leaseReplSession(
-            aliveFlagPath: String?,
-            targetPlatform: CompileService.TargetPlatform,
-            servicesFacade: CompilerCallbackServicesFacade,
-            templateClasspath: List<File>,
-            templateClassName: String,
-            scriptArgs: Array<out Any?>?,
-            scriptArgsTypes: Array<out Class<out Any>>?,
-            compilerMessagesOutputStream: RemoteOutputStream,
-            evalOutputStream: RemoteOutputStream?,
-            evalErrorStream: RemoteOutputStream?,
-            evalInputStream: RemoteInputStream?,
-            operationsTracer: RemoteOperationsTracer?
+        aliveFlagPath: String?,
+        targetPlatform: CompileService.TargetPlatform,
+        servicesFacade: CompilerCallbackServicesFacade,
+        templateClasspath: List<File>,
+        templateClassName: String,
+        scriptArgs: Array<out Any?>?,
+        scriptArgsTypes: Array<out Class<out Any>>?,
+        compilerMessagesOutputStream: RemoteOutputStream,
+        evalOutputStream: RemoteOutputStream?,
+        evalErrorStream: RemoteOutputStream?,
+        evalInputStream: RemoteInputStream?,
+        operationsTracer: RemoteOperationsTracer?
     ): CompileService.CallResult<Int> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        reportNotImplemented()
     }
 
     override fun remoteReplLineCheck(sessionId: Int, codeLine: ReplCodeLine): CompileService.CallResult<ReplCheckResult> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        reportNotImplemented()
     }
 
     override fun remoteReplLineCompile(
@@ -73,7 +75,7 @@ class CompileServiceClientRMIWrapper(
         codeLine: ReplCodeLine,
         history: List<ReplCodeLine>?
     ): CompileService.CallResult<ReplCompileResult> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        reportNotImplemented()
     }
 
     override fun remoteReplLineEval(
@@ -81,16 +83,16 @@ class CompileServiceClientRMIWrapper(
         codeLine: ReplCodeLine,
         history: List<ReplCodeLine>?
     ): CompileService.CallResult<ReplEvalResult> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        reportNotImplemented()
     }
 
     // normal methods:
     override fun compile(
-            sessionId: Int,
-            compilerArguments: Array<out String>,
-            compilationOptions: CompilationOptions,
-            servicesFacade: CompilerServicesFacadeBase,
-            compilationResults: CompilationResults?
+        sessionId: Int,
+        compilerArguments: Array<out String>,
+        compilationOptions: CompilationOptions,
+        servicesFacade: CompilerServicesFacadeBase,
+        compilationResults: CompilationResults?
     ) = runBlocking {
         asyncCompileService.compile(
             sessionId,
@@ -103,12 +105,12 @@ class CompileServiceClientRMIWrapper(
 
 
     override fun leaseReplSession(
-            aliveFlagPath: String?,
-            compilerArguments: Array<out String>,
-            compilationOptions: CompilationOptions,
-            servicesFacade: CompilerServicesFacadeBase,
-            templateClasspath: List<File>,
-            templateClassName: String
+        aliveFlagPath: String?,
+        compilerArguments: Array<out String>,
+        compilationOptions: CompilationOptions,
+        servicesFacade: CompilerServicesFacadeBase,
+        templateClasspath: List<File>,
+        templateClassName: String
     ) = runBlocking {
         asyncCompileService.leaseReplSession(
             aliveFlagPath,
