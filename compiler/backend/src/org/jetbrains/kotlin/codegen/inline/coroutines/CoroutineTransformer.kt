@@ -91,21 +91,17 @@ class CoroutineTransformer(
     private fun isSuspendFunction(node: MethodNode): Boolean = findFakeContinuationConstructorClassName(node) != null
 
     private fun newStateMachineForLambda(node: MethodNode, element: KtElement): DeferredMethodVisitor {
+        val name = node.name.removeSuffix(FOR_INLINE_SUFFIX)
         return DeferredMethodVisitor(
             MethodNode(
-                node.access, node.name, node.desc, node.signature,
+                node.access, name, node.desc, node.signature,
                 ArrayUtil.toStringArray(node.exceptions)
             )
         ) {
             val stateMachineBuilder = CoroutineTransformerMethodVisitor(
                 classBuilder.newMethod(
-                    JvmDeclarationOrigin.NO_ORIGIN,
-                    node.access,
-                    node.name,
-                    node.desc,
-                    node.signature,
-                    ArrayUtil.toStringArray(node.exceptions)
-                ), node.access, node.name, node.desc, null, null,
+                    JvmDeclarationOrigin.NO_ORIGIN, node.access, name, node.desc, node.signature, null
+                ), node.access, name, node.desc, null, null,
                 obtainClassBuilderForCoroutineState = { classBuilder },
                 element = element,
                 diagnostics = state.diagnostics,
@@ -119,12 +115,7 @@ class CoroutineTransformer(
 
             if (generateForInline)
                 MethodNodeCopyingMethodVisitor(
-                    delegate = stateMachineBuilder,
-                    access = node.access,
-                    name = node.name.removeSuffix(FOR_INLINE_SUFFIX),
-                    desc = node.desc,
-                    signature = node.signature,
-                    exceptions = null,
+                    stateMachineBuilder, node.access, name, node.desc, node.signature, null,
                     codegen = null,
                     classBuilder = classBuilder,
                     keepAccess = true

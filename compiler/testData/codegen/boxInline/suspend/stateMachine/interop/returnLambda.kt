@@ -14,16 +14,13 @@ inline fun inlineMe(crossinline c: suspend () -> Unit) = suspend { c(); c() }
 // FILE: A.java
 
 import test.InlineMeKt;
-import helpers.StateMachineChecker;
-import helpers.EmptyContinuation;
 import kotlin.Unit;
+import kotlin.jvm.functions.*;
+import COROUTINES_PACKAGE.*;
 
 public class A {
-    public static void call() {
-        InlineMeKt.inlineMe((continuation) -> {
-            StateMachineChecker.INSTANCE.suspendHere(continuation);
-            return Unit.INSTANCE;
-        }).invoke(new EmptyContinuation());
+    public static Object call(Object c) {
+        return InlineMeKt.inlineMe((Function1<? super Continuation<? super Unit>, Object>) c);
     }
 }
 
@@ -38,8 +35,13 @@ fun builder(c: suspend () -> Unit) {
 }
 
 fun box(): String {
-    A.call()
-    StateMachineChecker.check(2)
+    builder {
+        (A.call(suspend {
+            StateMachineChecker.suspendHere()
+            StateMachineChecker.suspendHere()
+        }) as (suspend () -> Unit)).invoke()
+    }
+    StateMachineChecker.check(4)
     StateMachineChecker.reset()
     builder {
         inlineMe {
