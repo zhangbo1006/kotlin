@@ -19,12 +19,11 @@ import org.jetbrains.kotlin.fir.java.enhancement.*
 import org.jetbrains.kotlin.fir.java.enhancement.EnhancementSignatureParts
 import org.jetbrains.kotlin.fir.java.toNotNullConeKotlinType
 import org.jetbrains.kotlin.fir.java.types.FirJavaTypeRef
+import org.jetbrains.kotlin.fir.render
 import org.jetbrains.kotlin.fir.scopes.FirScope
 import org.jetbrains.kotlin.fir.scopes.ProcessorAction
-import org.jetbrains.kotlin.fir.symbols.ConeCallableSymbol
-import org.jetbrains.kotlin.fir.symbols.ConeFunctionSymbol
-import org.jetbrains.kotlin.fir.symbols.ConePropertySymbol
-import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
+import org.jetbrains.kotlin.fir.symbols.*
+import org.jetbrains.kotlin.fir.symbols.impl.FirAccessorSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.types.*
@@ -77,30 +76,41 @@ class JavaClassEnhancementScope(
     private fun enhance(
         original: ConePropertySymbol,
         name: Name
-    ): FirPropertySymbol {
-        val firField = (original as FirBasedSymbol<*>).fir as? FirJavaField ?: error("Can't make enhancement for $original")
+    ): ConePropertySymbol {
+        when (val firElement = (original as FirBasedSymbol<*>).fir) {
+            is FirJavaField -> {
 
-        val memberContext = context.copyWithNewDefaultTypeQualifiers(typeQualifierResolver, jsr305State, firField.annotations)
-        val newReturnTypeRef = enhanceReturnType(firField, emptyList(), memberContext, null)
+                val memberContext = context.copyWithNewDefaultTypeQualifiers(typeQualifierResolver, jsr305State, firElement.annotations)
+                val newReturnTypeRef = enhanceReturnType(firElement, emptyList(), memberContext, null)
 
-        val symbol = FirPropertySymbol(original.callableId)
-        with(firField) {
-            FirMemberPropertyImpl(
-                this@JavaClassEnhancementScope.session, null, symbol, name,
-                visibility, modality, isExpect, isActual, isOverride,
-                isConst = false, isLateInit = false,
-                receiverTypeRef = null,
-                returnTypeRef = newReturnTypeRef,
-                isVar = isVar, initializer = null,
-                getter = FirDefaultPropertyGetter(this@JavaClassEnhancementScope.session, null, newReturnTypeRef, visibility),
-                setter = FirDefaultPropertySetter(this@JavaClassEnhancementScope.session, null, newReturnTypeRef, visibility),
-                delegate = null
-            ).apply {
-                annotations += firField.annotations
-                status.isStatic = firField.isStatic
+                val symbol = FirPropertySymbol(original.callableId)
+                with(firElement) {
+                    FirMemberPropertyImpl(
+                        this@JavaClassEnhancementScope.session, null, symbol, name,
+                        visibility, modality, isExpect, isActual, isOverride,
+                        isConst = false, isLateInit = false,
+                        receiverTypeRef = null,
+                        returnTypeRef = newReturnTypeRef,
+                        isVar = isVar, initializer = null,
+                        getter = FirDefaultPropertyGetter(this@JavaClassEnhancementScope.session, null, newReturnTypeRef, visibility),
+                        setter = FirDefaultPropertySetter(this@JavaClassEnhancementScope.session, null, newReturnTypeRef, visibility),
+                        delegate = null
+                    ).apply {
+                        annotations += firElement.annotations
+                        status.isStatic = firElement.isStatic
+                    }
+                }
+                return symbol
             }
+            is FirJavaMethod -> {
+                original as FirAccessorSymbol
+                return enhanceMethod(
+                    firElement, original.accessorId, original.accessorId.callableName, isAccessor = true, propertyId = original.callableId
+                ) as FirAccessorSymbol
+            }
+            is FirProperty -> return original
+            else -> error("Can't make enhancement for $original: `${firElement.render()}`")
         }
-        return symbol
     }
 
     private fun enhance(
@@ -108,9 +118,18 @@ class JavaClassEnhancementScope(
         name: Name
     ): FirFunctionSymbol {
         val firMethod = (original as FirFunctionSymbol).fir as? FirFunction
-
         if (firMethod !is FirJavaMethod && firMethod !is FirJavaConstructor || firMethod !is FirCallableMember) return original
+        return enhanceMethod(firMethod, original.callableId, name) as FirFunctionSymbol
+    }
 
+    private fun enhanceMethod(
+        firMethod: FirFunction,
+        methodId: CallableId,
+        name: Name,
+        isAccessor: Boolean = false,
+        propertyId: CallableId? = null
+    ): ConeCallableSymbol {
+        require(firMethod is FirCallableMember)
         val memberContext = context.copyWithNewDefaultTypeQualifiers(typeQualifierResolver, jsr305State, firMethod.annotations)
 
         val predefinedEnhancementInfo =
@@ -147,7 +166,7 @@ class JavaClassEnhancementScope(
             )
         }
 
-        val symbol = FirFunctionSymbol(original.callableId)
+        val symbol = if (!isAccessor) FirFunctionSymbol(methodId) else FirAccessorSymbol(callableId = propertyId!!, accessorId = methodId)
         FirMemberFunctionImpl(
             this@JavaClassEnhancementScope.session, null, symbol, name,
             newReceiverTypeRef, newReturnTypeRef

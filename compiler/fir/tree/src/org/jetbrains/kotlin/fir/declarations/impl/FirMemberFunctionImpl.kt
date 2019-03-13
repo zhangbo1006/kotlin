@@ -10,9 +10,11 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.FirSession
+import org.jetbrains.kotlin.fir.declarations.FirCallableMember
 import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
 import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.expressions.FirBlock
+import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.transformInplace
 import org.jetbrains.kotlin.fir.transformSingle
@@ -25,7 +27,7 @@ open class FirMemberFunctionImpl : FirAbstractCallableMember, FirNamedFunction, 
     constructor(
         session: FirSession,
         psi: PsiElement?,
-        symbol: FirFunctionSymbol,
+        symbol: FirBasedSymbol<FirCallableMember>,
         name: Name,
         receiverTypeRef: FirTypeRef?,
         returnTypeRef: FirTypeRef
