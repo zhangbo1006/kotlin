@@ -34615,7 +34615,7 @@ public final class DebugProtoBuf {
     internal_static_org_jetbrains_kotlin_metadata_VersionRequirement_fieldAccessorTable = new
       org.jetbrains.kotlin.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_org_jetbrains_kotlin_metadata_VersionRequirement_descriptor,
-        new java.lang.String[] { "DaemonProtocolVariant", "VersionFull", "Level", "ErrorCode", "Message", "VersionKind", });
+        new java.lang.String[] { "Version", "VersionFull", "Level", "ErrorCode", "Message", "VersionKind", });
     internal_static_org_jetbrains_kotlin_metadata_VersionRequirementTable_descriptor =
       getDescriptor().getMessageTypes().get(15);
     internal_static_org_jetbrains_kotlin_metadata_VersionRequirementTable_fieldAccessorTable = new

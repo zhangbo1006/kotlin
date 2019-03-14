@@ -49,7 +49,7 @@ class KotlinVersionsTest : KtUsefulTestCase() {
         }
 
         fun String.toVersion(source: String): Version =
-                toVersionOrNull(source) ?: error("DaemonProtocolVariant ($source) is in an unknown format: $this")
+                toVersionOrNull(source) ?: error("Version ($source) is in an unknown format: $this")
 
         val versions = arrayListOf<Version>()
 
