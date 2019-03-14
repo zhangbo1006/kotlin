@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.expandedConeType
 import org.jetbrains.kotlin.fir.declarations.superConeTypes
 import org.jetbrains.kotlin.fir.resolve.toSymbol
-import org.jetbrains.kotlin.fir.service
 import org.jetbrains.kotlin.fir.symbols.ConeClassLikeSymbol
 import org.jetbrains.kotlin.fir.symbols.ConeClassSymbol
 import org.jetbrains.kotlin.fir.symbols.ConeSymbol
@@ -108,6 +107,7 @@ interface ConeTypeContext : TypeSystemContext, TypeSystemOptimizationContext {
 
     override fun SimpleTypeMarker.typeConstructor(): TypeConstructorMarker {
         require(this is ConeLookupTagBasedType)
+        if (this is ConeClassErrorType) return ErrorTypeConstructor("No constructor: $reason")
         return this.lookupTag.toSymbol(session) ?: ErrorTypeConstructor("Unresolved: ${this.lookupTag}")
     }
 
@@ -216,8 +216,9 @@ interface ConeTypeContext : TypeSystemContext, TypeSystemOptimizationContext {
     }
 
     override fun isEqualTypeConstructors(c1: TypeConstructorMarker, c2: TypeConstructorMarker): Boolean {
-        assert(c1 is ConeSymbol)
-        assert(c2 is ConeSymbol)
+        if (c1 is ErrorTypeConstructor || c2 is ErrorTypeConstructor) return false
+        require(c1 is ConeSymbol)
+        require(c2 is ConeSymbol)
         return c1 == c2
     }
 
