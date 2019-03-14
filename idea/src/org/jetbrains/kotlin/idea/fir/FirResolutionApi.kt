@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.idea.fir
 
+import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.builder.RawFirBuilder
 import org.jetbrains.kotlin.fir.declarations.FirCallableMember
 import org.jetbrains.kotlin.fir.declarations.FirTypedDeclaration
@@ -25,6 +26,7 @@ import org.jetbrains.kotlin.idea.caches.project.getModuleInfo
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
 enum class FirStage(val index: Int, val stubMode: Boolean) {
@@ -52,13 +54,18 @@ private fun KtClassOrObject.relativeFqName(): FqName {
     return parentFqName?.child(className) ?: FqName.topLevel(className)
 }
 
+val KtElement.session: FirSession
+    get() {
+        val moduleInfo = this.getModuleInfo() as ModuleSourceInfo
+        val sessionProvider = FirProjectSessionProvider(project)
+        return sessionProvider.getSession(moduleInfo) ?: FirJavaModuleBasedSession(
+            moduleInfo, sessionProvider, moduleInfo.contentScope(),
+            IdeFirDependenciesSymbolProvider(moduleInfo, project, sessionProvider)
+        )
+    }
+
 fun KtCallableDeclaration.getOrBuildFir(stage: FirStage = FirStage.DECLARATIONS): FirCallableMember {
-    val moduleInfo = this.getModuleInfo() as ModuleSourceInfo
-    val sessionProvider = FirProjectSessionProvider(project)
-    val session = sessionProvider.getSession(moduleInfo) ?: FirJavaModuleBasedSession(
-        moduleInfo, sessionProvider, moduleInfo.contentScope(),
-        IdeFirDependenciesSymbolProvider(moduleInfo, project, sessionProvider)
-    )
+    val session = this.session
 
     val file = this.containingKtFile
     val packageFqName = file.packageFqName
