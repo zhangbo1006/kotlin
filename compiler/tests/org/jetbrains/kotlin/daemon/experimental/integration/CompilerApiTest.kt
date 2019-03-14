@@ -31,6 +31,8 @@ import java.util.logging.Logger
 
 private val logFiles = arrayListOf<String>()
 
+// TODO: remove ignore annotation from tests.
+
 class CompilerApiTest : KotlinIntegrationTestBase() {
 
     val kotlinCompilerClient = KotlinCompilerDaemonClient

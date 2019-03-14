@@ -79,14 +79,6 @@ class ByteReadChannelWrapper(readChannel: ByteReadChannel, private val log: Logg
                 (0xFF and b3 shl 8) or (0xFF and b4)).also { log.info("   $it") }
     }
 
-    /** reads exactly <tt>length</tt>  bytes.
-     * after deafault timeout returns <tt>DEFAULT_BYTE_ARRAY</tt> */
-    suspend fun readBytes(length: Int): ByteArray = runWithTimeout {
-        val expectedBytes = CompletableDeferred<ByteArray>()
-        readActor.send(GivenLengthBytesQuery(length, expectedBytes))
-        expectedBytes.await()
-    } ?: DEFAULT_BYTE_ARRAY
-
     /** first reads <t>length</t> token (4 bytes) and then -- reads <t>length</t> bytes.
      * after deafault timeout returns <tt>DEFAULT_BYTE_ARRAY</tt> */
     suspend fun nextBytes(): ByteArray = runWithTimeout {

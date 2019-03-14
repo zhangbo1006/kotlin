@@ -31,7 +31,7 @@ import java.util.logging.LogManager
 import java.util.logging.Logger
 import kotlin.concurrent.schedule
 
-
+// TODO: remove ignore annotation from tests.
 class ConnectionsTest : KotlinIntegrationTestBase() {
 
     val kotlinCompilerClient = KotlinCompilerDaemonClient.instantiate(DaemonProtocolVariant.RMI) // TODO(SOCKETS)

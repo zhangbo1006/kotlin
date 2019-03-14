@@ -74,4 +74,4 @@ fun readTokenKeyPairAndSign(input: FileInputStream): ByteArray {
     return dsa.sign()
 }
 
-suspend fun sendSignature(output: ByteWriteChannelWrapper, signature: ByteArray) = output.printBytesAndLength(signature.size, signature)
+suspend fun sendSignature(output: ByteWriteChannelWrapper, signature: ByteArray) = output.writeBytesAndLength(signature.size, signature)

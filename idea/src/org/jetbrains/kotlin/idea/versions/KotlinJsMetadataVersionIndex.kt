@@ -47,7 +47,7 @@ object KotlinJsMetadataVersionIndex : KotlinMetadataVersionIndexBase<KotlinJsMet
             KotlinJavascriptMetadataUtils.parseMetadata(inputData.contentAsText, metadataList)
             for (metadata in metadataList) {
                 val version = metadata.version.takeIf { it.isCompatible() }
-                // version is set to something weird
+                // Version is set to something weird
                     ?: JsMetadataVersion.INVALID_VERSION
                 result[version] = null
             }

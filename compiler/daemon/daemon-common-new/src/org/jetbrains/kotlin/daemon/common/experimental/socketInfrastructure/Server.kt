@@ -191,20 +191,18 @@ suspend fun <T> runWithTimeout(
 suspend fun tryAcquireHandshakeMessage(input: ByteReadChannelWrapper, log: Logger): Boolean {
     val bytes = runWithTimeout {
         input.nextBytes()
-    } ?: return false.also {
-        if (bytes.zip(FIRST_HANDSHAKE_BYTE_TOKEN).any { it.first != it.second }) {
-            return false
-        }
-        return true
+    } ?: return false
+    if (bytes.zip(FIRST_HANDSHAKE_BYTE_TOKEN).any { it.first != it.second }) {
+        return false
     }
+    return true
 }
 
 
 //@Throws(ConnectionResetException::class)
 suspend fun trySendHandshakeMessage(output: ByteWriteChannelWrapper, log: Logger): Boolean {
     runWithTimeout {
-        output.printBytesAndLength(FIRST_HANDSHAKE_BYTE_TOKEN.size, FIRST_HANDSHAKE_BYTE_TOKEN)
-    } ?: return false.also {
-        return true
-    }
+        output.writeBytesAndLength(FIRST_HANDSHAKE_BYTE_TOKEN.size, FIRST_HANDSHAKE_BYTE_TOKEN)
+    } ?: return false
+    return true
 }

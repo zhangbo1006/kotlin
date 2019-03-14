@@ -38,6 +38,6 @@ interface RemoteInputStreamServerSide : RemoteInputStreamAsync, Server<RemoteInp
 
     class ReadMessage(val length: Int = -1) : Server.Message<RemoteInputStreamServerSide>() {
         override suspend fun processImpl(server: RemoteInputStreamServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(if (length == -1) server.read() else server.read(length))
+            sendReply(if (length == -1) server.read() else server.read(length))
     }
 }

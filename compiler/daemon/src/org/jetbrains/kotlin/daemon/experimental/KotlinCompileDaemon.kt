@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.cli.common.environment.setIdeaIoUseFallback
 import org.jetbrains.kotlin.cli.js.K2JSCompiler
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.metadata.K2MetadataCompiler
+import org.jetbrains.kotlin.daemon.CompilerSelector
 import org.jetbrains.kotlin.daemon.common.*
 import org.jetbrains.kotlin.daemon.common.experimental.findPortForSocket
 import org.jetbrains.kotlin.daemon.common.ensureServerHostnameIsSetUp
@@ -75,7 +76,7 @@ object KotlinCompileDaemon {
             ?.findResource("META-INF/MANIFEST.MF")
             ?.let {
                 try {
-                    return Manifest(it.openStream()).mainAttributes.getValue("Implementation-version") ?: null
+                    return Manifest(it.openStream()).mainAttributes.getValue("Implementation-Version") ?: null
                 } catch (e: IOException) {
                 }
             }

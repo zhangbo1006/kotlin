@@ -26782,7 +26782,7 @@ public final class DebugProtoBuf {
      * <code>optional int32 version_full = 2;</code>
      *
      * <pre>
-     * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+     * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
      * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
      * </pre>
      */
@@ -26791,7 +26791,7 @@ public final class DebugProtoBuf {
      * <code>optional int32 version_full = 2;</code>
      *
      * <pre>
-     * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+     * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
      * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
      * </pre>
      */
@@ -27216,7 +27216,7 @@ public final class DebugProtoBuf {
      * <code>optional int32 version_full = 2;</code>
      *
      * <pre>
-     * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+     * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
      * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
      * </pre>
      */
@@ -27227,7 +27227,7 @@ public final class DebugProtoBuf {
      * <code>optional int32 version_full = 2;</code>
      *
      * <pre>
-     * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+     * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
      * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
      * </pre>
      */
@@ -27704,7 +27704,7 @@ public final class DebugProtoBuf {
        * <code>optional int32 version_full = 2;</code>
        *
        * <pre>
-       * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+       * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
        * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
        * </pre>
        */
@@ -27715,7 +27715,7 @@ public final class DebugProtoBuf {
        * <code>optional int32 version_full = 2;</code>
        *
        * <pre>
-       * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+       * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
        * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
        * </pre>
        */
@@ -27726,7 +27726,7 @@ public final class DebugProtoBuf {
        * <code>optional int32 version_full = 2;</code>
        *
        * <pre>
-       * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+       * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
        * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
        * </pre>
        */
@@ -27740,7 +27740,7 @@ public final class DebugProtoBuf {
        * <code>optional int32 version_full = 2;</code>
        *
        * <pre>
-       * version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
+       * Version in base 256, in case we run out of space to store the version in the optimized form. Has priority over 'version'.
        * (patch &lt;&lt; 16) + (minor &lt;&lt; 8) + major
        * </pre>
        */

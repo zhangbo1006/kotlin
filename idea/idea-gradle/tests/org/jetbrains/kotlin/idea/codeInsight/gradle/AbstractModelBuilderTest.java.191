@@ -234,7 +234,7 @@ public abstract class AbstractModelBuilderTest {
 
         @NotNull
         public URI getDistributionFor(@NotNull GradleVersion version) throws URISyntaxException {
-            return getDistribution(getDistributionRepository(daemonProtocolVariant), version, "gradle", "bin");
+            return getDistribution(getDistributionRepository(version), version, "gradle", "bin");
         }
 
         @NotNull

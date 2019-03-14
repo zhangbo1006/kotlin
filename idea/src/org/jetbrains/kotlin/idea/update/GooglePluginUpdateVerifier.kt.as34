@@ -30,7 +30,7 @@ class GooglePluginUpdateVerifier : PluginUpdateVerifier() {
         }
 
         val version = pluginDescriptor.version
-        if (isEap(daemonProtocolVariant) || isDev(daemonProtocolVariant)) {
+        if (isEap(version) || isDev(version)) {
             return PluginVerifyResult.accept()
         }
 
@@ -49,7 +49,7 @@ class GooglePluginUpdateVerifier : PluginUpdateVerifier() {
             else
                 PluginVerifyResult.decline("Version to be verified.")
         } catch (e: Exception) {
-            LOG.info("Exception when verifying plugin ${pluginDescriptor.pluginId.idString} version $daemonProtocolVariant", e)
+            LOG.info("Exception when verifying plugin ${pluginDescriptor.pluginId.idString} version $version", e)
             return when (e) {
                 is IOException ->
                     PluginVerifyResult.decline("unable to connect to compatibility verification repository")
@@ -133,7 +133,7 @@ class GooglePluginUpdateVerifier : PluginUpdateVerifier() {
             var ideaVersion: IdeaVersion? = null
 
             override fun toString(): String {
-                return "IdeaPlugin(id=$id, sha256=$sha256, ideaVersion=$ideaVersion, channel=$channel, version=$daemonProtocolVariant)"
+                return "IdeaPlugin(id=$id, sha256=$sha256, ideaVersion=$ideaVersion, channel=$channel, version=$version)"
             }
         }
 

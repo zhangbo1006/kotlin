@@ -33,7 +33,7 @@ dependencies {
     compile(commonDep("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8")) {
         isTransitive = false
     }
-    compileOnly(commonDep("io.ktor", "ktor-network")) {
+    compile(commonDep("io.ktor", "ktor-network")) {
         ktorExcludesForDaemon.forEach { (group, module) ->
             exclude(group = group, module = module)
         }

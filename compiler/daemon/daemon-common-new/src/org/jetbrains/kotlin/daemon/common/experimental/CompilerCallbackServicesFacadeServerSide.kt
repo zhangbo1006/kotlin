@@ -14,39 +14,39 @@ interface CompilerCallbackServicesFacadeServerSide : CompilerCallbackServicesFac
 
     class HasIncrementalCachesMessage : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.hasIncrementalCaches())
+            sendReply(server.hasIncrementalCaches())
     }
 
     class HasLookupTrackerMessage : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.hasLookupTracker())
+            sendReply(server.hasLookupTracker())
     }
 
     class HasCompilationCanceledStatusMessage : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.hasCompilationCanceledStatus())
+            sendReply(server.hasCompilationCanceledStatus())
     }
 
     // ----------------------------------------------------
     // IncrementalCache
     class IncrementalCache_getObsoletePackagePartsMessage(val target: TargetId) : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.incrementalCache_getObsoletePackageParts(target))
+            sendReply(server.incrementalCache_getObsoletePackageParts(target))
     }
 
     class IncrementalCache_getObsoleteMultifileClassFacadesMessage(val target: TargetId) : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.incrementalCache_getObsoleteMultifileClassFacades(target))
+            sendReply(server.incrementalCache_getObsoleteMultifileClassFacades(target))
     }
 
     class IncrementalCache_getPackagePartDataMessage(val target: TargetId, val partInternalName: String) : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.incrementalCache_getPackagePartData(target, partInternalName))
+            sendReply(server.incrementalCache_getPackagePartData(target, partInternalName))
     }
 
     class IncrementalCache_getModuleMappingDataMessage(val target: TargetId) : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.incrementalCache_getModuleMappingData(target))
+            sendReply(server.incrementalCache_getModuleMappingData(target))
     }
 
     class IncrementalCache_registerInlineMessage(
@@ -61,7 +61,7 @@ interface CompilerCallbackServicesFacadeServerSide : CompilerCallbackServicesFac
 
     class IncrementalCache_getClassFilePathMessage(val target: TargetId, val internalClassName: String) : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.incrementalCache_getClassFilePath(target, internalClassName))
+            sendReply(server.incrementalCache_getClassFilePath(target, internalClassName))
     }
 
     class IncrementalCache_closeMessage(val target: TargetId) : Message<CompilerCallbackServicesFacadeServerSide>() {
@@ -71,7 +71,7 @@ interface CompilerCallbackServicesFacadeServerSide : CompilerCallbackServicesFac
 
     class IncrementalCache_getMultifileFacadePartsMessage(val target: TargetId, val internalName: String) : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.incrementalCache_getMultifileFacadeParts(target, internalName))
+            sendReply(server.incrementalCache_getMultifileFacadeParts(target, internalName))
     }
 
     // ----------------------------------------------------
@@ -85,12 +85,12 @@ interface CompilerCallbackServicesFacadeServerSide : CompilerCallbackServicesFac
 
     class LookupTracker_recordMessage(val lookups: Collection<LookupInfo>) : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.lookupTracker_record(lookups))
+            sendReply(server.lookupTracker_record(lookups))
     }
 
     class LookupTracker_isDoNothingMessage : Message<CompilerCallbackServicesFacadeServerSide>() {
         override suspend fun processImpl(server: CompilerCallbackServicesFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.lookupTracker_isDoNothing())
+            sendReply(server.lookupTracker_isDoNothing())
     }
 
     // ----------------------------------------------------

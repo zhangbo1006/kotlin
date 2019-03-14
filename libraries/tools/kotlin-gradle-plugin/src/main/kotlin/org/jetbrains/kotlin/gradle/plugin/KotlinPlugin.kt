@@ -893,7 +893,7 @@ internal fun loadAndroidPluginVersion(): String? {
         val jarInputStream = jarConnection.inputStream
         val attr = Manifest(jarInputStream).mainAttributes
         jarInputStream.close()
-        return attr.getValue("Plugin-version")
+        return attr.getValue("Plugin-Version")
     } catch (t: Throwable) {
         return null
     }

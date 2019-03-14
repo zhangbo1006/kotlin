@@ -225,7 +225,7 @@ abstract class KotlinWithGradleConfigurator : KotlinProjectConfigurator {
                 module.project,
                 "This language feature requires version $requiredStdlibVersion or later of the Kotlin runtime library. " +
                         "Please update the version in your build script.",
-                "Update Language version"
+                "Update Language Version"
             )
             return
         }

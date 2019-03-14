@@ -15,26 +15,26 @@ interface ReplStateFacadeServerSide: ReplStateFacadeAsync, Server<ReplStateFacad
     // Query messages:
     class GetIdMessage : Server.Message<ReplStateFacadeServerSide>() {
         override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.getId())
+            sendReply(server.getId())
     }
 
     class GetHistorySizeMessage : Server.Message<ReplStateFacadeServerSide>() {
         override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.getHistorySize())
+            sendReply(server.getHistorySize())
     }
 
     class HistoryGetMessage(val index: Int) : Server.Message<ReplStateFacadeServerSide>() {
         override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.historyGet(index))
+            sendReply(server.historyGet(index))
     }
 
     class HistoryResetMessage : Server.Message<ReplStateFacadeServerSide>() {
         override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.historyReset())
+            sendReply(server.historyReset())
     }
 
     class HistoryResetToMessage(val id: ILineId) : Server.Message<ReplStateFacadeServerSide>() {
         override suspend fun processImpl(server: ReplStateFacadeServerSide, sendReply: (Any?) -> Unit) =
-            writeObject(server.historyResetTo(id))
+            sendReply(server.historyResetTo(id))
     }
 }

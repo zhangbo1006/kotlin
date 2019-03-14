@@ -57,6 +57,8 @@ import kotlin.test.fail
 
 val TIMEOUT_DAEMON_RUNNER_EXIT_MS = 10000L
 
+// TODO: remove ignore annotation from tests.
+
 class CompilerDaemonTest : KotlinIntegrationTestBase() {
 
     val kotlinCompilerClientInstance = KotlinCompilerDaemonClient.instantiate(DaemonProtocolVariant.RMI) // TODO(SOCKETS)
@@ -1005,7 +1007,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
                             override suspend fun checkCanceled() {
                                 thread {
                                     Thread.sleep(10)
-                                    callbackServices!!.downServer()
+                                    callbackServices!!.shutdownServer()
                                 }
                             }
                         },

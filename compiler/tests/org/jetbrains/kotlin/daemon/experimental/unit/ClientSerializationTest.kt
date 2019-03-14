@@ -22,6 +22,8 @@ import java.io.ObjectOutputStream
 import java.net.InetSocketAddress
 import java.util.logging.Logger
 
+// TODO: remove ignore annotation from tests.
+
 class TestServer(val serverPort: Int = 6999) {
     private val serverSocket = aSocket(selectorMgr).tcp().bind(InetSocketAddress(serverPort))
     private val log = Logger.getLogger("TestServer")
@@ -87,10 +89,5 @@ class ClientSerializationTest : KotlinIntegrationTestBase() {
     )
 
     fun ignore_testRMIWrapper() = abstractSerializationTest({ CompilerServicesFacadeBaseClientSideImpl(testServer.serverPort).toRMI() })
-
-//    fun ignore_testReplAsync() = abstractSerializationTest(
-//        { ReplStateFacadeAsyncC(testServer.serverPort) },
-//        { client, client2 -> assert(client.serverPort == client2.serverPort) }
-//    )
 
 }

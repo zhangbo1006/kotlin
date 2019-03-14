@@ -11,7 +11,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.impl.ZipHandler
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
-import io.ktor.network.sockets.Socket
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.actor
@@ -35,14 +34,9 @@ import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.metadata.K2MetadataCompiler
 import org.jetbrains.kotlin.config.Services
+import org.jetbrains.kotlin.daemon.CompilerSelector
 import org.jetbrains.kotlin.daemon.LazyClasspathWatcher
 import org.jetbrains.kotlin.daemon.common.*
-import org.jetbrains.kotlin.daemon.common.experimental.*
-import org.jetbrains.kotlin.daemon.common.experimental.socketInfrastructure.*
-import org.jetbrains.kotlin.daemon.common.DummyProfilerAsync
-import org.jetbrains.kotlin.daemon.common.ProfilerAsync
-import org.jetbrains.kotlin.daemon.common.WallAndThreadAndMemoryTotalProfilerAsync
-import org.jetbrains.kotlin.daemon.common.WallAndThreadTotalProfilerAsync
 import org.jetbrains.kotlin.daemon.nowSeconds
 import org.jetbrains.kotlin.daemon.report.experimental.CompileServicesFacadeMessageCollector
 import org.jetbrains.kotlin.daemon.report.experimental.DaemonMessageReporterAsync
@@ -71,6 +65,12 @@ import java.util.logging.Logger
 import kotlin.concurrent.read
 import kotlin.concurrent.schedule
 import kotlin.concurrent.write
+import org.jetbrains.kotlin.daemon.common.experimental.socketInfrastructure.*
+import org.jetbrains.kotlin.daemon.common.experimental.*
+import io.ktor.network.sockets.*
+import org.jetbrains.kotlin.daemon.experimental.CompileServiceTaskScheduler.*
+
+// TODO: this classes should replace their non-experimental versions eventually.
 
 interface EventManager {
     suspend fun onCompilationFinished(f: suspend () -> Unit)
@@ -86,6 +86,98 @@ private class EventManagerImpl : EventManager {
 
     suspend fun fireCompilationFinished() {
         onCompilationFinished.forEach { it() }
+    }
+}
+
+private class CompileServiceTaskScheduler(log: Logger) {
+    interface CompileServiceTask
+    interface CompileServiceTaskWithResult : CompileServiceTask
+
+    open class ExclusiveTask(val completed: CompletableDeferred<Boolean>, val shutdownAction: suspend () -> Any) : CompileServiceTask
+    open class ShutdownTaskWithResult(val result: CompletableDeferred<Any>, shutdownAction: suspend () -> Any) :
+        ExclusiveTask(CompletableDeferred(), shutdownAction), CompileServiceTaskWithResult
+
+    open class OrdinaryTask(val completed: CompletableDeferred<Boolean>, val action: suspend () -> Any) : CompileServiceTask
+    class OrdinaryTaskWithResult(val result: CompletableDeferred<Any>, action: suspend () -> Any) :
+        OrdinaryTask(CompletableDeferred(), action),
+        CompileServiceTaskWithResult
+
+    class TaskFinished(val taskId: Int) : CompileServiceTask
+    class ExclusiveTaskFinished : CompileServiceTask
+
+    private var shutdownActionInProgress = false
+    private var readLocksCount = 0
+
+    suspend fun scheduleTask(task: CompileServiceTask) = queriesActor.send(task)
+
+    fun getReadLocksCnt() = readLocksCount
+
+    fun isShutdownActionInProgress() = shutdownActionInProgress
+
+    private val queriesActor = GlobalScope.actor<CompileServiceTask>(capacity = Channel.UNLIMITED) {
+        var currentTaskId = 0
+        var shutdownTask: ExclusiveTask? = null
+        val activeTaskIds = arrayListOf<Int>()
+        val waitingTasks = arrayListOf<CompileServiceTask>()
+        fun shutdownIfInactive(reason: String) {
+            log.fine("invoked \'shutdownIfInactive\', reason : $reason")
+            if (activeTaskIds.isEmpty()) {
+                shutdownTask?.let { task ->
+                    shutdownActionInProgress = true
+                    GlobalScope.async {
+                        val res = task.shutdownAction()
+                        task.completed.complete(true)
+                        if (task is ShutdownTaskWithResult) {
+                            task.result.complete(res)
+                        }
+                        channel.send(ExclusiveTaskFinished())
+                    }
+                }
+            }
+        }
+        consumeEach { task ->
+            when (task) {
+                is ExclusiveTask -> {
+                    if (shutdownTask == null) {
+                        shutdownTask = task
+                        shutdownIfInactive("ExclusiveTask")
+                    } else {
+                        waitingTasks.add(task)
+                    }
+                }
+                is OrdinaryTask -> {
+                    if (shutdownTask == null) {
+                        val id = currentTaskId++
+                        activeTaskIds.add(id)
+                        readLocksCount++
+                        GlobalScope.async {
+                            val res = task.action()
+                            if (task is OrdinaryTaskWithResult) {
+                                task.result.complete(res)
+                            }
+                            task.completed.complete(true)
+                            channel.send(TaskFinished(id))
+                        }
+                    } else {
+                        waitingTasks.add(task)
+                    }
+                }
+                is TaskFinished -> {
+                    log.fine("TaskFinished!!!")
+                    activeTaskIds.remove(task.taskId)
+                    readLocksCount--
+                    shutdownIfInactive("TaskFinished")
+                }
+                is ExclusiveTaskFinished -> {
+                    shutdownTask = null
+                    shutdownActionInProgress = false
+                    waitingTasks.forEach {
+                        channel.send(it)
+                    }
+                    waitingTasks.clear()
+                }
+            }
+        }
     }
 }
 
@@ -119,88 +211,9 @@ class CompileServiceServerSideImpl(
         return tryAcquireHandshakeMessage(input, log) && trySendHandshakeMessage(output, log)
     }
 
-    interface CompileServiceTask
-    interface CompileServiceTaskWithResult : CompileServiceTask
+    private val log by lazy { Logger.getLogger("compiler") }
 
-    open class ExclusiveTask(val completed: CompletableDeferred<Boolean>, val shutdownAction: suspend () -> Any) : CompileServiceTask
-    open class ShutdownTaskWithResult(val result: CompletableDeferred<Any>, shutdownAction: suspend () -> Any) :
-        ExclusiveTask(CompletableDeferred(), shutdownAction), CompileServiceTaskWithResult
-
-    open class OrdinaryTask(val completed: CompletableDeferred<Boolean>, val action: suspend () -> Any) : CompileServiceTask
-    class OrdinaryTaskWithResult(val result: CompletableDeferred<Any>, action: suspend () -> Any) :
-        OrdinaryTask(CompletableDeferred(), action),
-        CompileServiceTaskWithResult
-
-    class TaskFinished(val taskId: Int) : CompileServiceTask
-    class ExclusiveTaskFinished : CompileServiceTask
-
-    var isWriteLocked = false
-    var readLocksCount = 0
-    val queriesActor = GlobalScope.actor<CompileServiceTask>(capacity = Channel.UNLIMITED) {
-        var currentTaskId = 0
-        var shutdownTask: ExclusiveTask? = null
-        val activeTaskIds = arrayListOf<Int>()
-        val waitingTasks = arrayListOf<CompileServiceTask>()
-        fun tryInvokeShutdown(reason: String) {
-            println("tryInvokeShutdown | reason = $reason | tasks = ${activeTaskIds} | shutdownTask = ${shutdownTask != null}")
-            if (activeTaskIds.isEmpty()) {
-                shutdownTask?.let { task ->
-                    isWriteLocked = true
-                    GlobalScope.async {
-                        val res = task.shutdownAction()
-                        task.completed.complete(true)
-                        if (task is ShutdownTaskWithResult) {
-                            task.result.complete(res)
-                        }
-                        channel.send(ExclusiveTaskFinished())
-                    }
-                }
-            }
-        }
-        consumeEach { task ->
-            when (task) {
-                is ExclusiveTask -> {
-                    if (shutdownTask == null) {
-                        shutdownTask = task
-                        tryInvokeShutdown("ExclusiveTask")
-                    } else {
-                        waitingTasks.add(task)
-                    }
-                }
-                is OrdinaryTask -> {
-                    if (shutdownTask == null) {
-                        val id = currentTaskId++
-                        activeTaskIds.add(id)
-                        readLocksCount++
-                        GlobalScope.async {
-                            val res = task.action()
-                            if (task is OrdinaryTaskWithResult) {
-                                task.result.complete(res)
-                            }
-                            task.completed.complete(true)
-                            channel.send(TaskFinished(id))
-                        }
-                    } else {
-                        waitingTasks.add(task)
-                    }
-                }
-                is TaskFinished -> {
-                    log.info("TaskFinished!!!")
-                    activeTaskIds.remove(task.taskId)
-                    readLocksCount--
-                    tryInvokeShutdown("TaskFinished")
-                }
-                is ExclusiveTaskFinished -> {
-                    shutdownTask = null
-                    isWriteLocked = false
-                    waitingTasks.forEach {
-                        channel.send(it)
-                    }
-                    waitingTasks.clear()
-                }
-            }
-        }
-    }
+    private val scheduler = CompileServiceTaskScheduler(log)
 
     constructor(
         serverSocket: ServerSocketWrapper,
@@ -212,7 +225,16 @@ class CompileServiceServerSideImpl(
         onShutdown: () -> Unit
     ) : this(
         serverSocket,
-        CompilerSelector.getDefault(),
+        object : CompilerSelector {
+            private val jvm by lazy { K2JVMCompiler() }
+            private val js by lazy { K2JSCompiler() }
+            private val metadata by lazy { K2MetadataCompiler() }
+            override fun get(targetPlatform: CompileService.TargetPlatform): CLICompiler<*> = when (targetPlatform) {
+                CompileService.TargetPlatform.JVM -> jvm
+                CompileService.TargetPlatform.JS -> js
+                CompileService.TargetPlatform.METADATA -> metadata
+            }
+        },
         compilerId,
         daemonOptions,
         daemonJVMOptions,
@@ -221,10 +243,8 @@ class CompileServiceServerSideImpl(
         onShutdown
     )
 
-    private val log by lazy { Logger.getLogger("compiler") }
-
     init {
-        log.info("Running OLD server (port = $port)")
+        log.fine("Running OLD server (port = $port)")
         System.setProperty(KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY, "true")
     }
 
@@ -356,8 +376,9 @@ class CompileServiceServerSideImpl(
     @Volatile
     private var _lastUsedSeconds = nowSeconds()
     val lastUsedSeconds: Long
-        get() = (if (readLocksCount > 1 || isWriteLocked) nowSeconds() else _lastUsedSeconds).also {
-            log.info("lastUsedSeconds .. isReadLockedCNT : $readLocksCount , isWriteLocked : $isWriteLocked")
+        get() = (if (scheduler.getReadLocksCnt() > 1 || scheduler.isShutdownActionInProgress()) nowSeconds() else _lastUsedSeconds).also {
+            log.fine("lastUsedSeconds .. isReadLockedCNT : ${scheduler.getReadLocksCnt()} , " +
+                             "shutdownActionInProgress : ${scheduler.isShutdownActionInProgress()}")
         }
 
     private var runFile: File
@@ -366,13 +387,13 @@ class CompileServiceServerSideImpl(
     init {
         val runFileDir = File(daemonOptions.runFilesPathOrDefault)
         runFileDir.mkdirs()
-        log.info("port.toString() = $port | serverSocketWithPort = $serverSocketWithPort")
+        log.fine("port.toString() = $port | serverSocketWithPort = $serverSocketWithPort")
         runFile = File(
             runFileDir,
             makeRunFilenameString(
-                    timestamp = "%tFT%<tH-%<tM-%<tS.%<tLZ".format(Calendar.getInstance(TimeZone.getTimeZone("Z"))),
-                    digest = compilerId.compilerClasspath.map { File(it).absolutePath }.distinctStringsDigest().toHexString(),
-                    port = port.toString()
+                timestamp = "%tFT%<tH-%<tM-%<tS.%<tLZ".format(Calendar.getInstance(TimeZone.getTimeZone("Z"))),
+                digest = compilerId.compilerClasspath.map { File(it).absolutePath }.distinctStringsDigest().toHexString(),
+                port = port.toString()
             )
         )
         try {
@@ -400,12 +421,12 @@ class CompileServiceServerSideImpl(
     }
 
     override suspend fun getDaemonJVMOptions(): CompileService.CallResult<DaemonJVMOptions> = ifAlive(info = "getDaemonJVMOptions") {
-        log.info("getDaemonJVMOptions: $daemonJVMOptions")// + daemonJVMOptions.mappers.flatMap { it.toArgs("-") })
+        log.fine("getDaemonJVMOptions: $daemonJVMOptions")// + daemonJVMOptions.mappers.flatMap { it.toArgs("-") })
         CompileService.CallResult.Good(daemonJVMOptions)
     }
 
     override suspend fun registerClient(aliveFlagPath: String?): CompileService.CallResult<Nothing> {
-        log.info("fun registerClient")
+        log.fine("fun registerClient")
         return ifAlive(minAliveness = Aliveness.Alive, info = "registerClient") {
             registerClientImpl(aliveFlagPath)
         }
@@ -422,7 +443,7 @@ class CompileServiceServerSideImpl(
 
     private fun registerClientImpl(aliveFlagPath: String?): CompileService.CallResult<Nothing> {
         state.addClient(aliveFlagPath)
-        log.info("Registered a client alive file: $aliveFlagPath")
+        log.fine("Registered a client alive file: $aliveFlagPath")
         return CompileService.CallResult.Ok()
     }
 
@@ -437,7 +458,7 @@ class CompileServiceServerSideImpl(
         ifAlive(minAliveness = Aliveness.Alive, info = "leaseCompileSession") {
             CompileService.CallResult.Good(
                 state.sessions.leaseSession(ClientOrSessionProxy<Any>(aliveFlagPath)).apply {
-                    log.info("leased a new session $this, session alive file: $aliveFlagPath")
+                    log.fine("leased a new session $this, session alive file: $aliveFlagPath")
                 })
         }
 
@@ -446,9 +467,9 @@ class CompileServiceServerSideImpl(
         info = "releaseCompileSession"
     ) {
         state.sessions.remove(sessionId)
-        log.info("cleaning after session $sessionId")
+        log.fine("cleaning after session $sessionId")
         val completed = CompletableDeferred<Boolean>()
-        queriesActor.send(ExclusiveTask(completed, { clearJarCache() }))
+        scheduler.scheduleTask(ExclusiveTask(completed, { clearJarCache() }))
 //        completed.await()
         if (state.sessions.isEmpty()) {
             // TODO: and some goes here
@@ -497,13 +518,13 @@ class CompileServiceServerSideImpl(
         servicesFacade: CompilerServicesFacadeBaseAsync,
         compilationResults: CompilationResultsAsync?
     ): CompileService.CallResult<Int> = ifAlive(info = "compile") {
-        log.info("servicesFacade : $servicesFacade")
+        log.fine("servicesFacade : $servicesFacade")
         servicesFacade.report(ReportCategory.DAEMON_MESSAGE, ReportSeverity.INFO, "abacaba")
-        log.info("servicesFacade - sent \"abacaba\"")
+        log.fine("servicesFacade - sent \"abacaba\"")
         val messageCollector = CompileServicesFacadeMessageCollector(servicesFacade, compilationOptions)
         val daemonReporter = DaemonMessageReporterAsync(servicesFacade, compilationOptions)
         val targetPlatform = compilationOptions.targetPlatform
-        log.info("Starting compilation with args: " + compilerArguments.joinToString(" "))
+        log.fine("Starting compilation with args: " + compilerArguments.joinToString(" "))
 
         @Suppress("UNCHECKED_CAST")
         val compiler = when (targetPlatform) {
@@ -531,9 +552,9 @@ class CompileServiceServerSideImpl(
             }
             CompilerMode.NON_INCREMENTAL_COMPILER -> {
                 doCompile(sessionId, daemonReporter, tracer = null) { _, _ ->
-                    log.info("(in doCompile's body) - start")
+                    log.fine("(in doCompile's body) - start")
                     compiler.exec(messageCollector, Services.EMPTY, k2PlatformArgs).also {
-                        log.info("(in doCompile's body) - end")
+                        log.fine("(in doCompile's body) - end")
                     }
                 }.await()
             }
@@ -763,7 +784,7 @@ class CompileServiceServerSideImpl(
 
     init {
 
-        log.info("init(port= $serverSocketWithPort)")
+        log.fine("init(port= $serverSocketWithPort)")
 
         // assuming logically synchronized
         System.setProperty(KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY, "true")
@@ -785,7 +806,7 @@ class CompileServiceServerSideImpl(
         timer.schedule(delay = DAEMON_PERIODIC_SELDOM_CHECK_INTERVAL_MS + 100, period = DAEMON_PERIODIC_SELDOM_CHECK_INTERVAL_MS) {
             exceptionLoggingTimerThread(info = "periodicSeldomCheck") { periodicSeldomCheck() }
         }
-        log.info("last_init_end")
+        log.fine("last_init_end")
     }
 
     private fun exceptionLoggingTimerThread(info: String = "no info", body: () -> Unit) {
@@ -811,18 +832,18 @@ class CompileServiceServerSideImpl(
                 when {
                     // check if in graceful shutdown state and all sessions are closed
                     state.alive.get() == Aliveness.LastSession.ordinal && state.sessions.isEmpty() -> {
-                        log.info("All sessions finished")
+                        log.fine("All sessions finished")
                         shutdownWithDelay()
                         return@ifAliveUnit
                     }
                     state.aliveClientsCount == 0 -> {
-                        log.info("No more clients left")
+                        log.fine("No more clients left")
                         shutdownWithDelay()
                         return@ifAliveUnit
                     }
                     // discovery file removed - shutdown
                     !runFile.exists() -> {
-                        log.info("Run file removed")
+                        log.fine("Run file removed")
                         shutdownWithDelay()
                         return@ifAliveUnit
                     }
@@ -833,11 +854,11 @@ class CompileServiceServerSideImpl(
             ifAliveUnit(minAliveness = Aliveness.Alive, info = "periodicAndAfterSessionCheck - 2") {
                 when {
                     daemonOptions.autoshutdownUnusedSeconds != COMPILE_DAEMON_TIMEOUT_INFINITE_S && compilationsCounter.get() == 0 && nowSeconds() - lastUsedSeconds > daemonOptions.autoshutdownUnusedSeconds -> {
-                        log.info("Unused timeout exceeded ${daemonOptions.autoshutdownUnusedSeconds}s")
+                        log.fine("Unused timeout exceeded ${daemonOptions.autoshutdownUnusedSeconds}s")
                         gracefulShutdown(false)
                     }
                     daemonOptions.autoshutdownIdleSeconds != COMPILE_DAEMON_TIMEOUT_INFINITE_S && nowSeconds() - lastUsedSeconds > daemonOptions.autoshutdownIdleSeconds -> {
-                        log.info("Idle timeout exceeded ${daemonOptions.autoshutdownIdleSeconds}s")
+                        log.fine("Idle timeout exceeded ${daemonOptions.autoshutdownIdleSeconds}s")
                         gracefulShutdown(false)
                     }
                     anyDead -> {
@@ -853,7 +874,7 @@ class CompileServiceServerSideImpl(
             ifAliveUnit(minAliveness = Aliveness.Alive, info = "periodicSeldomCheck") {
                 // compiler changed (seldom check) - shutdown
                 if (classpathWatcher.isChanged) {
-                    log.info("Compiler changed.")
+                    log.fine("Compiler changed.")
                     gracefulShutdown(false)
                 }
             }
@@ -865,16 +886,16 @@ class CompileServiceServerSideImpl(
     private fun initiateElections() {
         runBlocking(Dispatchers.Unconfined) {
             ifAliveUnit(info = "initiateElections") {
-                log.info("initiate elections")
+                log.fine("initiate elections")
                 val aliveWithOpts = walkDaemonsAsync(
                     File(daemonOptions.runFilesPathOrDefault),
                     compilerId,
                     runFile,
                     filter = { _, p -> p != port },
-                    report = { _, msg -> log.info(msg) },
+                    report = { _, msg -> log.fine(msg) },
                     useRMI = false
                 )
-                log.info("aliveWithOpts : ${aliveWithOpts.map { it.daemon.javaClass.name }}")
+                log.fine("aliveWithOpts : ${aliveWithOpts.map { it.daemon.javaClass.name }}")
                 val comparator = compareByDescending<DaemonWithMetadataAsync, DaemonJVMOptions>(
                     DaemonJVMOptionsMemoryComparator(),
                     { it.jvmOptions }
@@ -895,20 +916,20 @@ class CompileServiceServerSideImpl(
                         ) < 0
                     ) {
                         // all others are smaller that me, take overs' clients and shut them down
-                        log.info("$LOG_PREFIX_ASSUMING_OTHER_DAEMONS_HAVE lower prio, taking clients from them and schedule them to shutdown: my runfile: ${runFile.name} (${runFile.lastModified()}) vs best other runfile: ${bestDaemonWithMetadata.runFile.name} (${bestDaemonWithMetadata.runFile.lastModified()})")
+                        log.fine("$LOG_PREFIX_ASSUMING_OTHER_DAEMONS_HAVE lower prio, taking clients from them and schedule them to shutdown: my runfile: ${runFile.name} (${runFile.lastModified()}) vs best other runfile: ${bestDaemonWithMetadata.runFile.name} (${bestDaemonWithMetadata.runFile.lastModified()})")
                         aliveWithOpts.forEach { (daemon, runFile, _) ->
                             try {
-                                log.info("other : $daemon")
+                                log.fine("other : $daemon")
                                 daemon.getClients().takeIf { it.isGood }?.let {
                                     it.get().forEach { clientAliveFile ->
                                         registerClientImpl(clientAliveFile)
                                     }
                                 }
-                                log.info("other : CLIENTS_OK")
+                                log.fine("other : CLIENTS_OK")
                                 daemon.scheduleShutdown(true)
-                                log.info("other : SHUTDOWN_OK")
+                                log.fine("other : SHUTDOWN_OK")
                             } catch (e: Throwable) {
-                                log.info("Cannot connect to a daemon, assuming dying ('${runFile.canonicalPath}'): ${e.message}")
+                                log.fine("Cannot connect to a daemon, assuming dying ('${runFile.canonicalPath}'): ${e.message}")
                             }
                         }
                     }
@@ -933,14 +954,14 @@ class CompileServiceServerSideImpl(
                         ) > 0
                     ) {
                         // there is at least one bigger, handover my clients to it and shutdown
-                        log.info("$LOG_PREFIX_ASSUMING_OTHER_DAEMONS_HAVE higher prio, handover clients to it and schedule shutdown: my runfile: ${runFile.name} (${runFile.lastModified()}) vs best other runfile: ${bestDaemonWithMetadata.runFile.name} (${bestDaemonWithMetadata.runFile.lastModified()})")
+                        log.fine("$LOG_PREFIX_ASSUMING_OTHER_DAEMONS_HAVE higher prio, handover clients to it and schedule shutdown: my runfile: ${runFile.name} (${runFile.lastModified()}) vs best other runfile: ${bestDaemonWithMetadata.runFile.name} (${bestDaemonWithMetadata.runFile.lastModified()})")
                         getClientsImpl().takeIf { it.isGood }?.let {
                             it.get().forEach { bestDaemonWithMetadata.daemon.registerClient(it) }
                         }
                         scheduleShutdownImpl(true)
                     } else {
                         // undecided, do nothing
-                        log.info("$LOG_PREFIX_ASSUMING_OTHER_DAEMONS_HAVE equal prio, continue: ${runFile.name} (${runFile.lastModified()}) vs best other runfile: ${bestDaemonWithMetadata.runFile.name} (${bestDaemonWithMetadata.runFile.lastModified()})")
+                        log.fine("$LOG_PREFIX_ASSUMING_OTHER_DAEMONS_HAVE equal prio, continue: ${runFile.name} (${runFile.lastModified()}) vs best other runfile: ${bestDaemonWithMetadata.runFile.name} (${bestDaemonWithMetadata.runFile.lastModified()})")
                         // TODO: implement some behaviour here, e.g.:
                         //   - shutdown/takeover smaller daemon
                         //   - runServer (or better persuade client to runServer) a bigger daemon (in fact may be even simple shutdown will do, because of client's daemon choosing logic)
@@ -952,36 +973,36 @@ class CompileServiceServerSideImpl(
     }
 
     private fun shutdownNow() {
-        log.info("Shutdown started")
+        log.fine("Shutdown started")
         fun Long.mb() = this / (1024 * 1024)
         with(Runtime.getRuntime()) {
-            log.info("Memory stats: total: ${totalMemory().mb()}mb, free: ${freeMemory().mb()}mb, max: ${maxMemory().mb()}mb")
+            log.fine("Memory stats: total: ${totalMemory().mb()}mb, free: ${freeMemory().mb()}mb, max: ${maxMemory().mb()}mb")
         }
         state.alive.set(Aliveness.Dying.ordinal)
-        downServer()
-        log.info("Shutdown complete")
+        shutdownServer()
+        log.fine("Shutdown complete")
         onShutdown()
         log.handlers.forEach { it.flush() }
     }
 
     private fun shutdownWithDelayImpl(currentClientsCount: Int, currentSessionId: Int, currentCompilationsCount: Int) {
-        log.info("${log.name} .......shutdowning........")
-        log.info("${log.name} currentCompilationsCount = $currentCompilationsCount, compilationsCounter.get(): ${compilationsCounter.get()}")
+        log.fine("${log.name} .......shutdowning........")
+        log.fine("${log.name} currentCompilationsCount = $currentCompilationsCount, compilationsCounter.get(): ${compilationsCounter.get()}")
         state.delayedShutdownQueued.set(false)
         if (currentClientsCount == state.clientsCounter &&
             currentCompilationsCount == compilationsCounter.get() &&
             currentSessionId == state.sessions.lastSessionId
         ) {
-            log.info("currentCompilationsCount == compilationsCounter.get()")
+            log.fine("currentCompilationsCount == compilationsCounter.get()")
             runBlocking(Dispatchers.Unconfined) {
                 ifAliveExclusiveUnit(minAliveness = Aliveness.LastSession, info = "initiate elections - shutdown") {
-                    log.info("Execute delayed shutdown!!!")
+                    log.fine("Execute delayed shutdown!!!")
                     log.fine("Execute delayed shutdown")
                     shutdownNow()
                 }
             }
         } else {
-            log.info("Cancel delayed shutdown due to a new activity")
+            log.fine("Cancel delayed shutdown due to a new activity")
         }
     }
 
@@ -990,7 +1011,7 @@ class CompileServiceServerSideImpl(
         val currentClientsCount = state.clientsCounter
         val currentSessionId = state.sessions.lastSessionId
         val currentCompilationsCount = compilationsCounter.get()
-        log.info("Delayed shutdown in ${daemonOptions.shutdownDelayMilliseconds}ms")
+        log.fine("Delayed shutdown in ${daemonOptions.shutdownDelayMilliseconds}ms")
         timer.schedule(daemonOptions.shutdownDelayMilliseconds) {
             shutdownWithDelayImpl(currentClientsCount, currentSessionId, currentCompilationsCount)
         }
@@ -999,10 +1020,10 @@ class CompileServiceServerSideImpl(
     private fun gracefulShutdown(onAnotherThread: Boolean): Boolean {
 
         if (!state.alive.compareAndSet(Aliveness.Alive.ordinal, Aliveness.LastSession.ordinal)) {
-            log.info("Invalid state for graceful shutdown: ${state.alive.get().toAlivenessName()}")
+            log.fine("Invalid state for graceful shutdown: ${state.alive.get().toAlivenessName()}")
             return false
         }
-        log.info("Graceful shutdown signalled")
+        log.fine("Graceful shutdown signalled")
 
         if (!onAnotherThread) {
             shutdownIfIdle()
@@ -1029,35 +1050,35 @@ class CompileServiceServerSideImpl(
             daemonOptions.autoshutdownIdleSeconds =
                     TimeUnit.MILLISECONDS.toSeconds(daemonOptions.forceShutdownTimeoutMilliseconds).toInt()
             daemonOptions.autoshutdownUnusedSeconds = daemonOptions.autoshutdownIdleSeconds
-            log.info("Some sessions are active, waiting for them to finish")
-            log.info("Unused/idle timeouts are set to ${daemonOptions.autoshutdownUnusedSeconds}/${daemonOptions.autoshutdownIdleSeconds}s")
+            log.fine("Some sessions are active, waiting for them to finish")
+            log.fine("Unused/idle timeouts are set to ${daemonOptions.autoshutdownUnusedSeconds}/${daemonOptions.autoshutdownIdleSeconds}s")
         }
     }
 
     private fun doCompile(
-            sessionId: Int,
-            daemonMessageReporterAsync: DaemonMessageReporterAsync,
-            tracer: RemoteOperationsTracer?,
-            body: suspend (EventManager, ProfilerAsync) -> ExitCode
+        sessionId: Int,
+        daemonMessageReporterAsync: DaemonMessageReporterAsync,
+        tracer: RemoteOperationsTracer?,
+        body: suspend (EventManager, ProfilerAsync) -> ExitCode
     ): Deferred<CompileService.CallResult<Int>> = GlobalScope.async {
-        log.info("alive!")
+        log.fine("alive!")
         withValidClientOrSessionProxy(sessionId) {
-            log.info("before compile")
+            log.fine("before compile")
             val rpcProfiler = if (daemonOptions.reportPerf) WallAndThreadTotalProfilerAsync() else DummyProfilerAsync()
             val eventManger = EventManagerImpl()
             try {
-                log.info("trying get exitCode")
+                log.fine("trying get exitCode")
                 val exitCode = checkedCompile(daemonMessageReporterAsync, rpcProfiler) {
-                    log.info("body of exitCode")
+                    log.fine("body of exitCode")
                     body(eventManger, rpcProfiler).code.also {
-                        log.info("after body of exitCode")
+                        log.fine("after body of exitCode")
                     }
                 }.await()
-                log.info("got exitCode")
+                log.fine("got exitCode")
                 CompileService.CallResult.Good(exitCode)
             } finally {
                 eventManger.fireCompilationFinished()
-                log.info("after compile")
+                log.fine("after compile")
             }
         }
     }
@@ -1078,10 +1099,10 @@ class CompileServiceServerSideImpl(
             builder.register(LookupTracker::class.java, RemoteLookupTrackerClient(facade, eventManager, rpcProfiler))
         }
         if (facade.hasCompilationCanceledStatus()) {
-            log.info("facade.hasCompilationCanceledStatus() = true")
+            log.fine("facade.hasCompilationCanceledStatus() = true")
             builder.register(CompilationCanceledStatus::class.java, RemoteCompilationCanceledStatusClient(facade, rpcProfiler))
         } else {
-            log.info("facade.hasCompilationCanceledStatus() = false")
+            log.fine("facade.hasCompilationCanceledStatus() = false")
         }
         builder.build()
     }
@@ -1093,14 +1114,14 @@ class CompileServiceServerSideImpl(
         body: suspend () -> R
     ): Deferred<R> = GlobalScope.async {
         try {
-            log.info("checkedCompile")
+            log.fine("checkedCompile")
             val profiler = if (daemonOptions.reportPerf) WallAndThreadAndMemoryTotalProfilerAsync(withGC = false) else DummyProfilerAsync()
 
             val res = profiler.withMeasure(null, body)
 
             val endMem = if (daemonOptions.reportPerf) usedMemory(withGC = false) else 0L
 
-            log.info("Done with result " + res.toString())
+            log.fine("Done with result " + res.toString())
 
             if (daemonOptions.reportPerf) {
                 fun Long.ms() = TimeUnit.NANOSECONDS.toMillis(this)
@@ -1112,14 +1133,14 @@ class CompileServiceServerSideImpl(
                     pc.memory.kb()
                 )} kb)".let {
                     daemonMessageReporterAsync.report(ReportSeverity.INFO, it)
-                    log.info(it)
+                    log.fine(it)
                 }
 
                 // this will only be reported if if appropriate (e.g. ByClass) profiler is used
                 for ((obj, counters) in rpcProfiler.getCounters()) {
                     "PERF: rpc by $obj: ${counters.count} calls, ${counters.time.ms()} ms, thread ${counters.threadTime.ms()} ms".let {
                         daemonMessageReporterAsync.report(ReportSeverity.INFO, it)
-                        log.info(it)
+                        log.fine(it)
                     }
                 }
             }
@@ -1127,7 +1148,7 @@ class CompileServiceServerSideImpl(
         }
         // TODO: consider possibilities to handle OutOfMemory
         catch (e: Throwable) {
-            log.info("Error: $e")
+            log.fine("Error: $e")
             throw e
         }
     }
@@ -1142,12 +1163,12 @@ class CompileServiceServerSideImpl(
         info: String = "no info",
         body: suspend () -> CompileService.CallResult<R>
     ): CompileService.CallResult<R> {
-        log.info("ifAlive(1)($info)")
+        log.fine("ifAlive(1)($info)")
         val result = CompletableDeferred<Any>()
-        queriesActor.send(OrdinaryTaskWithResult(result) {
-            log.info("ifAlive(2)($info)")
+        scheduler.scheduleTask(OrdinaryTaskWithResult(result) {
+            log.fine("ifAlive(2)($info)")
             ifAliveChecksImpl(minAliveness, info, body).also {
-                log.info("ifAlive(3)($info)")
+                log.fine("ifAlive(3)($info)")
             }
         })
         return result.await() as CompileService.CallResult<R>
@@ -1158,16 +1179,16 @@ class CompileServiceServerSideImpl(
         info: String = "no info",
         body: suspend () -> Unit
     ) {
-        log.info("ifAliveUnit(1)($info)")
+        log.fine("ifAliveUnit(1)($info)")
         val completed = CompletableDeferred<Boolean>()
-        queriesActor.send(
+        scheduler.scheduleTask(
             OrdinaryTask(completed) {
-                log.info("ifAliveUnit(2)($info)")
+                log.fine("ifAliveUnit(2)($info)")
                 ifAliveChecksImpl(minAliveness, info) {
                     body()
                     CompileService.CallResult.Ok()
                 }.also {
-                    log.info("ifAliveUnit(3)($info)")
+                    log.fine("ifAliveUnit(3)($info)")
                 }
             }
         )
@@ -1179,12 +1200,12 @@ class CompileServiceServerSideImpl(
         info: String = "no info",
         body: suspend () -> CompileService.CallResult<R>
     ): CompileService.CallResult<R> {
-        log.info("ifAliveExclusive(1)($info)")
+        log.fine("ifAliveExclusive(1)($info)")
         val result = CompletableDeferred<Any>()
-        queriesActor.send(ShutdownTaskWithResult(result) {
-            log.info("ifAliveExclusive(2)($info)")
+        scheduler.scheduleTask(ShutdownTaskWithResult(result) {
+            log.fine("ifAliveExclusive(2)($info)")
             ifAliveChecksImpl(minAliveness, info, body).also {
-                log.info("ifAliveExclusive(3)($info)")
+                log.fine("ifAliveExclusive(3)($info)")
             }
         })
         return result.await() as CompileService.CallResult<R>
@@ -1195,15 +1216,15 @@ class CompileServiceServerSideImpl(
         info: String = "no info",
         body: suspend () -> Unit
     ): CompileService.CallResult<Unit> {
-        log.info("ifAliveExclusiveUnit(1)($info)")
+        log.fine("ifAliveExclusiveUnit(1)($info)")
         val result = CompletableDeferred<Any>()
-        queriesActor.send(ShutdownTaskWithResult(result) {
-            log.info("ifAliveExclusive(2)($info)")
+        scheduler.scheduleTask(ShutdownTaskWithResult(result) {
+            log.fine("ifAliveExclusive(2)($info)")
             ifAliveChecksImpl(minAliveness) {
                 body()
                 CompileService.CallResult.Ok()
             }.also {
-                log.info("ifAliveExclusive(3)($info)")
+                log.fine("ifAliveExclusive(3)($info)")
             }
         })
         return result.await() as CompileService.CallResult<Unit>
@@ -1215,10 +1236,10 @@ class CompileServiceServerSideImpl(
         body: suspend () -> CompileService.CallResult<R>
     ): CompileService.CallResult<R> {
         val curState = state.alive.get()
-        log.info("ifAliveChecksImpl.info = $info")
+        log.fine("ifAliveChecksImpl.info = $info")
         return when {
             curState < minAliveness.ordinal -> {
-                log.info("Cannot perform operation, requested state: ${minAliveness.name} > actual: ${curState.toAlivenessName()}")
+                log.fine("Cannot perform operation, requested state: ${minAliveness.name} > actual: ${curState.toAlivenessName()}")
                 CompileService.CallResult.Dying()
             }
             else -> {

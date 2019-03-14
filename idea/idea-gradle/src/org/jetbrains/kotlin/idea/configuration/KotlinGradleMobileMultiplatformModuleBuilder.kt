@@ -191,7 +191,7 @@ class KotlinGradleMobileMultiplatformModuleBuilder :
 
             androidLocalProperties.write(
                 """
-## This file must *NOT* be checked into version Control Systems,
+## This file must *NOT* be checked into Version Control Systems,
 # as it contains information specific to your local configuration.
 #
 # Location of the SDK. This is only used by Gradle.

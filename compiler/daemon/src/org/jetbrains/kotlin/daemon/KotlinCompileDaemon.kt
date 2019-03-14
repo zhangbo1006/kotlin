@@ -81,7 +81,7 @@ object KotlinCompileDaemon {
                 ?.findResource("META-INF/MANIFEST.MF")
                 ?.let {
                     try {
-                        return Manifest(it.openStream()).mainAttributes.getValue("Implementation-version") ?: null
+                        return Manifest(it.openStream()).mainAttributes.getValue("Implementation-Version") ?: null
                     }
                     catch (e: IOException) {}
                 }

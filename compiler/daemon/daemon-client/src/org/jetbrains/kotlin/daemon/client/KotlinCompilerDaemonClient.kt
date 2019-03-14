@@ -72,13 +72,13 @@ interface KotlinCompilerDaemonClient {
     fun main(vararg args: String)
 
     companion object {
-        fun instantiate(daemonProtocolVariant: version): KotlinCompilerDaemonClient =
+        fun instantiate(daemonProtocolVariant: DaemonProtocolVariant): KotlinCompilerDaemonClient =
             KotlinCompilerDaemonClient::class.java
                 .classLoader
                 .loadClass(
                     when(daemonProtocolVariant) {
-                        version.RMI -> "org.jetbrains.kotlin.daemon.client.impls.KotlinCompilerClientImpl"
-                        version.SOCKETS -> "org.jetbrains.kotlin.daemon.client.experimental.KotlinCompilerClient"
+                        DaemonProtocolVariant.RMI -> "org.jetbrains.kotlin.daemon.client.impls.KotlinCompilerClientImpl"
+                        DaemonProtocolVariant.SOCKETS -> "org.jetbrains.kotlin.daemon.client.experimental.KotlinCompilerClient"
                     }
                 )
                 .newInstance() as KotlinCompilerDaemonClient
