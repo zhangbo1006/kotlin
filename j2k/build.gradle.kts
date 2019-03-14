@@ -80,5 +80,3 @@ test.apply {
     exclude("**/*JavaToKotlinConverterForWebDemoTestGenerated*")
     dependsOn(testForWebDemo)
 }
-
-ideaPlugin()
