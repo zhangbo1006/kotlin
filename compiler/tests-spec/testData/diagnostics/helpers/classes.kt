@@ -6,10 +6,12 @@ class Class {
     val prop_5: Float = 3f
     val prop_6: String = "..."
     val prop_7: Nothing? = "..."
+    val prop_8: Class? = "..."
 
     fun fun_1(): (Int) -> (Int) -> Int = {number: Int -> { number * 5 }}
     fun fun_2(value_1: Int): Int = value_1 * 2
     fun fun_3(value_1: Int): (Int) -> Int = fun(value_2: Int): Int = value_1 * value_2 * 2
+    fun fun_4(): Class? = Class()
 
     operator fun contains(a: Int) = a > 30
     operator fun contains(a: Long) = a > 30L
@@ -51,6 +53,9 @@ class ClassLevel6: ClassLevel5() {
 }
 
 class Inv<T>(val x: T = null as T) {
+    val prop_1: Inv<T>? = null
+    val prop_2: T? = null
+
     fun test() {}
     fun get() = x
     fun put(x: T) {}
@@ -63,6 +68,9 @@ class In<in T>() {
 }
 
 class Out<out T>(val x: T = null as T) {
+    val prop_1: Inv<T>? = null
+    val prop_2: T? = null
+
     fun get() = x
 }
 

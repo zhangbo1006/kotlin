@@ -24,7 +24,7 @@ fun case_1(x: Any?) {
 fun case_2(x: Any) {
     if (x is Number || x !is Number || <!USELESS_IS_CHECK!>x is Number<!>) {
         <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any")!>x<!>
-        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any")!>x<!>.toByte()
+        <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any")!>x<!>.<!UNRESOLVED_REFERENCE_WRONG_RECEIVER!>toByte<!>()
     }
 }
 
@@ -92,11 +92,11 @@ fun case_9(x: Any?) {
 
 // TESTCASE NUMBER: 10
 fun case_10(x: Any?) {
-    if (!!(x is Interface3)) {
-        if (!!(x !is Interface3)) {
-            <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & kotlin.Any & kotlin.Any?")!>x<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.itest()
-            <!DEBUG_INFO_EXPRESSION_TYPE("Interface3 & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.itest3()
+    if (!!(x !is Interface3)) {
+        if (!!!(x is Interface3)) {
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>.<!UNRESOLVED_REFERENCE!>itest<!>()
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>.<!UNRESOLVED_REFERENCE!>itest3<!>()
         }
     }
 }
@@ -104,10 +104,10 @@ fun case_10(x: Any?) {
 // TESTCASE NUMBER: 11
 fun case_11(x: Any?) {
     if (x is SealedMixedChildObject1?) else {
-        if (<!USELESS_IS_CHECK!>x is SealedMixedChildObject1?<!>) else {
-            <!DEBUG_INFO_EXPRESSION_TYPE("SealedMixedChildObject1? & kotlin.Any?")!>x<!>
-            <!DEBUG_INFO_EXPRESSION_TYPE("SealedMixedChildObject1? & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_1
-            <!DEBUG_INFO_EXPRESSION_TYPE("SealedMixedChildObject1? & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>?.prop_2
+        if (x is SealedMixedChildObject1?) else {
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>?.<!UNRESOLVED_REFERENCE!>prop_1<!>
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>?.<!UNRESOLVED_REFERENCE!>prop_2<!>
         }
     }
 }
@@ -115,8 +115,9 @@ fun case_11(x: Any?) {
 // TESTCASE NUMBER: 12
 inline fun <reified T, reified K>case_12(x: Any?) {
     if (x !is T) {
-        if (<!USELESS_IS_CHECK!>x is T<!> is K) {
-            <!DEBUG_INFO_EXPRESSION_TYPE("T & kotlin.Any?")!>x<!>
+        if (x is T is K) {
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!><!UNSAFE_CALL!>.<!>equals(10)
         }
     }
 }
@@ -125,7 +126,8 @@ inline fun <reified T, reified K>case_12(x: Any?) {
 inline fun <reified T, reified K>case_13(x: Any?) {
     if (x !is T) {
         if (x !is K) {
-            <!DEBUG_INFO_EXPRESSION_TYPE("K & T & kotlin.Any?")!>x<!>
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!><!UNSAFE_CALL!>.<!>equals(10)
         }
     }
 }
@@ -133,8 +135,9 @@ inline fun <reified T, reified K>case_13(x: Any?) {
 // TESTCASE NUMBER: 14
 inline fun <reified T, reified K>case_14(x: Any?) {
     if (x is K) else {
-        if (<!USELESS_IS_CHECK!>x !is T<!>) {
-            <!DEBUG_INFO_EXPRESSION_TYPE("T & kotlin.Any?")!>x<!>
+        if (x !is T) {
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!><!UNSAFE_CALL!>.<!>equals(10)
         }
     }
 }
@@ -143,7 +146,8 @@ inline fun <reified T, reified K>case_14(x: Any?) {
 inline fun <reified T, reified K>case_15(x: Any?) {
     if (x !is T) {
         if (x is K) else {
-            <!DEBUG_INFO_EXPRESSION_TYPE("T & kotlin.Any?")!>x<!>
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>
+            <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!><!UNSAFE_CALL!>.<!>equals(10)
         }
     }
 }

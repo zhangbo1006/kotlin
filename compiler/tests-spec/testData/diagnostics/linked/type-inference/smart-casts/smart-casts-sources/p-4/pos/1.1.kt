@@ -223,7 +223,7 @@ fun case_11(x: TypealiasNullableStringIndirect<!REDUNDANT_NULLABLE!>?<!>, y: Typ
 // TESTCASE NUMBER: 12
 fun case_12(x: TypealiasNullableStringIndirect, y: TypealiasNullableStringIndirect) =
     if (x == null) "1"
-    else if (y === null) <!DEBUG_INFO_EXPRESSION_TYPE("TypealiasNullableStringIndirect /* = kotlin.String */ & TypealiasNullableStringIndirect /* = kotlin.String? */"), DEBUG_INFO_SMARTCAST!>x<!>
+    else if (y === null) <!DEBUG_INFO_EXPRESSION_TYPE("TypealiasNullableStringIndirect /* = kotlin.String */ & TypealiasNullableStringIndirect /* = kotlin.String? */")!>x<!>
     else if (<!SENSELESS_COMPARISON!>y === null<!>) <!DEBUG_INFO_EXPRESSION_TYPE("TypealiasNullableStringIndirect /* = kotlin.String */ & TypealiasNullableStringIndirect /* = kotlin.String? */"), DEBUG_INFO_SMARTCAST!>x<!>.equals(null)
     else if (<!SENSELESS_COMPARISON!>y === null<!>) <!DEBUG_INFO_EXPRESSION_TYPE("TypealiasNullableStringIndirect /* = kotlin.String */ & TypealiasNullableStringIndirect /* = kotlin.String? */"), DEBUG_INFO_SMARTCAST!>x<!>.propT
     else if (<!SENSELESS_COMPARISON!>y === null<!>) <!DEBUG_INFO_EXPRESSION_TYPE("TypealiasNullableStringIndirect /* = kotlin.String */ & TypealiasNullableStringIndirect /* = kotlin.String? */"), DEBUG_INFO_SMARTCAST!>x<!>.propAny

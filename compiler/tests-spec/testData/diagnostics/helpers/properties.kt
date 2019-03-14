@@ -17,7 +17,13 @@ val nullableOut: Out<Int>? = null
 
 val <T> T.propT get() = 10
 
-val <T> T?.propNullableT get() = 10
+val <T : Any> T.propDefNotNullT get() = 10
+
+val <T> T?.propNullableT get(): Int? = 10
+
+val <T> T.propTT get() = 10 as T
+
+val <T> T?.propNullableTT get() = 10 as T?
 
 val Any.propAny get() = 10
 
