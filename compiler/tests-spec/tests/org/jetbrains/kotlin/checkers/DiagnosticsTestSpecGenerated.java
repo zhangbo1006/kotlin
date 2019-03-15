@@ -1047,6 +1047,11 @@ public class DiagnosticsTestSpecGenerated extends AbstractDiagnosticsTestSpec {
                                 runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/pos/2.15.kt");
                             }
 
+                            @TestMetadata("2.16.kt")
+                            public void test2_16() throws Exception {
+                                runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/pos/2.16.kt");
+                            }
+
                             @TestMetadata("2.2.kt")
                             public void test2_2() throws Exception {
                                 runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/pos/2.2.kt");
