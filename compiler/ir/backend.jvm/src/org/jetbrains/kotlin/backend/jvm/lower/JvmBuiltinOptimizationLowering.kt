@@ -35,17 +35,11 @@ class JvmBuiltinOptimizationLowering(val context: JvmBackendContext) : FileLower
 
     companion object {
         fun isNegation(expression: IrExpression, context: JvmBackendContext): Boolean {
-            // TODO: there should be only one representation of the 'not' operator.
-            return expression is IrCall &&
-                    (expression.symbol == context.irBuiltIns.booleanNotSymbol ||
-                            context.state.intrinsics.getIntrinsic(expression.symbol.descriptor) is Not)
+            return expression is IrCall && context.state.intrinsics.getIntrinsic(expression.symbol.descriptor) is Not
         }
 
         fun negationArgument(call: IrCall): IrExpression {
-            // TODO: there should be only one representation of the 'not' operator.
-            // Once there is only the IR definition the negation argument will
-            // always be a value argument and this method can be removed.
-            return call.dispatchReceiver ?: call.getValueArgument(0)!!
+            return call.dispatchReceiver!!
         }
     }
 
