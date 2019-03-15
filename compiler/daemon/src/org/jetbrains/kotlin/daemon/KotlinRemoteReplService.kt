@@ -175,7 +175,7 @@ inline internal fun getValidId(counter: AtomicInteger, check: (Int) -> Boolean):
     return newId
 }
 
-private fun CompilerConfiguration.configureScripting() {
+fun CompilerConfiguration.configureScripting() {
     val error = try {
         add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
         null

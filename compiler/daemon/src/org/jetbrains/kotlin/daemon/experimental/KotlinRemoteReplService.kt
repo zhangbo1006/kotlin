@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
+import org.jetbrains.kotlin.daemon.configureScripting
 
 open class KotlinJvmReplServiceAsync(
     disposable: Disposable,
@@ -43,6 +44,7 @@ open class KotlinJvmReplServiceAsync(
         languageVersionSettings = LanguageVersionSettingsImpl(
             LanguageVersion.LATEST_STABLE, ApiVersion.LATEST_STABLE, mapOf(AnalysisFlags.skipMetadataVersionCheck to true)
         )
+        configureScripting()
     }
 
     protected fun makeScriptDefinition(templateClasspath: List<File>, templateClassName: String): KotlinScriptDefinition? {

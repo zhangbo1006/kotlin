@@ -16,15 +16,10 @@ import org.jetbrains.kotlin.cli.js.K2JSCompiler
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.metadata.K2MetadataCompiler
 import org.jetbrains.kotlin.daemon.*
-import org.jetbrains.kotlin.daemon.client.KotlinCompilerClientInstance
 import org.jetbrains.kotlin.daemon.client.DaemonReportingTargets
-import org.jetbrains.kotlin.daemon.client.experimental.CompilerCallbackServicesFacadeServerServerSide
+import org.jetbrains.kotlin.daemon.client.KotlinCompilerClientInstance
 import org.jetbrains.kotlin.daemon.client.KotlinCompilerDaemonClient
-import org.jetbrains.kotlin.daemon.client.experimental.KotlinRemoteReplCompilerClientAsync
 import org.jetbrains.kotlin.daemon.common.*
-import org.jetbrains.kotlin.daemon.common.CompileServiceAsyncWrapper
-import org.jetbrains.kotlin.daemon.common.CompileServiceAsync
-import org.jetbrains.kotlin.daemon.common.experimental.findCallbackServerSocket
 import org.jetbrains.kotlin.integration.KotlinIntegrationTestBase
 import org.jetbrains.kotlin.progress.experimental.CompilationCanceledStatus
 import org.jetbrains.kotlin.test.KotlinTestUtils
@@ -53,7 +48,9 @@ import kotlin.script.experimental.dependencies.ScriptDependencies
 import kotlin.script.experimental.dependencies.asSuccess
 import kotlin.script.templates.ScriptTemplateDefinition
 import kotlin.test.fail
-
+import org.jetbrains.kotlin.daemon.client.experimental.*
+import org.jetbrains.kotlin.daemon.common.experimental.*
+import org.jetbrains.kotlin.daemon.common.experimental.LoopbackNetworkInterface
 
 val TIMEOUT_DAEMON_RUNNER_EXIT_MS = 10000L
 
@@ -90,11 +87,23 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
     val compilerClassPath = listOf(
         File(KotlinIntegrationTestBase.getCompilerLib(), "kotlin-compiler.jar")
     )
+
+    val scriptingCompilerClassPath = listOf(
+        File(KotlinIntegrationTestBase.getCompilerLib(), "kotlin-scripting-compiler.jar"),
+        File(KotlinIntegrationTestBase.getCompilerLib(), "kotlin-scripting-common.jar"),
+        File(KotlinIntegrationTestBase.getCompilerLib(), "kotlin-scripting-jvm.jar")
+    )
+
     val daemonClientClassPath = listOf(
         File(KotlinIntegrationTestBase.getCompilerLib(), "kotlin-daemon-client-new.jar"),
         File(KotlinIntegrationTestBase.getCompilerLib(), "kotlin-compiler.jar")
     )
+
     val compilerId by lazy(LazyThreadSafetyMode.NONE) { CompilerId.makeCompilerId(compilerClassPath) }
+
+    val compilerWithScriptingId by lazy(LazyThreadSafetyMode.NONE) {
+        CompilerId.makeCompilerId(compilerClassPath + scriptingCompilerClassPath)
+    }
 
     private fun compileOnDaemon(
         clientAliveFile: File,
@@ -357,7 +366,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
     }
 
     // TODO: find out how to reliably cause the retry
-    fun testDaemonStartRetry() {
+    fun ignore_testDaemonStartRetry() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions =
@@ -926,7 +935,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
                             compiledPort?.let { port -> port2logs.find { it?.first == port } }?.second?.let { logFile ->
                                 appendln("--- log file ${logFile.name}:\n${logFile.readText()}\n---")
                             }
-                                    ?: appendln("--- log not found (port: $compiledPort)")
+                                ?: appendln("--- log not found (port: $compiledPort)")
                         }
                     }
                 }
@@ -1021,16 +1030,16 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
                         CompileService.NO_SESSION,
                         arrayOf("-include-runtime", file.absolutePath, "-d", jar),
                         CompilationOptions(
-                                CompilerMode.JPS_COMPILER,
-                                CompileService.TargetPlatform.JVM,
-                                arrayOf(
-                                        ReportCategory.COMPILER_MESSAGE.code,
-                                        ReportCategory.DAEMON_MESSAGE.code,
-                                        ReportCategory.EXCEPTION.code,
-                                        ReportCategory.OUTPUT_MESSAGE.code
+                            CompilerMode.JPS_COMPILER,
+                            CompileService.TargetPlatform.JVM,
+                            arrayOf(
+                                ReportCategory.COMPILER_MESSAGE.code,
+                                ReportCategory.DAEMON_MESSAGE.code,
+                                ReportCategory.EXCEPTION.code,
+                                ReportCategory.OUTPUT_MESSAGE.code
                             ),
-                                ReportSeverity.DEBUG.code,
-                                emptyArray()
+                            ReportSeverity.DEBUG.code,
+                            emptyArray()
                         ),
                         callbackServices.clientSide,
                         kotlinCompilerClientInstance.createCompResults().clientSide
@@ -1047,9 +1056,30 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    // TODO: fix "Front-end Internal error: Failed to analyze declaration Line_1"
-    fun ignore_testDaemonReplLocalEvalNoParams() {
-        withDaemon { daemon ->
+    fun testDaemonReplScriptingNotInClasspathError() {
+        withDaemon(compilerId) { daemon ->
+            var repl: KotlinRemoteReplCompilerClientAsync? = null
+            var isErrorThrown = false
+            try {
+                repl = KotlinRemoteReplCompilerClientAsync(
+                    daemon, null, CompileService.TargetPlatform.JVM, emptyArray(), TestMessageCollector(),
+                    classpathFromClassloader(), ScriptWithNoParam::class.qualifiedName!!
+                )
+            } catch (e: Exception) {
+                TestCase.assertEquals(
+                    "Unable to use scripting/REPL in the daemon, no kotlin-scripting-compiler.jar or its dependencies are found in the compiler classpath",
+                    e.message
+                )
+                isErrorThrown = true
+            } finally {
+                repl?.dispose()
+            }
+            TestCase.assertTrue("Expecting exception that kotlin-scripting-plugin is not found in the classpath", isErrorThrown)
+        }
+    }
+
+    fun testDaemonReplLocalEvalNoParams() {
+        withDaemon(compilerWithScriptingId) { daemon ->
             val repl = KotlinRemoteReplCompilerClientAsync(
                 daemon, null, CompileService.TargetPlatform.JVM,
                 emptyArray(),
@@ -1068,8 +1098,8 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
     }
 
     // TODO: fix "Front-end Internal error: Failed to analyze declaration Line_1"
-    fun ignore_testDaemonReplLocalEvalStandardTemplate() {
-        withDaemon { daemon ->
+    fun testDaemonReplLocalEvalStandardTemplate() {
+        withDaemon(compilerWithScriptingId) { daemon ->
             val repl = KotlinRemoteReplCompilerClientAsync(
                 daemon, null, CompileService.TargetPlatform.JVM, emptyArray(),
                 TestMessageCollector(),
@@ -1136,8 +1166,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         TestCase.assertEquals(7, res21e!!.value)
     }
 
-    // TODO: fix "Front-end Internal error: Failed to analyze declaration Line_1"
-    fun ignore_testDaemonReplAutoshutdownOnIdle() {
+    fun testDaemonReplAutoshutdownOnIdle() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions = DaemonOptions(
@@ -1151,13 +1180,14 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
                     val daemonJVMOptions = makeTestDaemonJvmOptions(logFile)
 
                     val daemon = kotlinCompilerClientInstance.connectToCompileService(
-                        compilerId,
+                        compilerWithScriptingId,
                         flagFile,
                         daemonJVMOptions,
                         daemonOptions,
                         DaemonReportingTargets(out = System.err),
                         autostart = true
                     )
+
                     println("daemon : $daemon")
                     assertNotNull("failed to connect daemon", daemon)
 
@@ -1197,7 +1227,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    internal fun withDaemon(body: suspend (CompileServiceAsync) -> Unit) {
+    internal fun withDaemon(compilerId: CompilerId = this.compilerId, body: suspend (CompileServiceAsync) -> Unit) {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             val daemonOptions = makeTestDaemonOptions(getTestName(true))
             withLogFile("kotlin-daemon-test") { logFile ->
@@ -1253,9 +1283,9 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         onShutdown: () -> Unit = {}
     ) {
         val (registry, serverPort) = findPortAndCreateRegistry(
-                COMPILE_DAEMON_FIND_PORT_ATTEMPTS,
-                COMPILE_DAEMON_PORTS_RANGE_START,
-                COMPILE_DAEMON_PORTS_RANGE_END
+            COMPILE_DAEMON_FIND_PORT_ATTEMPTS,
+            COMPILE_DAEMON_PORTS_RANGE_START,
+            COMPILE_DAEMON_PORTS_RANGE_END
         )
         val compilerSelector = object : CompilerSelector {
             private val jvm by lazy { K2JVMCompiler() }
@@ -1392,7 +1422,7 @@ internal fun classpathFromClassloader(): List<File> {
     return ((TestKotlinScriptDummyDependenciesResolver::class.java.classLoader as? URLClassLoader)?.urLs
         ?.mapNotNull(URL::toFile)
         ?.filter { it.path.contains("out") && it.path.contains("") }
-            ?: emptyList()
+        ?: emptyList()
             ) + additionalClasspath
 }
 
