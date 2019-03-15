@@ -45,7 +45,7 @@ open class KotlinRemoteReplCompilerClientAsync(
                         arrayOf(ReportCategory.COMPILER_MESSAGE.code, ReportCategory.DAEMON_MESSAGE.code, ReportCategory.EXCEPTION.code, ReportCategory.OUTPUT_MESSAGE.code),
                         ReportSeverity.INFO.code,
                         emptyArray()),
-                services,
+                services.clientSide,
                 templateClasspath,
                 templateClassName
         ).get()
@@ -66,7 +66,7 @@ open class KotlinRemoteReplCompilerClientAsync(
             RemoteReplCompilerStateAsync(
                     runBlocking { compileService.replCreateState(sessionId).get() },
                     lock
-            ).toRMI()
+            )
 
     override fun check(state: IReplStageState<*>, codeLine: ReplCodeLine): ReplCheckResult = runBlocking {
         compileService.replCheck(sessionId, state.asState(RemoteReplCompilerStateAsync::class.java).replStateFacade.getId(), codeLine).get()

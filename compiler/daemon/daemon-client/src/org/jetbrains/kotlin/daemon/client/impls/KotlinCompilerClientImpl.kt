@@ -116,16 +116,10 @@ object KotlinCompilerClientImpl : KotlinCompilerDaemonClient {
             profiler
     )
 
-    override fun getOrCreateClientFlagFile(daemonOptions: DaemonOptions): File {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun getOrCreateClientFlagFile(daemonOptions: DaemonOptions): File = oldClient.getOrCreateClientFlagFile(daemonOptions)
 
-    override fun createCompResults(): CompilationResultsAsync {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun createCompResults() = TODO("not implemented")
 
-    override fun main(vararg args: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun main(vararg args: String) = oldClient.main(*args)
 
 }

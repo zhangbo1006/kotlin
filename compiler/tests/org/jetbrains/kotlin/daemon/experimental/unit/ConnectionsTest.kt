@@ -31,14 +31,11 @@ import java.util.logging.LogManager
 import java.util.logging.Logger
 import kotlin.concurrent.schedule
 
-// TODO: remove ignore annotation from tests.
 class ConnectionsTest : KotlinIntegrationTestBase() {
 
-    val kotlinCompilerClient = KotlinCompilerDaemonClient.instantiate(DaemonProtocolVariant.RMI) // TODO(SOCKETS)
+    val kotlinCompilerClient = KotlinCompilerDaemonClient.instantiate(DaemonProtocolVariant.SOCKETS)
 
-    private val logFile = createTempFile("/Users/jetbrains/Documents/kotlin/my_fork/kotlin", ".txt").also {
-        println("client log file path : ${it.loggerCompatiblePath}")
-    }
+    private val logFile = createTempFile("/Users/jetbrains/Documents/kotlin/my_fork/kotlin", ".txt")
 
     private val cfg = "handlers = java.util.logging.FileHandler\n" +
             "java.util.logging.FileHandler.level     = ALL\n" +
@@ -252,36 +249,35 @@ class ConnectionsTest : KotlinIntegrationTestBase() {
 
     private fun endTest() {
         deleteClients()
-        println("test passed")
     }
 
-    fun ignore_testConnectionMEchanism_OldClient_OldServer() {
+    fun testConnectionMEchanism_OldClient_OldServer() {
         runOldServer()
         expectOldDaemon()
         endTest()
     }
 
 
-    fun ignore_testConnectionMechanism_NewClient_NewServer() {
+    fun testConnectionMechanism_NewClient_NewServer() {
         runNewServer()
         expectNewDaemon(ServerType.NEW)
         endTest()
     }
 
-    fun ignore_testConnectionMechanism_OldClient_NewServer() {
+    fun testConnectionMechanism_OldClient_NewServer() {
         runNewServer()
         expectOldDaemon()
         endTest()
     }
 
-    fun ignore_testConnectionMechanism_NewClient_OldServer() {
+    fun testConnectionMechanism_NewClient_OldServer() {
         runOldServer()
         expectNewDaemon(ServerType.OLD)
         endTest()
     }
 
 
-    fun ignore_testConnections_OldDaemon_DifferentClients() {
+    fun testConnections_OldDaemon_DifferentClients() {
         runOldServer()
         (0..20).forEach {
             expectNewDaemon(ServerType.OLD)
@@ -290,42 +286,36 @@ class ConnectionsTest : KotlinIntegrationTestBase() {
         endTest()
     }
 
-    fun ignore_testConnections_NewDaemon_DifferentClients() {
+    fun testConnections_NewDaemon_DifferentClients() {
         runNewServer()
         (0..4).forEach {
-            println(it)
             expectNewDaemon(ServerType.NEW)
-            println(it)
             expectOldDaemon()
         }
         endTest()
     }
 
-    fun ignore_testConnections_MultipleDaemons_MultipleClients() {
+    fun testConnections_MultipleDaemons_MultipleClients() {
         (0..3).forEach {
             runNewServer()
             runOldServer()
         }
         (0..4).forEach {
-            println(it)
             expectNewDaemon(ServerType.ANY)
-            println(it)
             expectOldDaemon(shouldCheckNumber = false)
         }
         endTest()
     }
 
-    fun ignore_testShutdown() {
+    fun testShutdown() {
         runNewServer()
         expectNewDaemon(ServerType.NEW) { daemon ->
             runBlocking {
-                println("shutdown...")
                 daemon.shutdown()
                 delay(1000L)
                 val mem: Long = try {
                     daemon.getUsedMemory().get()
                 } catch (e: IOException) {
-                    println(e.message)
                     -100500L
                 }
                 assertTrue(mem == -100500L)
@@ -334,7 +324,7 @@ class ConnectionsTest : KotlinIntegrationTestBase() {
     }
 
 
-    fun ignore_testCompile() {
+    fun testCompile() {
         runNewServer()
         expectNewDaemon(ServerType.NEW) { daemon ->
             runBlocking {
@@ -377,11 +367,10 @@ class ConnectionsTest : KotlinIntegrationTestBase() {
                                 ),
                                 servicesClient,
                                 compResultsClient
-                            ).get().also { println("CODE = $it") }
+                            ).get()
                         codes[i] = code
                     }
                 (0 until threadCount).map(::runThread).map { it.await() }
-                codes.forEach { println(it) }
                 assertTrue("not-null code", codes.all { it == 0 })
             }
         }

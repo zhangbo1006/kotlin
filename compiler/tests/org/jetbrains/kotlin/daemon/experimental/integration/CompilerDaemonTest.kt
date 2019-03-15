@@ -61,7 +61,7 @@ val TIMEOUT_DAEMON_RUNNER_EXIT_MS = 10000L
 
 class CompilerDaemonTest : KotlinIntegrationTestBase() {
 
-    val kotlinCompilerClientInstance = KotlinCompilerDaemonClient.instantiate(DaemonProtocolVariant.RMI) // TODO(SOCKETS)
+    val kotlinCompilerClientInstance = KotlinCompilerDaemonClient.instantiate(DaemonProtocolVariant.SOCKETS)
 
     private fun createNewLogFile(): File {
         println("creating logFile")
@@ -171,7 +171,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         )
     }
 
-    fun ignore_testHelloApp() {
+    fun testHelloApp() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions = makeTestDaemonOptions(getTestName(true))
@@ -214,7 +214,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonJvmOptionsParsing() {
+    fun testDaemonJvmOptionsParsing() {
         val backupJvmOptions = System.getProperty(COMPILE_DAEMON_JVM_OPTIONS_PROPERTY)
         try {
             System.setProperty(
@@ -253,7 +253,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonOptionsParsing() {
+    fun testDaemonOptionsParsing() {
         val backupOptions = System.getProperty(COMPILE_DAEMON_OPTIONS_PROPERTY)
         try {
             System.setProperty(COMPILE_DAEMON_OPTIONS_PROPERTY, "runFilesPath=abcd,autoshutdownIdleSeconds=1111")
@@ -265,7 +265,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonInstancesSimple() {
+    fun testDaemonInstancesSimple() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions = makeTestDaemonOptions(getTestName(true))
@@ -325,7 +325,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonRunError() {
+    fun testDaemonRunError() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions =
@@ -357,7 +357,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
     }
 
     // TODO: find out how to reliably cause the retry
-    fun ignore_testDaemonStartRetry() {
+    fun testDaemonStartRetry() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions =
@@ -391,7 +391,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonAutoshutdownOnUnused() {
+    fun testDaemonAutoshutdownOnUnused() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions = DaemonOptions(
@@ -430,7 +430,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonAutoshutdownOnIdle() {
+    fun testDaemonAutoshutdownOnIdle() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions = DaemonOptions(
@@ -479,7 +479,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonGracefulShutdown() {
+    fun testDaemonGracefulShutdown() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions = DaemonOptions(
@@ -530,7 +530,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonExitsOnClientFlagDeletedWithActiveSessions() {
+    fun testDaemonExitsOnClientFlagDeletedWithActiveSessions() {
         runBlocking {
             val daemonOptions = DaemonOptions(
                 autoshutdownIdleSeconds = 1000,
@@ -570,7 +570,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonExitsOnClientFlagDeletedWithAllSessionsReleased() {
+    fun testDaemonExitsOnClientFlagDeletedWithAllSessionsReleased() {
         runBlocking {
             val daemonOptions = DaemonOptions(
                 autoshutdownIdleSeconds = 1000,
@@ -613,7 +613,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonCancelShutdownOnANewClient() {
+    fun testDaemonCancelShutdownOnANewClient() {
         runBlocking {
             val daemonOptions = DaemonOptions(
                 autoshutdownIdleSeconds = 1000,
@@ -677,7 +677,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
      *  This seems a known problem, e.g. gradle uses a library with native code that prevents io handles inheritance when launching it's daemon
      *  (the same solution is used in kotlin daemon client - see next commit)
      */
-    fun ignore_testDaemonExecutionViaIntermediateProcess() {
+    fun testDaemonExecutionViaIntermediateProcess() {
         val clientAliveFile = createTempFile("kotlin-daemon-transitive-run-test", ".run")
         val daemonOptions = makeTestDaemonOptions(getTestName(true))
         val jar = tmpdir.absolutePath + File.separator + "hello.jar"
@@ -741,7 +741,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         localEndSignal.countDown()
     }
 
-    fun ignore_testParallelCompilationOnDaemon() {
+    fun testParallelCompilationOnDaemon() {
 
         assertTrue(PARALLEL_THREADS_TO_COMPILE <= LoopbackNetworkInterface.SERVER_SOCKET_BACKLOG_SIZE)
 
@@ -818,7 +818,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         const val connectionFailedErr = -100
     }
 
-    fun ignore_testParallelDaemonStart() {
+    fun testParallelDaemonStart() {
 
         val doneLatch = CountDownLatch(ParallelStartParams.threads)
 
@@ -941,7 +941,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonConnectionProblems() {
+    fun testDaemonConnectionProblems() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
                 val daemonOptions = makeTestDaemonOptions(getTestName(true))
@@ -977,6 +977,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
+    // TODO: fix this test
     fun ignore_testDaemonCallbackConnectionProblems() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {
@@ -1046,6 +1047,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
+    // TODO: fix "Front-end Internal error: Failed to analyze declaration Line_1"
     fun ignore_testDaemonReplLocalEvalNoParams() {
         withDaemon { daemon ->
             val repl = KotlinRemoteReplCompilerClientAsync(
@@ -1065,6 +1067,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
+    // TODO: fix "Front-end Internal error: Failed to analyze declaration Line_1"
     fun ignore_testDaemonReplLocalEvalStandardTemplate() {
         withDaemon { daemon ->
             val repl = KotlinRemoteReplCompilerClientAsync(
@@ -1084,7 +1087,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         }
     }
 
-    fun ignore_testDaemonReplLocalEvalStandardTemplate_OldDaemon_NewClient() {
+    fun testDaemonReplLocalEvalStandardTemplate_OldDaemon_NewClient() {
         withOldDaemon { daemon ->
             val repl = KotlinRemoteReplCompilerClientAsync(
                 daemon, null, CompileService.TargetPlatform.JVM, emptyArray(),
@@ -1133,6 +1136,7 @@ class CompilerDaemonTest : KotlinIntegrationTestBase() {
         TestCase.assertEquals(7, res21e!!.value)
     }
 
+    // TODO: fix "Front-end Internal error: Failed to analyze declaration Line_1"
     fun ignore_testDaemonReplAutoshutdownOnIdle() {
         withFlagFile(getTestName(true), ".alive") { flagFile ->
             runBlocking {

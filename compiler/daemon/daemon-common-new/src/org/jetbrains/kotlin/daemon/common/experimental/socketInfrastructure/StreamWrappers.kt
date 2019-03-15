@@ -30,7 +30,7 @@ class ByteReadChannelWrapper(readChannel: ByteReadChannel, private val log: Logg
             try {
                 readChannel.readPacket(4).readBytes()
             } catch (e: Exception) {
-                log.info("failed to read message length, ${e.message}")
+                log.fine("failed to read message length, ${e.message}")
                 null
             }
 
@@ -40,7 +40,7 @@ class ByteReadChannelWrapper(readChannel: ByteReadChannel, private val log: Logg
                 length
             ).readBytes()
         } catch (e: Exception) {
-            log.info("failed to read packet (${e.message})")
+            log.fine("failed to read packet (${e.message})")
             null
         }
 
@@ -68,7 +68,7 @@ class ByteReadChannelWrapper(readChannel: ByteReadChannel, private val log: Logg
                     }
                 }
             } else {
-                log.info("read chanel closed " + log.name)
+                log.fine("read chanel closed " + log.name)
             }
         }
     }
@@ -76,7 +76,7 @@ class ByteReadChannelWrapper(readChannel: ByteReadChannel, private val log: Logg
     private fun getLength(packet: ByteArray): Int {
         val (b1, b2, b3, b4) = packet.map(Byte::toInt)
         return (0xFF and b1 shl 24 or (0xFF and b2 shl 16) or
-                (0xFF and b3 shl 8) or (0xFF and b4)).also { log.info("   $it") }
+                (0xFF and b3 shl 8) or (0xFF and b4)).also { log.fine("   $it") }
     }
 
     /** first reads <t>length</t> token (4 bytes) and then -- reads <t>length</t> bytes.
@@ -138,10 +138,10 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
             try {
                 writeChannel.writeFully(b)
             } catch (e: Exception) {
-                log.info("failed to print message, ${e.message}")
+                log.fine("failed to print message, ${e.message}")
             }
         } else {
-            log.info("closed chanel (write)")
+            log.fine("closed chanel (write)")
         }
     }
 
@@ -150,7 +150,7 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
             if (!writeChannel.isClosedForWrite) {
                 when (message) {
                     is CloseMessage -> {
-                        log.info("${log.name} closing chanel...")
+                        log.fine("${log.name} closing chanel...")
                         writeChannel.close()
                     }
                     is ByteData -> {
@@ -159,13 +159,13 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
                             try {
                                 writeChannel.flush()
                             } catch (e: Exception) {
-                                log.info("failed to flush byte write chanel")
+                                log.fine("failed to flush byte write chanel")
                             }
                         }
                     }
                 }
             } else {
-                log.info("${log.name} write chanel closed")
+                log.fine("${log.name} write chanel closed")
             }
         }
     }
@@ -188,9 +188,6 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
                 writeBytesAndLength(bytes.size, bytes)
             }
         }
-            .also {
-                log.info("sent object : $obj")
-            }
 
     private suspend fun writeString(s: String) = writeBytesAndLength(-s.length, s.toByteArray())
 
@@ -199,12 +196,8 @@ class ByteWriteChannelWrapper(writeChannel: ByteWriteChannel, private val log: L
             .allocate(4)
             .putInt(length)
             .array()
-            .also {
-                log.info("printLength $length")
-            }
 
     suspend fun writeObject(obj: Any?) {
-//        println("write object : $obj")
         if (obj is String) writeString(obj)
         else writeObjectImpl(obj)
     }
