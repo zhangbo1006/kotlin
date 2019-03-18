@@ -80,7 +80,7 @@ open class KotlinStubBaseImpl<T : KtElementImplStub<*>>(parent: StubElement<*>?,
     companion object {
         private val LOGGER: Logger = Logger.getInstance(KotlinStubBaseImpl::class.java)
 
-        private val BASE_STUB_INTERFACES = listOf(
+        private val BASE_STUB_INTERFACES: List<Class<*>> = listOf(
             KotlinStubWithFqName::class.java,
             KotlinClassOrObjectStub::class.java,
             NamedStub::class.java,
