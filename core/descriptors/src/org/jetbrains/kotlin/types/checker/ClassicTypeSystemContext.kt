@@ -8,13 +8,18 @@ package org.jetbrains.kotlin.types.checker
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns.FQ_NAMES
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.resolve.calls.inference.CapturedType
+import org.jetbrains.kotlin.resolve.descriptorUtil.hasExactAnnotation
+import org.jetbrains.kotlin.resolve.descriptorUtil.hasNoInferAnnotation
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.model.*
 import org.jetbrains.kotlin.types.model.CaptureStatus
 import org.jetbrains.kotlin.types.typeUtil.asTypeProjection
+import org.jetbrains.kotlin.types.typeUtil.canHaveUndefinedNullability
+import org.jetbrains.kotlin.types.typeUtil.contains
 
-interface ClassicTypeSystemContext : TypeSystemContext {
+interface ClassicTypeSystemContext : TypeSystemInferenceExtensionContext {
     override fun TypeConstructorMarker.isDenotable(): Boolean {
         require(this is TypeConstructor, this::errorMessage)
         return this.isDenotable
@@ -123,6 +128,14 @@ interface ClassicTypeSystemContext : TypeSystemContext {
 
 
 
+    private fun TypeVariance.convertVariance(): Variance {
+        return when (this) {
+            TypeVariance.INV -> Variance.INVARIANT
+            TypeVariance.IN -> Variance.IN_VARIANCE
+            TypeVariance.OUT -> Variance.OUT_VARIANCE
+        }
+    }
+
     override fun TypeArgumentMarker.getType(): KotlinTypeMarker {
         require(this is TypeProjection, this::errorMessage)
         return this.type.unwrap()
@@ -208,6 +221,11 @@ interface ClassicTypeSystemContext : TypeSystemContext {
         return this.asTypeProjection()
     }
 
+    override fun TypeConstructorMarker.isUnitTypeConstructor(): Boolean {
+        require(this is TypeConstructor, this::errorMessage)
+        return KotlinBuiltIns.isTypeConstructorForGivenClass(this, FQ_NAMES.unit)
+    }
+
     /**
      *
      * SingleClassifierType is one of the following types:
@@ -228,6 +246,219 @@ interface ClassicTypeSystemContext : TypeSystemContext {
         require(this is KotlinType, this::errorMessage)
         return typeConstructor().isNothingConstructor() && !TypeUtils.isNullableType(this)
     }
+
+    override fun KotlinTypeMarker.contains(predicate: (KotlinTypeMarker) -> Boolean): Boolean {
+        require(this is KotlinType, this::errorMessage)
+        return containsInternal(this, predicate)
+    }
+
+    override fun SimpleTypeMarker.typeDepth(): Int {
+        require(this is SimpleType, this::errorMessage)
+        return this.typeDepthInternal()
+    }
+
+    override fun KotlinTypeMarker.typeDepth(): Int {
+        require(this is UnwrappedType, this::errorMessage)
+        return this.typeDepthInternal()
+    }
+
+    override fun intersectTypes(types: List<KotlinTypeMarker>): KotlinTypeMarker {
+        @Suppress("UNCHECKED_CAST")
+        return org.jetbrains.kotlin.types.checker.intersectTypes(types as List<UnwrappedType>)
+    }
+
+    override fun intersectTypes(types: List<SimpleTypeMarker>): SimpleTypeMarker {
+        @Suppress("UNCHECKED_CAST")
+        return org.jetbrains.kotlin.types.checker.intersectTypes(types as List<SimpleType>)
+    }
+
+    override fun Collection<KotlinTypeMarker>.singleBestRepresentative(): KotlinTypeMarker? {
+        return singleBestRepresentative(this as Collection<KotlinType>)
+    }
+
+    override fun KotlinTypeMarker.isUnit(): Boolean {
+        require(this is UnwrappedType)
+        return KotlinBuiltIns.isUnit(this)
+    }
+
+    override fun createFlexibleType(lowerBound: SimpleTypeMarker, upperBound: SimpleTypeMarker): KotlinTypeMarker {
+        require(lowerBound is SimpleType)
+        require(upperBound is SimpleType)
+        return KotlinTypeFactory.flexibleType(lowerBound, upperBound)
+    }
+
+    override fun KotlinTypeMarker.withNullability(nullable: Boolean): KotlinTypeMarker {
+        return when (this) {
+            is SimpleTypeMarker -> this.withNullability(nullable)
+            is FlexibleTypeMarker -> createFlexibleType(lowerBound().withNullability(nullable), upperBound().withNullability(nullable))
+            else -> error("sealed")
+        }
+    }
+
+
+    override fun newBaseTypeCheckerContext(errorTypesEqualToAnything: Boolean): AbstractTypeCheckerContext {
+        return ClassicTypeCheckerContext(errorTypesEqualToAnything)
+    }
+
+    override fun nullableNothingType(): SimpleTypeMarker {
+        return builtIns.nullableNothingType
+    }
+
+    override fun nullableAnyType(): SimpleTypeMarker {
+        return builtIns.nullableAnyType
+    }
+
+    override fun nothingType(): SimpleTypeMarker {
+        return builtIns.nothingType
+    }
+
+    val builtIns: KotlinBuiltIns get() = throw UnsupportedOperationException("Not supported")
+
+    override fun KotlinTypeMarker.makeDefinitelyNotNullOrNotNull(): KotlinTypeMarker {
+        require(this is UnwrappedType)
+        return makeDefinitelyNotNullOrNotNullInternal(this)
+    }
+
+
+    override fun SimpleTypeMarker.makeSimpleTypeDefinitelyNotNullOrNotNull(): SimpleTypeMarker {
+        require(this is SimpleType)
+        return makeSimpleTypeDefinitelyNotNullOrNotNullInternal(this)
+    }
+
+
+    override fun KotlinTypeMarker.removeAnnotations(): KotlinTypeMarker {
+        require(this is UnwrappedType)
+        return this.replaceAnnotations(Annotations.EMPTY)
+    }
+
+    override fun KotlinTypeMarker.hasExactAnnotation(): Boolean {
+        require(this is UnwrappedType)
+        return hasExactInternal(this)
+    }
+
+    override fun KotlinTypeMarker.hasNoInferAnnotation(): Boolean {
+        require(this is UnwrappedType)
+        return hasNoInferInternal(this)
+    }
+
+    override fun TypeVariableMarker.freshTypeConstructor(): TypeConstructorMarker {
+        throw UnsupportedOperationException("!")
+    }
+
+    override fun CapturedTypeMarker.typeConstructorProjection(): TypeArgumentMarker {
+        require(this is NewCapturedType)
+        return this.constructor.projection
+    }
+
+    override fun KotlinTypeMarker.isNullableType(): Boolean {
+        require(this is KotlinType)
+        return TypeUtils.isNullableType(this)
+    }
+
+    override fun createSimpleType(
+        constructor: TypeConstructorMarker,
+        arguments: List<TypeArgumentMarker>,
+        nullable: Boolean
+    ): SimpleTypeMarker {
+        require(constructor is TypeConstructor)
+        @Suppress("UNCHECKED_CAST")
+        return KotlinTypeFactory.simpleType(Annotations.EMPTY, constructor, arguments as List<TypeProjection>, nullable)
+    }
+
+    override fun createTypeArgument(type: KotlinTypeMarker, variance: TypeVariance): TypeArgumentMarker {
+        require(type is KotlinType)
+        return TypeProjectionImpl(variance.convertVariance(), type)
+    }
+
+    override fun createStarProjection(typeParameter: TypeParameterMarker): TypeArgumentMarker {
+        require(typeParameter is TypeParameterDescriptor)
+        return StarProjectionImpl(typeParameter)
+    }
+
+    override fun KotlinTypeMarker.canHaveUndefinedNullability(): Boolean {
+        require(this is UnwrappedType)
+        return constructor is NewTypeVariableConstructor ||
+                constructor.declarationDescriptor is TypeParameterDescriptor ||
+                this is NewCapturedType
+    }
+
+    override fun SimpleTypeMarker.replaceArguments(newArguments: List<TypeArgumentMarker>): SimpleTypeMarker {
+        require(this is SimpleType)
+        return this.replace(newArguments as List<TypeProjection>)
+    }
+
+    override fun prepareType(type: KotlinTypeMarker): KotlinTypeMarker {
+        require(type is UnwrappedType)
+        return NewKotlinTypeChecker.transformToNewType(type)
+    }
+
+    override fun DefinitelyNotNullTypeMarker.original(): SimpleTypeMarker {
+        require(this is DefinitelyNotNullType)
+        return this.original
+    }
+
+    override fun createCapturedType(
+        constructorProjection: TypeArgumentMarker,
+        constructorSupertypes: List<KotlinTypeMarker>,
+        lowerType: KotlinTypeMarker?,
+        captureStatus: CaptureStatus
+    ): CapturedTypeMarker {
+        TODO("not implemented")
+    }
+
+    override fun typeSubstitutorByTypeConstructor(map: Map<TypeConstructorMarker, KotlinTypeMarker>): TypeSubstitutorMarker {
+        TODO("not implemented")
+    }
+
+    override fun TypeSubstitutorMarker.safeSubstitute(type: KotlinTypeMarker): KotlinTypeMarker {
+        TODO("not implemented")
+    }
+
+    override fun TypeVariableMarker.defaultType(): SimpleTypeMarker {
+        TODO("not implemented")
+    }
+
+    override fun createStubType(typeVariable: TypeVariableMarker): StubTypeMarker {
+        TODO("not implemented")
+    }
+}
+
+private fun hasNoInferInternal(type: UnwrappedType): Boolean {
+    return type.hasNoInferAnnotation()
+}
+
+
+private fun hasExactInternal(type: UnwrappedType): Boolean {
+    return type.hasExactAnnotation()
+}
+
+
+private fun makeDefinitelyNotNullOrNotNullInternal(type: UnwrappedType): UnwrappedType {
+    return type.makeDefinitelyNotNullOrNotNull()
+}
+
+private fun makeSimpleTypeDefinitelyNotNullOrNotNullInternal(type: SimpleType): SimpleType {
+    return type.makeSimpleTypeDefinitelyNotNullOrNotNull()
+}
+
+private fun containsInternal(type: KotlinType, predicate: (KotlinTypeMarker) -> Boolean): Boolean = type.contains(predicate)
+
+private fun singleBestRepresentative(collection: Collection<KotlinType>) = collection.singleBestRepresentative()
+
+internal fun UnwrappedType.typeDepthInternal() =
+    when (this) {
+        is SimpleType -> typeDepthInternal()
+        is FlexibleType -> Math.max(lowerBound.typeDepthInternal(), upperBound.typeDepthInternal())
+    }
+
+internal fun SimpleType.typeDepthInternal(): Int {
+    if (this is TypeUtils.SpecialType) return 0
+
+    val maxInArguments = arguments.asSequence().map {
+        if (it.isStarProjection) 1 else it.type.unwrap().typeDepthInternal()
+    }.max() ?: 0
+
+    return maxInArguments + 1
 }
 
 
