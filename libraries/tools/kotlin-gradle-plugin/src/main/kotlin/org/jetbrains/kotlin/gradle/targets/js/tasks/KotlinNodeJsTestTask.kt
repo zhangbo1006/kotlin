@@ -24,11 +24,11 @@ import javax.inject.Inject
 open class KotlinNodeJsTestTask : AbstractTestTask() {
     @Input
     var ignoredTestSuites: IgnoredTestSuites =
-            IgnoredTestSuites.showWithContents
+        IgnoredTestSuites.showWithContents
 
     @Input
     var testsGrouping: TestsGrouping =
-            TestsGrouping.root
+        TestsGrouping.root
 
     @Input
     @Optional
@@ -64,6 +64,15 @@ open class KotlinNodeJsTestTask : AbstractTestTask() {
     @Internal
     val nodeJsProcessOptions: ProcessForkOptions = DefaultProcessForkOptions(fileResolver)
 
+    val nodeJsExecutable: String
+        @Input get() = nodeJsProcessOptions.executable
+
+    val nodeJsWorkingDir: File
+        @Input get() = nodeJsProcessOptions.workingDir
+
+    val nodeJsEnvironment: Map<String, Any>
+        @Input get() = nodeJsProcessOptions.environment
+
     fun nodeJs(options: ProcessForkOptions.() -> Unit) {
         options(nodeJsProcessOptions)
     }
@@ -75,22 +84,26 @@ open class KotlinNodeJsTestTask : AbstractTestTask() {
         extendedForkOptions.environment.addPath("NODE_PATH", nodeModulesDir!!.canonicalPath)
 
         val cliArgs = KotlinNodeJsTestRunnerCliArgs(
-                nodeModulesToLoad.toList(),
-                filterExt.includePatterns + filterExt.commandLineIncludePatterns,
-                excludes,
-                ignoredTestSuites.cli
+            nodeModulesToLoad.toList(),
+            filterExt.includePatterns + filterExt.commandLineIncludePatterns,
+            excludes,
+            ignoredTestSuites.cli
         )
 
         val clientSettings = when (testsGrouping) {
             TestsGrouping.none -> TCServiceMessagesClientSettings(rootNodeName = name, skipRoots = true)
             TestsGrouping.root -> TCServiceMessagesClientSettings(rootNodeName = name, nameOfRootSuiteToReplace = targetName)
-            TestsGrouping.leaf -> TCServiceMessagesClientSettings(rootNodeName = name, skipRoots = true, nameOfLeafTestToAppend = targetName)
+            TestsGrouping.leaf -> TCServiceMessagesClientSettings(
+                rootNodeName = name,
+                skipRoots = true,
+                nameOfLeafTestToAppend = targetName
+            )
         }
 
         return TCServiceMessagesTestExecutionSpec(
-                extendedForkOptions,
-                listOf(finalTestRuntimeNodeModule.absolutePath) + cliArgs.toList(),
-                clientSettings
+            extendedForkOptions,
+            listOf(finalTestRuntimeNodeModule.absolutePath) + cliArgs.toList(),
+            clientSettings
         )
     }
 
@@ -100,11 +113,11 @@ open class KotlinNodeJsTestTask : AbstractTestTask() {
 
     private val finalTestRuntimeNodeModule: File
         get() = testRuntimeNodeModule
-                ?: nodeModulesDir!!.resolve(".bin").resolve(kotlinNodeJsTestRuntimeBin)
+            ?: nodeModulesDir!!.resolve(".bin").resolve(kotlinNodeJsTestRuntimeBin)
 
     override fun createTestExecuter() = TCServiceMessagesTestExecutor(
-            execHandleFactory,
-            buildOperationExecutor
+        execHandleFactory,
+        buildOperationExecutor
     )
 }
 
