@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.fir.resolve.calls
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.FirCallableDeclaration
 import org.jetbrains.kotlin.fir.expressions.FirExpression
+import org.jetbrains.kotlin.fir.renderWithType
 import org.jetbrains.kotlin.fir.resolve.FirSymbolProvider
 import org.jetbrains.kotlin.fir.resolve.defaultType
 import org.jetbrains.kotlin.fir.resolve.scope
@@ -236,7 +237,8 @@ fun createSimpleConsumer(
             token,
             object : ReceiverValueWithPossibleTypes {
                 override val type: ConeKotlinType
-                    get() = callInfo.typeProvider(callInfo.explicitReceiver)!!.coneTypeUnsafe()
+                    get() = callInfo.typeProvider(callInfo.explicitReceiver)?.coneTypeUnsafe()
+                        ?: throw AssertionError("No type calculated for ${callInfo.explicitReceiver.renderWithType()}")
             },
             factory
         )
