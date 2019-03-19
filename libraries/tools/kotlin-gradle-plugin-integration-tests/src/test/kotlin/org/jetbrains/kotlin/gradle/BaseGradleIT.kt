@@ -495,6 +495,23 @@ abstract class BaseGradleIT {
         }
     }
 
+    fun CompiledProject.assertTasksRegistered(vararg tasks: String) {
+        for (task in tasks) {
+            assertContains("'Register task $task'")
+        }
+    }
+
+    fun CompiledProject.assertTasksNotRealized(vararg tasks: String) {
+        for (task in tasks) {
+            assertNotContains("'Realize task $task'")
+        }
+    }
+
+    fun CompiledProject.assertTasksRegisteredAndNotRealized(vararg tasks: String) {
+        assertTasksRegistered(*tasks)
+        assertTasksNotRealized(*tasks)
+    }
+
     fun CompiledProject.getOutputForTask(taskName: String): String {
         val taskOutputRegex = ("(?:\\[LIFECYCLE] \\[class org\\.gradle(?:\\.internal\\.buildevents)?\\.TaskExecutionLogger] :$taskName|" +
                 "\\[org\\.gradle\\.execution\\.plan\\.DefaultPlanExecutor\\] :$taskName.*?started)" +

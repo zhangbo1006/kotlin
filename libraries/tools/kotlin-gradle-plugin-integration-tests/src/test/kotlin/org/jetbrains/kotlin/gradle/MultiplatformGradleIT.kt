@@ -293,4 +293,75 @@ class MultiplatformGradleIT : BaseGradleIT() {
             assertTasksExecuted(customSourceSetCompileTasks)
         }
     }
+
+    @Test
+    fun testMppNodeJsTestRun() = with(Project("new-mpp-js-tests", GradleVersionRequired.AtLeast("4.10.2"))) {
+        setupWorkingDir()
+        gradleBuildScript().modify(::transformBuildScriptWithPluginsDsl)
+        gradleSettingsScript().modify(::transformBuildScriptWithPluginsDsl)
+
+        // just build without running tests to check configuration avoidance
+        build("assemble") {
+            assertSuccessful()
+
+            assertTasksRegisteredAndNotRealized(
+                    ":clientKotlinJsNodeModules",
+                    ":clientKotlinJsNodeModulesTestRuntime",
+                    ":clientTest",
+
+                    ":serverKotlinJsNodeModules",
+                    ":serverKotlinJsNodeModulesTestRuntime",
+                    ":serverTest"
+            )
+        }
+
+        build("check") {
+            assertSuccessful()
+
+            assertTasksExecuted(
+                    ":clientKotlinJsNodeModules",
+                    ":clientKotlinJsNodeModulesTestRuntime",
+                    ":clientTest",
+
+                    ":serverKotlinJsNodeModules",
+                    ":serverKotlinJsNodeModulesTestRuntime",
+                    ":serverTest"
+            )
+        }
+
+        // test all is up-to-date when no changes
+        build("check") {
+            assertSuccessful()
+
+            assertTasksUpToDate(
+                    ":clientKotlinJsNodeModules",
+                    ":clientKotlinJsNodeModulesTestRuntime",
+                    ":clientTest",
+
+                    ":serverKotlinJsNodeModules",
+                    ":serverKotlinJsNodeModulesTestRuntime",
+                    ":serverTest"
+            )
+        }
+
+        // change common file and check that all tasks executed
+        projectDir.resolve("src/commonMain/kotlin/common.kt").writeText("fun common() = 777")
+
+        build("check") {
+            assertSuccessful()
+
+            assertTasksUpToDate(
+                    "clientKotlinJsNodeModulesTestRuntime",
+                    "serverKotlinJsNodeModulesTestRuntime"
+            )
+
+            assertTasksExecuted(
+                    ":clientKotlinJsNodeModules",
+                    ":clientTest",
+
+                    ":serverKotlinJsNodeModules",
+                    ":serverTest"
+            )
+        }
+    }
 }
