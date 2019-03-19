@@ -11,15 +11,19 @@ open class NodeJsPlugin : Plugin<Project> {
     }
 
     companion object {
-        fun ensureAppliedInHierarchy(myProject: Project): Project {
-            var project : Project? = myProject
+        fun ensureAppliedInHierarchy(myProject: Project): Project =
+                findInHeirarchy(myProject) ?: myProject.also {
+                    it.pluginManager.apply(NodeJsPlugin::class.java)
+                }
+
+        fun findInHeirarchy(myProject: Project): Project? {
+            var project: Project? = myProject
             while (project != null) {
                 if (myProject.plugins.hasPlugin(NodeJsPlugin::class.java)) return project
                 project = project.parent
             }
 
-            myProject.pluginManager.apply(NodeJsPlugin::class.java)
-            return myProject
+            return null
         }
     }
 }
