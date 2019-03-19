@@ -7,10 +7,7 @@ package org.jetbrains.kotlin.codegen.inline.coroutines
 
 import com.intellij.util.ArrayUtil
 import org.jetbrains.kotlin.codegen.ClassBuilder
-import org.jetbrains.kotlin.codegen.coroutines.CoroutineTransformerMethodVisitor
-import org.jetbrains.kotlin.codegen.coroutines.getLastParameterIndex
-import org.jetbrains.kotlin.codegen.coroutines.isResumeImplMethodName
-import org.jetbrains.kotlin.codegen.coroutines.replaceFakeContinuationsWithRealOnes
+import org.jetbrains.kotlin.codegen.coroutines.*
 import org.jetbrains.kotlin.codegen.inline.*
 import org.jetbrains.kotlin.codegen.optimization.common.asSequence
 import org.jetbrains.kotlin.config.isReleaseCoroutines
@@ -24,6 +21,8 @@ import org.jetbrains.org.objectweb.asm.tree.MethodInsnNode
 import org.jetbrains.org.objectweb.asm.tree.MethodNode
 import org.jetbrains.org.objectweb.asm.tree.TypeInsnNode
 
+const val FOR_INLINE_SUFFIX = "\$\$forInline"
+
 class CoroutineTransformer(
     private val inliningContext: InliningContext,
     private val classBuilder: ClassBuilder,
@@ -32,17 +31,21 @@ class CoroutineTransformer(
     private val superClassName: String
 ) {
     private val state = inliningContext.state
+    private val generateForInline = inliningContext.callSiteInfo.isInlineOrInsideInline
+
+    fun shouldSkip(node: MethodNode): Boolean = methods.any { it.name == node.name + FOR_INLINE_SUFFIX }
 
     fun shouldTransform(node: MethodNode): Boolean {
         // Never generate state-machine for objects, which are going to be retransformed
         // See innerObjectRetransformation.kt
-        if (inliningContext.callSiteInfo.isInlineOrInsideInline) return false
         if (isContinuationNotLambda()) return false
         val crossinlineParam = crossinlineLambda() ?: return false
         if (inliningContext.isInliningLambda && !inliningContext.isContinuation) return false
+        if (node.name.endsWith(FOR_INLINE_SUFFIX)) return true
         return when {
             isSuspendFunction(node) -> true
             isSuspendLambda(node) -> {
+                // TODO: Do we still need these checks?
                 if (isStateMachine(node)) return false
                 val functionDescriptor =
                     crossinlineParam.invokeMethodDescriptor.containingDeclaration as? FunctionDescriptor ?: return true
@@ -82,7 +85,7 @@ class CoroutineTransformer(
     }
 
     private fun isResumeImpl(node: MethodNode): Boolean =
-        state.languageVersionSettings.isResumeImplMethodName(node.name) &&
+        state.languageVersionSettings.isResumeImplMethodName(node.name.removeSuffix(FOR_INLINE_SUFFIX)) &&
                 inliningContext.isContinuation
 
     private fun isSuspendFunction(node: MethodNode): Boolean = findFakeContinuationConstructorClassName(node) != null
@@ -94,7 +97,7 @@ class CoroutineTransformer(
                 ArrayUtil.toStringArray(node.exceptions)
             )
         ) {
-            CoroutineTransformerMethodVisitor(
+            val stateMachineBuilder = CoroutineTransformerMethodVisitor(
                 classBuilder.newMethod(
                     JvmDeclarationOrigin.NO_ORIGIN,
                     node.access,
@@ -113,6 +116,21 @@ class CoroutineTransformer(
                 sourceFile = sourceFile ?: "",
                 isCrossinlineLambda = inliningContext.isContinuation
             )
+
+            if (generateForInline)
+                MethodNodeCopyingMethodVisitor(
+                    delegate = stateMachineBuilder,
+                    access = node.access,
+                    name = node.name.removeSuffix(FOR_INLINE_SUFFIX),
+                    desc = node.desc,
+                    signature = node.signature,
+                    exceptions = null,
+                    codegen = null,
+                    classBuilder = classBuilder,
+                    keepAccess = true
+                )
+            else
+                stateMachineBuilder
         }
     }
 

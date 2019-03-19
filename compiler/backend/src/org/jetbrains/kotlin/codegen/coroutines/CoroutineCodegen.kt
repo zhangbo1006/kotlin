@@ -452,8 +452,7 @@ class CoroutineCodegenForLambda private constructor(
             object : FunctionGenerationStrategy.FunctionDefault(state, element as KtDeclarationWithBody) {
 
                 override fun wrapMethodVisitor(mv: MethodVisitor, access: Int, name: String, desc: String): MethodVisitor {
-                    if (forInline) return super.wrapMethodVisitor(mv, access, name, desc)
-                    return CoroutineTransformerMethodVisitor(
+                    val stateMachineBuiler = CoroutineTransformerMethodVisitor(
                         mv, access, name, desc, null, null,
                         obtainClassBuilderForCoroutineState = { v },
                         element = element,
@@ -464,6 +463,11 @@ class CoroutineCodegenForLambda private constructor(
                         languageVersionSettings = languageVersionSettings,
                         sourceFile = element.containingFile.name
                     )
+                    return if (forInline)
+                        MethodNodeCopyingMethodVisitor(
+                            stateMachineBuiler, access, name, desc, null, null, functionCodegen,
+                            classBuilder = null, keepAccess = true
+                        ) else stateMachineBuiler
                 }
 
                 override fun doGenerateBody(codegen: ExpressionCodegen, signature: JvmMethodSignature) {

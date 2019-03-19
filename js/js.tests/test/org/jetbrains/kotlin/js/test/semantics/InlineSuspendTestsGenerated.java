@@ -498,5 +498,32 @@ public class InlineSuspendTestsGenerated extends AbstractInlineSuspendTests {
         public void testNumberOfSuspentions_1_3() throws Exception {
             runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/numberOfSuspentions.kt", "kotlin.coroutines");
         }
+
+        @TestMetadata("compiler/testData/codegen/boxInline/suspend/stateMachine/interop")
+        @TestDataPath("$PROJECT_ROOT")
+        @RunWith(JUnit3RunnerWithInners.class)
+        public static class Interop extends AbstractInlineSuspendTests {
+            private void runTest(String testDataFilePath) throws Exception {
+                KotlinTestUtils.runTest0(this::doTest, TargetBackend.JS, testDataFilePath);
+            }
+
+            private void runTestWithPackageReplacement(String testDataFilePath, String packageName) throws Exception {
+                KotlinTestUtils.runTest0(filePath -> doTestWithCoroutinesPackageReplacement(filePath, packageName), TargetBackend.JS, testDataFilePath);
+            }
+
+            public void testAllFilesPresentInInterop() throws Exception {
+                KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/codegen/boxInline/suspend/stateMachine/interop"), Pattern.compile("^(.+)\\.kt$"), TargetBackend.JS, true);
+            }
+
+            @TestMetadata("returnLambda.kt")
+            public void testReturnLambda_1_2() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/returnLambda.kt", "kotlin.coroutines.experimental");
+            }
+
+            @TestMetadata("returnLambda.kt")
+            public void testReturnLambda_1_3() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/returnLambda.kt", "kotlin.coroutines");
+            }
+        }
     }
 }

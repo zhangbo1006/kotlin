@@ -137,9 +137,10 @@ class AnonymousObjectTransformer(
             methodsToTransform,
             superClassName
         )
-        for (next in methodsToTransform) {
+        loop@for (next in methodsToTransform) {
             val deferringVisitor =
                 when {
+                    coroutineTransformer.shouldSkip(next) -> continue@loop
                     coroutineTransformer.shouldTransform(next) -> coroutineTransformer.newMethod(next)
                     else -> newMethod(classBuilder, next)
                 }

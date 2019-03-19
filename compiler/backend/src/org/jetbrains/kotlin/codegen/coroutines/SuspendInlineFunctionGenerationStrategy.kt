@@ -5,17 +5,15 @@
 
 package org.jetbrains.kotlin.codegen.coroutines
 
-import org.jetbrains.kotlin.codegen.ExpressionCodegen
-import org.jetbrains.kotlin.codegen.FunctionCodegen
-import org.jetbrains.kotlin.codegen.FunctionGenerationStrategy
-import org.jetbrains.kotlin.codegen.TransformationMethodVisitor
+import org.jetbrains.kotlin.codegen.*
+import org.jetbrains.kotlin.codegen.inline.coroutines.FOR_INLINE_SUFFIX
 import org.jetbrains.kotlin.codegen.state.GenerationState
 import org.jetbrains.kotlin.config.JVMConstructorCallNormalizationMode
-import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.psi.KtFunction
-import org.jetbrains.kotlin.resolve.jvm.diagnostics.OtherOrigin
+import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodSignature
+import org.jetbrains.kotlin.utils.sure
 import org.jetbrains.org.objectweb.asm.MethodVisitor
 import org.jetbrains.org.objectweb.asm.Opcodes
 import org.jetbrains.org.objectweb.asm.tree.MethodNode
@@ -43,16 +41,8 @@ class SuspendInlineFunctionGenerationStrategy(
         if (access and Opcodes.ACC_ABSTRACT != 0) return mv
 
         return MethodNodeCopyingMethodVisitor(
-            super.wrapMethodVisitor(mv, access, name, desc),
-            access,
-            name,
-            desc = desc,
-            signature = null,
-            exceptions = null,
-            codegen = codegen,
-            declaration = declaration,
-            originalSuspendDescriptor = originalSuspendDescriptor,
-            isReleaseCoroutines = state.languageVersionSettings.supportsFeature(LanguageFeature.ReleaseCoroutines)
+            super.wrapMethodVisitor(mv, access, name, desc), access, name, desc, null, null, codegen,
+            classBuilder = null, keepAccess = false
         )
     }
 
@@ -60,34 +50,38 @@ class SuspendInlineFunctionGenerationStrategy(
         super.doGenerateBody(codegen, signature)
         defaultStrategy.doGenerateBody(codegen, signature)
     }
+}
 
-    private class MethodNodeCopyingMethodVisitor(
-        delegate: MethodVisitor,
-        private val access: Int,
-        private val name: String,
-        private val desc: String,
-        private val signature: String?,
-        private val exceptions: Array<out String>?,
-        private val codegen: FunctionCodegen,
-        private val declaration: KtFunction,
-        private val originalSuspendDescriptor: FunctionDescriptor,
-        private val isReleaseCoroutines: Boolean
-    ) : TransformationMethodVisitor(
-        delegate,
-        calculateAccessForInline(access),
-        "$name\$\$forInline",
-        desc,
-        signature,
-        exceptions
-    ) {
-        override fun performTransformations(methodNode: MethodNode) {
-            val newMethodNode = codegen.newMethod(
-                OtherOrigin(declaration, getOrCreateJvmSuspendFunctionView(originalSuspendDescriptor, isReleaseCoroutines)),
-                calculateAccessForInline(access), "$name\$\$forInline", desc, signature, exceptions
-            )
-            methodNode.instructions.resetLabels()
-            methodNode.accept(newMethodNode)
-        }
+class MethodNodeCopyingMethodVisitor(
+    delegate: MethodVisitor,
+    private val access: Int,
+    private val name: String,
+    private val desc: String,
+    private val signature: String?,
+    private val exceptions: Array<out String>?,
+    private val codegen: FunctionCodegen?,
+    private val classBuilder: ClassBuilder?,
+    private val keepAccess: Boolean
+) : TransformationMethodVisitor(
+    delegate,
+    if (keepAccess) access else calculateAccessForInline(access),
+    "$name$FOR_INLINE_SUFFIX",
+    desc,
+    signature,
+    exceptions
+) {
+    override fun performTransformations(methodNode: MethodNode) {
+        val newMethodNode = codegen?.newMethod(
+            JvmDeclarationOrigin.NO_ORIGIN, if (keepAccess) access else calculateAccessForInline(access),
+            "$name$FOR_INLINE_SUFFIX", desc, signature, exceptions
+        ) ?: classBuilder.sure {
+            "Either codegenData or inlinerData shall be not null"
+        }.newMethod(
+            JvmDeclarationOrigin.NO_ORIGIN, if (keepAccess) access else calculateAccessForInline(access),
+            "$name$FOR_INLINE_SUFFIX", desc, signature, exceptions
+        )
+        methodNode.instructions.resetLabels()
+        methodNode.accept(newMethodNode)
     }
 
     companion object {
