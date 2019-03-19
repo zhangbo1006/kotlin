@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.resolve.calls.model.*
 import org.jetbrains.kotlin.resolve.calls.tower.forceResolution
 import org.jetbrains.kotlin.resolve.constants.IntegerValueTypeConstructor
 import org.jetbrains.kotlin.types.*
+import org.jetbrains.kotlin.types.checker.SimpleClassicTypeSystemContext
 import org.jetbrains.kotlin.types.model.KotlinTypeMarker
 import org.jetbrains.kotlin.types.typeUtil.isPrimitiveNumberType
 
@@ -199,7 +200,10 @@ class KotlinCallCompleter(
         val constructor = typeVariable.constructor
         val variableWithConstraints = csBuilder.currentStorage().notFixedTypeVariables[constructor] ?: return false
         return variableWithConstraints.constraints.all {
-            !trivialConstraintTypeInferenceOracle.isTrivialConstraint(it) && !it.type.isIntegerValueType() &&
+            !trivialConstraintTypeInferenceOracle.isTrivialConstraint(
+                SimpleClassicTypeSystemContext,
+                it
+            ) && !it.type.isIntegerValueType() &&
                     it.kind.isLower() && csBuilder.isProperType(it.type)
         }
     }

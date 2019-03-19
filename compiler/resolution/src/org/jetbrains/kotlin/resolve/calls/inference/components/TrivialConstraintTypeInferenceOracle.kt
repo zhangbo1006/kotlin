@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.resolve.calls.inference.components
 import org.jetbrains.kotlin.resolve.calls.inference.model.Constraint
 import org.jetbrains.kotlin.resolve.calls.inference.model.ConstraintKind
 import org.jetbrains.kotlin.types.model.KotlinTypeMarker
+import org.jetbrains.kotlin.types.model.TypeSystemContext
 import org.jetbrains.kotlin.types.model.TypeSystemInferenceExtensionContext
 
 class TrivialConstraintTypeInferenceOracle {
@@ -15,7 +16,7 @@ class TrivialConstraintTypeInferenceOracle {
     // it's totally fine to go and resolve postponed argument without fixation T to Nothing(?).
     // In other words, constraint `Nothing(?) <: T` is *not* proper
     fun isTrivialConstraint(
-        context: TypeSystemInferenceExtensionContext,
+        context: TypeSystemContext,
         constraint: Constraint
     ): Boolean = with(context) {
         // TODO: probably we also can take into account `T <: Any(?)` constraints
@@ -26,7 +27,7 @@ class TrivialConstraintTypeInferenceOracle {
     // Even that Nothing(?) is the most specific type for subtype, it doesn't bring valuable information to the user,
     // therefore it is discriminated in favor of supertype
     fun isSuitableResultedType(
-        context: TypeSystemInferenceExtensionContext,
+        context: TypeSystemContext,
         resultType: KotlinTypeMarker
     ): Boolean = with(context) {
         return !resultType.typeConstructor().isNothingConstructor()
@@ -55,7 +56,7 @@ class TrivialConstraintTypeInferenceOracle {
     }
 
 
-    private fun KotlinTypeMarker.isNothingOrNullableNothing(context: TypeSystemInferenceExtensionContext): Boolean =
+    private fun KotlinTypeMarker.isNothingOrNullableNothing(context: TypeSystemContext): Boolean =
         with(context) {
             typeConstructor().isNothingConstructor()
         }

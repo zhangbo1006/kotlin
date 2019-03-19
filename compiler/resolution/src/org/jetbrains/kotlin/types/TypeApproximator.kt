@@ -227,7 +227,7 @@ abstract class AbstractTypeApproximator(val ctx: TypeSystemInferenceExtensionCon
             // commonSupertypeCalculator should handle flexible types correctly
             TO_COMMON_SUPERTYPE -> {
                 if (!toSuper) return type.defaultResult(toSuper = false)
-                val resultType = with(NewCommonSuperTypeCalculator) { NewCommonSuperTypeCalculator.commonSuperType(newTypes) }
+                val resultType = with(NewCommonSuperTypeCalculator) { commonSuperType(newTypes) }
                 approximateToSuperType(resultType, conf) ?: resultType
             }
         }
