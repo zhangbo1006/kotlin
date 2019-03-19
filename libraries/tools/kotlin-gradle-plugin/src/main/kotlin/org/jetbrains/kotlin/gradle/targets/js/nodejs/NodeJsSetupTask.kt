@@ -1,10 +1,12 @@
 package org.jetbrains.kotlin.gradle.targets.js.nodejs
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.repositories.IvyPatternRepositoryLayout
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.jetbrains.kotlin.gradle.logging.kotlinInfo
+import org.jetbrains.kotlin.gradle.utils.isGradleVersionAtLeast
 import java.io.File
 import java.net.URI
 
@@ -29,16 +31,20 @@ open class NodeJsSetupTask : DefaultTask() {
         if (!settings.download)
             return
 
-        @Suppress("UnstableApiUsage")
+        @Suppress("UnstableApiUsage", "DEPRECATION")
         val repo = project.repositories.ivy { repo ->
             repo.name = "Node Distributions at ${settings.distBaseUrl}"
             repo.url = URI(settings.distBaseUrl)
-            repo.patternLayout { layout ->
+            repo.layout("pattern") { layout ->
+                layout as IvyPatternRepositoryLayout
                 layout.artifact("v[revision]/[artifact](-v[revision]-[classifier]).[ext]")
                 layout.ivy("v[revision]/ivy.xml")
             }
             repo.metadataSources { it.artifact() }
-            repo.content { it.includeModule("org.nodejs", "node") }
+
+            if (isGradleVersionAtLeast(5, 1)) {
+                repo.content { it.includeModule("org.nodejs", "node") }
+            }
         }
 
         val dep = this.project.dependencies.create(env.ivyDependency)
