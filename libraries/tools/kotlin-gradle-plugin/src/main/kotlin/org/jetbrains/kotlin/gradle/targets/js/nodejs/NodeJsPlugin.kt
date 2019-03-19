@@ -11,12 +11,10 @@ open class NodeJsPlugin : Plugin<Project> {
     }
 
     companion object {
-        const val PLUGIN_ID = "org.jetbrains.kotlin.nodejs"
-
         fun ensureAppliedInHierarchy(myProject: Project): Project {
             var project : Project? = myProject
             while (project != null) {
-                if (myProject.pluginManager.findPlugin(PLUGIN_ID) != null) return project
+                if (myProject.plugins.hasPlugin(NodeJsPlugin::class.java)) return project
                 project = project.parent
             }
 
