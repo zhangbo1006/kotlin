@@ -67,11 +67,8 @@ open class KotlinNodeJsTestTask : AbstractTestTask() {
     val nodeJsExecutable: String
         @Input get() = nodeJsProcessOptions.executable
 
-    val nodeJsWorkingDir: File
-        @Input get() = nodeJsProcessOptions.workingDir
-
-    val nodeJsEnvironment: Map<String, Any>
-        @Input get() = nodeJsProcessOptions.environment
+    val nodeJsWorkingDirCanonicalPath: String
+        @Input get() = nodeJsProcessOptions.workingDir.canonicalPath
 
     fun nodeJs(options: ProcessForkOptions.() -> Unit) {
         options(nodeJsProcessOptions)

@@ -23,7 +23,6 @@ internal class KotlinJsCompilationTestsConfigurator(
     private val project get() = target.project
     private val compileTestKotlin2Js get() = compilation.compileKotlinTask as Kotlin2JsCompile
     private val isSinglePlatformProject get() = target is KotlinWithJavaTarget<*>
-
     private val testTaskName: String
         get() = if (isSinglePlatformProject) "testJs" else camelCaseTargetName("test")
 
@@ -49,6 +48,12 @@ internal class KotlinJsCompilationTestsConfigurator(
     private val Project.testReports: File
         get() = project.buildDir.resolve(TestingBasePlugin.TESTS_DIR_NAME)
 
+    private val compileTask: Kotlin2JsCompile
+        get() = project.tasks.findByName(compileTestKotlin2Js.name) as Kotlin2JsCompile
+
+    private val Kotlin2JsCompile.jsRuntimeClasspath: Collection<File>
+        get() = classpath + destinationDir
+
     fun configure() {
         val nodeModulesTask = registerTask(
                 project,
@@ -58,7 +63,7 @@ internal class KotlinJsCompilationTestsConfigurator(
             it.dependsOn(compileTestKotlin2Js)
 
             it.nodeModulesDir = nodeModulesDir
-            it.compileTaskName = compileTestKotlin2Js.name
+            it.classpath = compileTask.jsRuntimeClasspath
         }
 
         val nodeModulesTestRuntimeTask = registerTask(
