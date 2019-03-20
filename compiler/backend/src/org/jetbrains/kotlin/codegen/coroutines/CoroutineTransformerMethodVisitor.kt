@@ -47,6 +47,7 @@ private const val COROUTINES_METADATA_CLASS_NAME_JVM_NAME = "c"
 private const val COROUTINES_METADATA_VERSION_JVM_NAME = "v"
 
 const val SUSPEND_FUNCTION_CONTINUATION_PARAMETER = "\$completion"
+const val ILLEGAL_STATE_ERROR_MESSAGE = "call to 'resume' before 'invoke' with coroutine"
 
 class CoroutineTransformerMethodVisitor(
     delegate: MethodVisitor,
@@ -179,7 +180,7 @@ class CoroutineTransformerMethodVisitor(
             insert(last, defaultLabel)
 
             insert(last, withInstructionAdapter {
-                AsmUtil.genThrow(this, "java/lang/IllegalStateException", "call to 'resume' before 'invoke' with coroutine")
+                AsmUtil.genThrow(this, "java/lang/IllegalStateException", ILLEGAL_STATE_ERROR_MESSAGE)
                 areturn(Type.VOID_TYPE)
             })
         }

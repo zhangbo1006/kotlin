@@ -16,7 +16,7 @@ import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 import org.jetbrains.kotlin.utils.sure
 import org.jetbrains.org.objectweb.asm.Opcodes
-import org.jetbrains.org.objectweb.asm.tree.MethodInsnNode
+import org.jetbrains.org.objectweb.asm.tree.LdcInsnNode
 import org.jetbrains.org.objectweb.asm.tree.MethodNode
 import org.jetbrains.org.objectweb.asm.tree.TypeInsnNode
 
@@ -39,11 +39,12 @@ class CoroutineTransformer(
     fun shouldGenerateStateMachine(node: MethodNode): Boolean {
         // Continuations are similar to lambdas from bird's view, but we should never generate state machine for them
         if (isContinuationNotLambda()) return false
-        // The method is does not have state-machine, but should. Generate it
+        // The method does not have state-machine, but should. Generate it
         if (node.name.endsWith(FOR_INLINE_SUFFIX)) return true
         return when {
             isSuspendFunction(node) -> true
-            // TODO: Find a reason, why I cannot remove this check yet
+            // I cannot remove this check, because there can be suspend lambdas inside inline functions, which do not
+            // capture crossinline lambdas, thus, there is no need to transform them
             isSuspendLambda(node) -> !isStateMachine(node)
             else -> false
         }
@@ -58,7 +59,7 @@ class CoroutineTransformer(
     }?.cast()
 
     private fun isStateMachine(node: MethodNode): Boolean =
-        node.instructions.asSequence().any { it.opcode == Opcodes.INVOKESTATIC && (it as MethodInsnNode).name == "getCOROUTINE_SUSPENDED" }
+        node.instructions.asSequence().any { insn -> insn is LdcInsnNode && insn.cst == ILLEGAL_STATE_ERROR_MESSAGE }
 
     private fun isSuspendLambda(node: MethodNode) = isResumeImpl(node)
 
