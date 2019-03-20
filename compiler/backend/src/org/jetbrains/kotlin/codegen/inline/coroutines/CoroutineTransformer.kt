@@ -30,6 +30,8 @@ class CoroutineTransformer(
     private val superClassName: String
 ) {
     private val state = inliningContext.state
+    // If we inline into inline function, we should generate both method with state-machine for Java interop and method without
+    // state-machine for further transformation/inlining.
     private val generateForInline = inliningContext.callSiteInfo.isInlineOrInsideInline
 
     fun shouldSkip(node: MethodNode): Boolean = methods.any { it.name == node.name + FOR_INLINE_SUFFIX && it.desc == node.desc }
@@ -37,12 +39,8 @@ class CoroutineTransformer(
     fun shouldGenerateStateMachine(node: MethodNode): Boolean {
         // Continuations are similar to lambdas from bird's view, but we should never generate state machine for them
         if (isContinuationNotLambda()) return false
-        // The method captured crossinline lambda
+        // The method is does not have state-machine, but should. Generate it
         if (node.name.endsWith(FOR_INLINE_SUFFIX)) return true
-        // Never generate state-machine for objects, which are going to be retransformed
-        // See innerObjectRetransformation.kt
-        // TODO: remove this check
-        if (inliningContext.callSiteInfo.isInlineOrInsideInline) return false
         return when {
             isSuspendFunction(node) -> true
             // TODO: Find a reason, why I cannot remove this check yet
