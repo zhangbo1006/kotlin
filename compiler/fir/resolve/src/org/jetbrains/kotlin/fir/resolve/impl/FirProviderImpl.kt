@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.fir.resolve.impl
 
+import org.jetbrains.annotations.TestOnly
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.*
@@ -16,7 +17,7 @@ import org.jetbrains.kotlin.name.FqName
 
 class FirProviderImpl(val session: FirSession) : FirProvider {
     override fun getFirCallableContainerFile(symbol: ConeCallableSymbol): FirFile? {
-        return callableContainerMap[symbol]
+        return state.callableContainerMap[symbol]
     }
 
     override fun getClassLikeSymbolByFqName(classId: ClassId): ConeClassLikeSymbol? {
@@ -24,36 +25,36 @@ class FirProviderImpl(val session: FirSession) : FirProvider {
     }
 
     override fun getCallableSymbols(callableId: CallableId): List<ConeCallableSymbol> {
-        return (callableMap[callableId] ?: emptyList())
+        return (state.callableMap[callableId] ?: emptyList())
     }
 
     override fun getFirClassifierContainerFile(fqName: ClassId): FirFile {
-        return classifierContainerFileMap[fqName] ?: error("Couldn't find container for $fqName")
+        return state.classifierContainerFileMap[fqName] ?: error("Couldn't find container for $fqName")
     }
 
     fun recordFile(file: FirFile) {
+        recordFile(file, state)
+    }
+
+    private fun recordFile(file: FirFile, state: State) = with(state) {
         val packageName = file.packageFqName
         fileMap.merge(packageName, listOf(file)) { a, b -> a + b }
 
         file.acceptChildren(object : FirVisitorVoid() {
             override fun visitElement(element: FirElement) {}
 
-            var containerFqName: FqName = FqName.ROOT
 
             override fun visitRegularClass(regularClass: FirRegularClass) {
-                val fqName = containerFqName.child(regularClass.name)
-                val classId = ClassId(packageName, fqName, false)
+                val classId = regularClass.symbol.classId
+
                 classifierMap[classId] = regularClass
                 classifierContainerFileMap[classId] = file
 
-                containerFqName = fqName
                 regularClass.acceptChildren(this)
-                containerFqName = fqName.parent()
             }
 
             override fun visitTypeAlias(typeAlias: FirTypeAlias) {
-                val fqName = containerFqName.child(typeAlias.name)
-                val classId = ClassId(packageName, fqName, false)
+                val classId = typeAlias.symbol.classId
                 classifierMap[classId] = typeAlias
                 classifierContainerFileMap[classId] = file
             }
@@ -79,18 +80,75 @@ class FirProviderImpl(val session: FirSession) : FirProvider {
         })
     }
 
-    private val fileMap = mutableMapOf<FqName, List<FirFile>>()
-    private val classifierMap = mutableMapOf<ClassId, FirClassLikeDeclaration>()
-    private val classifierContainerFileMap = mutableMapOf<ClassId, FirFile>()
-    private val callableMap = mutableMapOf<CallableId, List<ConeCallableSymbol>>()
-    private val callableContainerMap = mutableMapOf<ConeCallableSymbol, FirFile>()
+    private val state = State()
+
+    private class State {
+        val fileMap = mutableMapOf<FqName, List<FirFile>>()
+        val classifierMap = mutableMapOf<ClassId, FirClassLikeDeclaration>()
+        val classifierContainerFileMap = mutableMapOf<ClassId, FirFile>()
+        val callableMap = mutableMapOf<CallableId, List<ConeCallableSymbol>>()
+        val callableContainerMap = mutableMapOf<ConeCallableSymbol, FirFile>()
+    }
 
     override fun getFirFilesByPackage(fqName: FqName): List<FirFile> {
-        return fileMap[fqName].orEmpty()
+        return state.fileMap[fqName].orEmpty()
     }
 
     override fun getFirClassifierByFqName(fqName: ClassId): FirClassLikeDeclaration? {
-        return classifierMap[fqName]
+        return state.classifierMap[fqName]
+    }
+
+    @TestOnly
+    fun ensureConsistent(files: List<FirFile>) {
+        val newState = State()
+        files.forEach { recordFile(it, newState) }
+
+        fun <K, V> checkMapDiff(a: Map<K, V>, b: Map<K, V>, equal: (old: V?, new: V?) -> Boolean = { old, new -> old === new }) {
+            val unionKeys = a.keys + b.keys
+            val failures = mutableListOf<String>()
+            for ((key, aValue, bValue) in unionKeys.map { Triple(it, a[it], b[it]) }) {
+                if (!equal(aValue, bValue)) {
+                    failures += "diff at key = '$key': was: '$aValue', become: '$bValue'"
+                }
+            }
+
+            assert(failures.isEmpty()) {
+                failures.joinToString(separator = "\n")
+            }
+        }
+
+        fun <K, V> checkMMapDiff(a: Map<K, List<V>>, b: Map<K, List<V>>) {
+            val unionKeys = a.keys + b.keys
+            val failures = mutableListOf<String>()
+            for ((key, aValue, bValue) in unionKeys.map { Triple(it, a[it], b[it])}) {
+                if (aValue == null || bValue == null) {
+                    failures += "diff at key = '$key': was: $aValue, become: $bValue"
+                } else {
+                    val aSet = aValue.toSet()
+                    val bSet = bValue.toSet()
+
+                    val aLost = aSet - bSet
+                    val bNew = bSet - aSet
+                    if (aLost.isNotEmpty() || bNew.isNotEmpty()) {
+                        failures += "diff at key = '$key':"
+                        failures += "    Lost:"
+                        aLost.forEach { failures += "     $it" }
+                        failures += "    New:"
+                        bNew.forEach { failures += "     $it" }
+                    }
+                }
+            }
+
+            assert(failures.isEmpty()) {
+                failures.joinToString(separator = "\n")
+            }
+        }
+
+        checkMMapDiff(state.fileMap, newState.fileMap)
+        checkMapDiff(state.classifierMap, newState.classifierMap)
+        checkMapDiff(state.classifierContainerFileMap, newState.classifierContainerFileMap)
+        checkMMapDiff(state.callableMap, newState.callableMap)
+        checkMapDiff(state.callableContainerMap, newState.callableContainerMap)
     }
 
 }
