@@ -82,11 +82,12 @@ dependencies {
 }
 
 runtimeJar(rewriteDepsToShadedCompiler(jar)) {
-    jarContents.asFileTree.forEach {
-        if (it.endsWith(".jar")) {
-            from(zipTree(it))
-        } else {
-            from(it)
+    dependsOn(jarContents)
+
+    from {
+        jarContents.asFileTree.map {
+            if (it.endsWith(".jar")) zipTree(it) 
+            else it
         }
     }
 }

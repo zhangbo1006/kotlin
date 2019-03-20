@@ -24,6 +24,9 @@ tasks {
         dependsOn("yarn")
         setWorkingDir(projectDir)
         args = listOf("build")
+
+        inputs.dir(projectDir.resolve("src"))
+        outputs.file(projectDir.resolve("lib/kotlin-js-test.js"))
     }
 
     create<Delete>("cleanYarn") {
