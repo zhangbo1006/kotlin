@@ -141,7 +141,7 @@ class AnonymousObjectTransformer(
             val deferringVisitor =
                 when {
                     coroutineTransformer.shouldSkip(next) -> continue@loop
-                    coroutineTransformer.shouldTransform(next) -> coroutineTransformer.newMethod(next)
+                    coroutineTransformer.shouldGenerateStateMachine(next) -> coroutineTransformer.newMethod(next)
                     else -> newMethod(classBuilder, next)
                 }
             val funResult = inlineMethodAndUpdateGlobalResult(parentRemapper, deferringVisitor, next, allCapturedParamBuilder, false)

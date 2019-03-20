@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.codegen.coroutines.*
 import org.jetbrains.kotlin.codegen.inline.*
 import org.jetbrains.kotlin.codegen.optimization.common.asSequence
 import org.jetbrains.kotlin.config.isReleaseCoroutines
-import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 import org.jetbrains.kotlin.utils.addToStdlib.cast
@@ -33,24 +32,21 @@ class CoroutineTransformer(
     private val state = inliningContext.state
     private val generateForInline = inliningContext.callSiteInfo.isInlineOrInsideInline
 
-    fun shouldSkip(node: MethodNode): Boolean = methods.any { it.name == node.name + FOR_INLINE_SUFFIX }
+    fun shouldSkip(node: MethodNode): Boolean = methods.any { it.name == node.name + FOR_INLINE_SUFFIX && it.desc == node.desc }
 
-    fun shouldTransform(node: MethodNode): Boolean {
+    fun shouldGenerateStateMachine(node: MethodNode): Boolean {
+        // Continuations are similar to lambdas from bird's view, but we should never generate state machine for them
+        if (isContinuationNotLambda()) return false
+        // The method captured crossinline lambda
+        if (node.name.endsWith(FOR_INLINE_SUFFIX)) return true
         // Never generate state-machine for objects, which are going to be retransformed
         // See innerObjectRetransformation.kt
-        if (isContinuationNotLambda()) return false
-        val crossinlineParam = crossinlineLambda() ?: return false
-        if (inliningContext.isInliningLambda && !inliningContext.isContinuation) return false
-        if (node.name.endsWith(FOR_INLINE_SUFFIX)) return true
+        // TODO: remove this check
+        if (inliningContext.callSiteInfo.isInlineOrInsideInline) return false
         return when {
             isSuspendFunction(node) -> true
-            isSuspendLambda(node) -> {
-                // TODO: Do we still need these checks?
-                if (isStateMachine(node)) return false
-                val functionDescriptor =
-                    crossinlineParam.invokeMethodDescriptor.containingDeclaration as? FunctionDescriptor ?: return true
-                !functionDescriptor.isInline
-            }
+            // TODO: Find a reason, why I cannot remove this check yet
+            isSuspendLambda(node) -> !isStateMachine(node)
             else -> false
         }
     }
