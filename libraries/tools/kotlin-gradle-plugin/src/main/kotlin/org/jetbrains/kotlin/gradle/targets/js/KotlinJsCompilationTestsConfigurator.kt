@@ -1,11 +1,11 @@
 package org.jetbrains.kotlin.gradle.targets.js
 
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.plugins.DslObject
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.testing.base.plugins.TestingBasePlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationToRunnableFiles
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaTarget
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsPlugin
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsSetupTask
@@ -20,22 +20,21 @@ internal class KotlinJsCompilationTestsConfigurator(
         val compilation: KotlinCompilationToRunnableFiles<*>
 ) {
     private val target get() = compilation.target
+    private val disambiguationClassifier get() = target.disambiguationClassifier
     private val project get() = target.project
     private val compileTestKotlin2Js get() = compilation.compileKotlinTask as Kotlin2JsCompile
-    private val isSinglePlatformProject get() = target is KotlinWithJavaTarget<*>
     private val testTaskName: String
-        get() = if (isSinglePlatformProject) "testJs" else camelCaseTargetName("test")
+        get() = camelCaseTargetName("test")
 
-    private fun camelCaseTargetName(prefix: String): String {
-        return if (isSinglePlatformProject) prefix
-        else target.name + prefix.capitalize()
+    private fun camelCaseTargetName(name: String): String {
+        return if (disambiguationClassifier == null) name
+        else disambiguationClassifier + name.capitalize()
     }
 
     @Suppress("SameParameterValue")
-    private fun underscoredCompilationName(prefix: String): String {
-        return if (isSinglePlatformProject) prefix
-        else "${target.name}_${compilation.name}_$prefix"
-    }
+    private fun underscoredCompilationName(prefix: String) =
+            if (disambiguationClassifier == null) "${compilation.name}_$prefix"
+            else "${disambiguationClassifier}_${compilation.name}_$prefix"
 
     private val nodeModulesDir
         get() = project.buildDir.resolve(underscoredCompilationName("node_modules"))
@@ -84,8 +83,8 @@ internal class KotlinJsCompilationTestsConfigurator(
                     nodeModulesTestRuntimeTask.getTaskOrProvider()
             )
 
-            if (!isSinglePlatformProject) {
-                testJs.targetName = target.name
+            if (disambiguationClassifier != null) {
+                testJs.targetName = disambiguationClassifier
             }
 
             testJs.nodeJsProcessOptions.workingDir = project.projectDir
