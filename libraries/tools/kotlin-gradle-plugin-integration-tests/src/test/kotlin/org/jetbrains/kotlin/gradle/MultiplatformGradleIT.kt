@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.gradle
 
+import com.intellij.testFramework.TestDataPath
 import org.jetbrains.kotlin.gradle.plugin.EXPECTED_BY_CONFIG_NAME
 import org.jetbrains.kotlin.gradle.plugin.IMPLEMENT_CONFIG_NAME
 import org.jetbrains.kotlin.gradle.plugin.IMPLEMENT_DEPRECATION_WARNING
@@ -25,6 +26,7 @@ import org.junit.Test
 import java.io.File
 import kotlin.test.assertTrue
 
+@TestDataPath("\$CONTENT_ROOT/resources")
 class MultiplatformGradleIT : BaseGradleIT() {
 
     @Test
@@ -305,13 +307,13 @@ class MultiplatformGradleIT : BaseGradleIT() {
             assertSuccessful()
 
             assertTasksRegisteredAndNotRealized(
-                    ":clientKotlinJsNodeModules",
-                    ":clientKotlinJsNodeModulesTestRuntime",
-                    ":clientTest",
+                ":clientKotlinJsNodeModules",
+                ":clientKotlinJsNodeModulesTestRuntime",
+                ":clientTest",
 
-                    ":serverKotlinJsNodeModules",
-                    ":serverKotlinJsNodeModulesTestRuntime",
-                    ":serverTest"
+                ":serverKotlinJsNodeModules",
+                ":serverKotlinJsNodeModulesTestRuntime",
+                ":serverTest"
             )
         }
 
@@ -319,14 +321,17 @@ class MultiplatformGradleIT : BaseGradleIT() {
             assertSuccessful()
 
             assertTasksExecuted(
-                    ":clientKotlinJsNodeModules",
-                    ":clientKotlinJsNodeModulesTestRuntime",
-                    ":clientTest",
+                ":clientKotlinJsNodeModules",
+                ":clientKotlinJsNodeModulesTestRuntime",
+                ":clientTest",
 
-                    ":serverKotlinJsNodeModules",
-                    ":serverKotlinJsNodeModulesTestRuntime",
-                    ":serverTest"
+                ":serverKotlinJsNodeModules",
+                ":serverKotlinJsNodeModulesTestRuntime",
+                ":serverTest"
             )
+
+            assertTestResults("testProject/new-mpp-js-tests/TEST-CommonTest.xml", "clientTest")
+            assertTestResults("testProject/new-mpp-js-tests/TEST-CommonTest.xml", "serverTest")
         }
 
         // test all is up-to-date when no changes
@@ -334,13 +339,13 @@ class MultiplatformGradleIT : BaseGradleIT() {
             assertSuccessful()
 
             assertTasksUpToDate(
-                    ":clientKotlinJsNodeModules",
-                    ":clientKotlinJsNodeModulesTestRuntime",
-                    ":clientTest",
+                ":clientKotlinJsNodeModules",
+                ":clientKotlinJsNodeModulesTestRuntime",
+                ":clientTest",
 
-                    ":serverKotlinJsNodeModules",
-                    ":serverKotlinJsNodeModulesTestRuntime",
-                    ":serverTest"
+                ":serverKotlinJsNodeModules",
+                ":serverKotlinJsNodeModulesTestRuntime",
+                ":serverTest"
             )
         }
 
@@ -351,17 +356,20 @@ class MultiplatformGradleIT : BaseGradleIT() {
             assertSuccessful()
 
             assertTasksUpToDate(
-                    "clientKotlinJsNodeModulesTestRuntime",
-                    "serverKotlinJsNodeModulesTestRuntime"
+                ":clientKotlinJsNodeModulesTestRuntime",
+                ":serverKotlinJsNodeModulesTestRuntime"
             )
 
             assertTasksExecuted(
-                    ":clientKotlinJsNodeModules",
-                    ":clientTest",
+                ":clientKotlinJsNodeModules",
+                ":clientTest",
 
-                    ":serverKotlinJsNodeModules",
-                    ":serverTest"
+                ":serverKotlinJsNodeModules",
+                ":serverTest"
             )
+
+            assertTestResults("testProject/new-mpp-js-tests/TEST-CommonTest-2.xml", "clientTest")
+            assertTestResults("testProject/new-mpp-js-tests/TEST-CommonTest-2.xml", "serverTest")
         }
     }
 }
