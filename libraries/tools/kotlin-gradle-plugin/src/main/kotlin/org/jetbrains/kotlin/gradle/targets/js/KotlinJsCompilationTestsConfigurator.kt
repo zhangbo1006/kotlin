@@ -51,8 +51,8 @@ internal class KotlinJsCompilationTestsConfigurator(
     private val compileTask: Kotlin2JsCompile
         get() = project.tasks.findByName(compileTestKotlin2Js.name) as Kotlin2JsCompile
 
-    private val Kotlin2JsCompile.jsRuntimeClasspath: Collection<File>
-        get() = classpath + destinationDir
+    private val Kotlin2JsCompile.jsRuntimeClasspath: FileCollection
+        get() = classpath.plus(project.files(destinationDir))
 
     fun configure() {
         val nodeModulesTask = registerTask(

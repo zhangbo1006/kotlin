@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.gradle.targets.js.tasks
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.*
 import java.io.File
 
@@ -17,7 +18,7 @@ open class KotlinJsNodeModulesTask : DefaultTask() {
     @Classpath
     @InputFiles
     @SkipWhenEmpty
-    lateinit var classpath: Collection<File>
+    lateinit var classpath: FileCollection
 
     @TaskAction
     fun copyFromRuntimeClasspath() {
