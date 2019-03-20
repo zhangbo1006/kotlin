@@ -80,7 +80,12 @@ internal class TCServiceMessagesClient(
     override fun regularText(text: String) {
         log.kotlinDebug { "TCSM stdout captured: $text" }
 
-        results.output(requireLeafTest().descriptor, DefaultTestOutputEvent(StdOut, text))
+        val test = leaf as? TestNode
+        if (test != null) {
+            results.output(test.descriptor, DefaultTestOutputEvent(StdOut, text))
+        } else {
+            println(text)
+        }
     }
 
     private fun beginTest(ts: Long, testName: String, isIgnored: Boolean = false) {
