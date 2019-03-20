@@ -125,7 +125,8 @@ public class FunctionCodegen {
                             CoroutineCodegenUtilKt.<FunctionDescriptor>unwrapInitialDescriptorForSuspendFunction(functionDescriptor),
                             function,
                             v.getThisName(),
-                            state.getConstructorCallNormalizationMode()
+                            state.getConstructorCallNormalizationMode(),
+                            this
                     );
                 } else {
                     strategy = new SuspendInlineFunctionGenerationStrategy(

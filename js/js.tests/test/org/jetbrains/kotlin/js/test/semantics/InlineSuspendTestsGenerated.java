@@ -534,6 +534,16 @@ public class InlineSuspendTestsGenerated extends AbstractInlineSuspendTests {
             public void testReturnLambda_1_3() throws Exception {
                 runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/returnLambda.kt", "kotlin.coroutines");
             }
+
+            @TestMetadata("returnObjectWithSuspendFunction.kt")
+            public void testReturnObjectWithSuspendFunction_1_2() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/returnObjectWithSuspendFunction.kt", "kotlin.coroutines.experimental");
+            }
+
+            @TestMetadata("returnObjectWithSuspendFunction.kt")
+            public void testReturnObjectWithSuspendFunction_1_3() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/returnObjectWithSuspendFunction.kt", "kotlin.coroutines");
+            }
         }
     }
 }

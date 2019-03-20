@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.codegen.inline
 
 import com.intellij.util.ArrayUtil
 import org.jetbrains.kotlin.codegen.*
+import org.jetbrains.kotlin.codegen.coroutines.DEBUG_METADATA_ANNOTATION_ASM_TYPE
 import org.jetbrains.kotlin.codegen.coroutines.isCoroutineSuperClass
 import org.jetbrains.kotlin.codegen.inline.coroutines.CoroutineTransformer
 import org.jetbrains.kotlin.codegen.serialization.JvmCodegenStringTable
@@ -67,6 +68,8 @@ class AnonymousObjectTransformer(
                     // Empty inner class info because no inner classes are used in kotlin.Metadata and its arguments
                     val innerClassesInfo = FileBasedKotlinClass.InnerClassesInfo()
                     return FileBasedKotlinClass.convertAnnotationVisitor(metadataReader, desc, innerClassesInfo)
+                } else if (desc == DEBUG_METADATA_ANNOTATION_ASM_TYPE.descriptor) {
+                    return null
                 }
                 return super.visitAnnotation(desc, visible)
             }

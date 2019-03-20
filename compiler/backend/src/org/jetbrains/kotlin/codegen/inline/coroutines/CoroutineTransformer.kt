@@ -122,19 +122,20 @@ class CoroutineTransformer(
     }
 
     private fun newStateMachineForNamedFunction(node: MethodNode, element: KtElement): DeferredMethodVisitor {
+        val name = node.name.removeSuffix(FOR_INLINE_SUFFIX)
         val continuationClassName = findFakeContinuationConstructorClassName(node)
         assert(inliningContext is RegeneratedClassContext)
         return DeferredMethodVisitor(
             MethodNode(
-                node.access, node.name, node.desc, node.signature,
+                node.access, name, node.desc, node.signature,
                 ArrayUtil.toStringArray(node.exceptions)
             )
         ) {
-            CoroutineTransformerMethodVisitor(
+            val stateMachineBuilder = CoroutineTransformerMethodVisitor(
                 classBuilder.newMethod(
-                    JvmDeclarationOrigin.NO_ORIGIN, node.access, node.name, node.desc, node.signature,
+                    JvmDeclarationOrigin.NO_ORIGIN, node.access, name, node.desc, node.signature,
                     ArrayUtil.toStringArray(node.exceptions)
-                ), node.access, node.name, node.desc, null, null,
+                ), node.access, name, node.desc, null, null,
                 obtainClassBuilderForCoroutineState = { (inliningContext as RegeneratedClassContext).continuationBuilders[continuationClassName]!! },
                 element = element,
                 diagnostics = state.diagnostics,
@@ -146,6 +147,16 @@ class CoroutineTransformer(
                 internalNameForDispatchReceiver = classBuilder.thisName,
                 sourceFile = sourceFile ?: ""
             )
+
+            if (generateForInline)
+                MethodNodeCopyingMethodVisitor(
+                    stateMachineBuilder, node.access, name, node.desc, node.signature, null,
+                    codegen = null,
+                    classBuilder = classBuilder,
+                    keepAccess = true
+                )
+            else
+                stateMachineBuilder
         }
     }
 

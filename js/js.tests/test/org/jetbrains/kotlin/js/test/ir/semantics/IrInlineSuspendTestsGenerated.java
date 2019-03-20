@@ -344,6 +344,11 @@ public class IrInlineSuspendTestsGenerated extends AbstractIrInlineSuspendTests 
             public void testReturnLambda_1_3() throws Exception {
                 runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/returnLambda.kt", "kotlin.coroutines");
             }
+
+            @TestMetadata("returnObjectWithSuspendFunction.kt")
+            public void testReturnObjectWithSuspendFunction_1_3() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/returnObjectWithSuspendFunction.kt", "kotlin.coroutines");
+            }
         }
     }
 }

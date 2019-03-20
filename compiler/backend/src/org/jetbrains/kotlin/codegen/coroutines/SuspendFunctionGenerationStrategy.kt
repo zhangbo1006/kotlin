@@ -5,10 +5,7 @@
 
 package org.jetbrains.kotlin.codegen.coroutines
 
-import org.jetbrains.kotlin.codegen.ClassBuilder
-import org.jetbrains.kotlin.codegen.ExpressionCodegen
-import org.jetbrains.kotlin.codegen.FunctionGenerationStrategy
-import org.jetbrains.kotlin.codegen.TransformationMethodVisitor
+import org.jetbrains.kotlin.codegen.*
 import org.jetbrains.kotlin.codegen.binding.CodegenBinding
 import org.jetbrains.kotlin.codegen.inline.addFakeContinuationConstructorCallMarker
 import org.jetbrains.kotlin.codegen.state.GenerationState
@@ -28,11 +25,12 @@ import org.jetbrains.org.objectweb.asm.Type
 import org.jetbrains.org.objectweb.asm.tree.MethodNode
 
 open class SuspendFunctionGenerationStrategy(
-        state: GenerationState,
-        protected val originalSuspendDescriptor: FunctionDescriptor,
-        protected val declaration: KtFunction,
-        private val containingClassInternalName: String,
-        private val constructorCallNormalizationMode: JVMConstructorCallNormalizationMode
+    state: GenerationState,
+    protected val originalSuspendDescriptor: FunctionDescriptor,
+    protected val declaration: KtFunction,
+    private val containingClassInternalName: String,
+    private val constructorCallNormalizationMode: JVMConstructorCallNormalizationMode,
+    protected val functionCodegen: FunctionCodegen
 ) : FunctionGenerationStrategy.CodegenBased(state) {
 
     private lateinit var codegen: ExpressionCodegen
@@ -53,16 +51,7 @@ open class SuspendFunctionGenerationStrategy(
     override fun wrapMethodVisitor(mv: MethodVisitor, access: Int, name: String, desc: String): MethodVisitor {
         if (access and Opcodes.ACC_ABSTRACT != 0) return mv
 
-        if (state.bindingContext[CodegenBinding.CAPTURES_CROSSINLINE_LAMBDA, originalSuspendDescriptor] == true) {
-            return AddConstructorCallForCoroutineRegeneration(
-                mv, access, name, desc, null, null, this::classBuilderForCoroutineState,
-                containingClassInternalName,
-                originalSuspendDescriptor.dispatchReceiverParameter != null,
-                containingClassInternalNameOrNull(),
-                languageVersionSettings
-            )
-        }
-        return CoroutineTransformerMethodVisitor(
+        val stateMachineBuilder = CoroutineTransformerMethodVisitor(
             mv, access, name, desc, null, null, containingClassInternalName, this::classBuilderForCoroutineState,
             isForNamedFunction = true,
             element = declaration,
@@ -73,6 +62,21 @@ open class SuspendFunctionGenerationStrategy(
             languageVersionSettings = languageVersionSettings,
             sourceFile = declaration.containingFile.name
         )
+
+        val forInline = state.bindingContext[CodegenBinding.CAPTURES_CROSSINLINE_LAMBDA, originalSuspendDescriptor] == true
+        if (forInline) {
+            return AddConstructorCallForCoroutineRegeneration(
+                MethodNodeCopyingMethodVisitor(
+                    stateMachineBuilder, access, name, desc, null, null,
+                    codegen = functionCodegen, classBuilder = null, keepAccess = true
+                ), access, name, desc, null, null, this::classBuilderForCoroutineState,
+                containingClassInternalName,
+                originalSuspendDescriptor.dispatchReceiverParameter != null,
+                containingClassInternalNameOrNull(),
+                languageVersionSettings
+            )
+        }
+        return stateMachineBuilder
     }
 
     private fun containingClassInternalNameOrNull() =
@@ -88,6 +92,7 @@ open class SuspendFunctionGenerationStrategy(
     // In order to keep generated continuation for named suspend function, we just generate construction call, which is going to be
     // removed during inlining.
     // The continuation itself will be regenerated and used as a container for the coroutine's locals.
+    // TODO: Now, when we have noinline version, can we remove it?
     private class AddConstructorCallForCoroutineRegeneration(
         delegate: MethodVisitor,
         access: Int,

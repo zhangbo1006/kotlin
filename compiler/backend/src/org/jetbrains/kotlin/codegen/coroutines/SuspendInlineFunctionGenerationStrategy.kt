@@ -27,13 +27,14 @@ class SuspendInlineFunctionGenerationStrategy(
     declaration: KtFunction,
     containingClassInternalName: String,
     constructorCallNormalizationMode: JVMConstructorCallNormalizationMode,
-    private val codegen: FunctionCodegen
+    codegen: FunctionCodegen
 ) : SuspendFunctionGenerationStrategy(
     state,
     originalSuspendDescriptor,
     declaration,
     containingClassInternalName,
-    constructorCallNormalizationMode
+    constructorCallNormalizationMode,
+    codegen
 ) {
     private val defaultStrategy = FunctionGenerationStrategy.FunctionDefault(state, declaration)
 
@@ -41,7 +42,7 @@ class SuspendInlineFunctionGenerationStrategy(
         if (access and Opcodes.ACC_ABSTRACT != 0) return mv
 
         return MethodNodeCopyingMethodVisitor(
-            super.wrapMethodVisitor(mv, access, name, desc), access, name, desc, null, null, codegen,
+            super.wrapMethodVisitor(mv, access, name, desc), access, name, desc, null, null, functionCodegen,
             classBuilder = null, keepAccess = false
         )
     }
@@ -75,7 +76,7 @@ class MethodNodeCopyingMethodVisitor(
             JvmDeclarationOrigin.NO_ORIGIN, if (keepAccess) access else calculateAccessForInline(access),
             "$name$FOR_INLINE_SUFFIX", desc, signature, exceptions
         ) ?: classBuilder.sure {
-            "Either codegenData or inlinerData shall be not null"
+            "Either codegen or classBuilder shall be not null"
         }.newMethod(
             JvmDeclarationOrigin.NO_ORIGIN, if (keepAccess) access else calculateAccessForInline(access),
             "$name$FOR_INLINE_SUFFIX", desc, signature, exceptions
