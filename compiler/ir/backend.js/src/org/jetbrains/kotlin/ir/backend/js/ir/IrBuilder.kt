@@ -43,7 +43,7 @@ object JsIrBuilder {
             type ?: target.owner.returnType,
             target,
             target.descriptor,
-            target.descriptor.typeParametersCount,
+            target.descriptor.typeParametersCount, /// deep descrs
             SYNTHESIZED_STATEMENT
         ).apply {
             typeArguments?.let {
