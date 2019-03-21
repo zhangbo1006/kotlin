@@ -28,9 +28,14 @@ class KotlinJsTargetConfigurator(kotlinPluginVersion: String) :
 
     override fun configureTest(target: KotlinOnlyTarget<KotlinJsCompilation>) {
         target.compilations.all {
-            if (it.name == KotlinCompilation.TEST_COMPILATION_NAME) {
+            if (isTestCompilation(it)) {
                 KotlinJsCompilationTestsConfigurator(it).configure()
             }
         }
+    }
+
+    companion object {
+        internal fun isTestCompilation(it: KotlinJsCompilation) =
+            it.name == KotlinCompilation.TEST_COMPILATION_NAME
     }
 }

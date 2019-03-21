@@ -9,35 +9,44 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationToRunnableFiles
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsPlugin
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsSetupTask
-import org.jetbrains.kotlin.gradle.targets.js.tasks.KotlinJsNodeModulesTask
-import org.jetbrains.kotlin.gradle.targets.js.tasks.KotlinNodeJsTestRuntimeToNodeModulesTask
-import org.jetbrains.kotlin.gradle.targets.js.tasks.KotlinNodeJsTestTask
+import org.jetbrains.kotlin.gradle.targets.js.tasks.*
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.registerTask
+import org.jetbrains.kotlin.utils.addIfNotNull
 import java.io.File
 
 internal class KotlinJsCompilationTestsConfigurator(
-        val compilation: KotlinCompilationToRunnableFiles<*>
+    val compilation: KotlinCompilationToRunnableFiles<*>
 ) {
     private val target get() = compilation.target
     private val disambiguationClassifier get() = target.disambiguationClassifier
     private val project get() = target.project
     private val compileTestKotlin2Js get() = compilation.compileKotlinTask as Kotlin2JsCompile
-    private val testTaskName: String
-        get() = camelCaseTargetName("test")
 
-    private fun camelCaseTargetName(name: String): String {
-        return if (disambiguationClassifier == null) name
-        else disambiguationClassifier + name.capitalize()
+    private fun disambiguate(name: String, includeCompilation: Boolean = false): MutableList<String> {
+        val components = mutableListOf<String>()
+
+        components.addIfNotNull(disambiguationClassifier)
+        if (includeCompilation) components.add(compilation.name)
+        components.add(name)
+        return components
+    }
+
+    private fun disambiguateCamelCased(name: String, includeCompilation: Boolean): String {
+        val components = disambiguate(name, includeCompilation)
+
+        return components.first() + components.drop(1).joinToString("") { it.capitalize() }
     }
 
     @Suppress("SameParameterValue")
-    private fun underscoredCompilationName(prefix: String) =
-            if (disambiguationClassifier == null) "${compilation.name}_$prefix"
-            else "${disambiguationClassifier}_${compilation.name}_$prefix"
+    private fun disambiguateUnderscored(name: String, includeCompilation: Boolean) =
+        disambiguate(name, includeCompilation).joinToString("_")
+
+    private val testTaskName: String
+        get() = disambiguateCamelCased("test", false)
 
     private val nodeModulesDir
-        get() = project.buildDir.resolve(underscoredCompilationName("node_modules"))
+        get() = project.buildDir.resolve(disambiguateUnderscored("node_modules", true))
 
     @Suppress("UnstableApiUsage")
     private val Project.testResults: File
@@ -55,33 +64,37 @@ internal class KotlinJsCompilationTestsConfigurator(
 
     fun configure() {
         val nodeModulesTask = registerTask(
-                project,
-                camelCaseTargetName("kotlinJsNodeModules"),
-                KotlinJsNodeModulesTask::class.java
+            project,
+            disambiguateCamelCased("nodeModules", true),
+            KotlinJsNodeModulesTask::class.java
         ) {
             it.dependsOn(compileTestKotlin2Js)
+
+            it.onlyIf {
+                compileTestKotlin2Js.outputFile.exists()
+            }
 
             it.nodeModulesDir = nodeModulesDir
             it.classpath = compileTask.jsRuntimeClasspath
         }
 
-        val nodeModulesTestRuntimeTask = registerTask(
-                project,
-                camelCaseTargetName("kotlinJsNodeModulesTestRuntime"),
-                KotlinNodeJsTestRuntimeToNodeModulesTask::class.java
-        ) {
-            it.nodeModulesDir = nodeModulesDir
-        }
-
         val projectWithNodeJsPlugin = NodeJsPlugin.ensureAppliedInHierarchy(target.project)
+        val kotlinJsExtractTestRunnerTask = project.kotlinNodeJsTestRuntimeExtractTask
 
         val testTask = registerTask(project, testTaskName, KotlinNodeJsTestTask::class.java) { testJs ->
             testJs.group = "verification"
 
             testJs.dependsOn(
-                    nodeModulesTask.getTaskOrProvider(),
-                    nodeModulesTestRuntimeTask.getTaskOrProvider()
+                nodeModulesTask.getTaskOrProvider(),
+                kotlinJsExtractTestRunnerTask.getTaskOrProvider()
             )
+
+            testJs.onlyIf {
+                // run only if there is org.jetbrains.kotlin:kotlin-test-js in classpath
+                // (kotlin-test-nodejs-runner.js requires kotlin-test.js)
+                nodeModulesDir.resolve("kotlin-test.js").exists()
+                compileTestKotlin2Js.outputFile.exists()
+            }
 
             if (disambiguationClassifier != null) {
                 testJs.targetName = disambiguationClassifier
@@ -90,6 +103,7 @@ internal class KotlinJsCompilationTestsConfigurator(
             testJs.nodeJsProcessOptions.workingDir = project.projectDir
 
             testJs.nodeModulesDir = nodeModulesDir
+            testJs.testRuntimeNodeModule = project.extractedKotlinTestNodeJsRunner
             testJs.nodeModulesToLoad = setOf(compileTestKotlin2Js.outputFile.name)
 
             val htmlReport = DslObject(testJs.reports.html)
