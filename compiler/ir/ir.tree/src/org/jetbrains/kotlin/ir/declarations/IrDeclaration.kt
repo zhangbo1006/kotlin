@@ -32,7 +32,11 @@ interface IrMetadataSourceOwner : IrElement {
     val metadata: MetadataSource?
 }
 
+@Experimental(level = Experimental.Level.ERROR)
+annotation class DescriptorInIrDeclaration
+
 interface IrDeclaration : IrStatement, IrAnnotationContainer, IrMetadataSourceOwner {
+    @DescriptorInIrDeclaration
     val descriptor: DeclarationDescriptor
     var origin: IrDeclarationOrigin
 

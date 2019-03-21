@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.name.Name
 
 interface IrModuleFragment : IrElement {
     val name: Name
+//    @DescriptorInIrDeclaration
     val descriptor: ModuleDescriptor
     val irBuiltins: IrBuiltIns
     val files: MutableList<IrFile>

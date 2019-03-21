@@ -58,6 +58,7 @@ class IrLazyFunction(
         TypeTranslator
     )
 
+    @org.jetbrains.kotlin.ir.declarations.DescriptorInIrDeclaration ///
     override val descriptor: FunctionDescriptor = symbol.descriptor
 
     override val typeParameters: MutableList<IrTypeParameter> by lazy {

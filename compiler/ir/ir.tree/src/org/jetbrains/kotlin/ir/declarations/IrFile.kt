@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.name.FqName
 import java.io.File
 
 interface IrPackageFragment : IrElement, IrDeclarationContainer, IrSymbolOwner {
+    @DescriptorInIrDeclaration
     val packageFragmentDescriptor: PackageFragmentDescriptor
     override val symbol: IrPackageFragmentSymbol
 

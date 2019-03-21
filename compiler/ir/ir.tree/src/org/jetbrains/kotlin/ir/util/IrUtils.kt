@@ -301,12 +301,12 @@ tailrec fun IrElement.getPackageFragment(): IrPackageFragment? {
 
 fun IrAnnotationContainer.getAnnotation(name: FqName) =
     annotations.find {
-        it.symbol.owner.parentAsClass.descriptor.fqNameSafe == name
+        it.symbol.owner.parentAsClass.getFqName() == name
     }
 
 fun IrAnnotationContainer.hasAnnotation(name: FqName) =
     annotations.any {
-        it.symbol.owner.parentAsClass.descriptor.fqNameSafe == name
+        it.symbol.owner.parentAsClass.getFqName() == name
     }
 
 fun IrAnnotationContainer.hasAnnotation(symbol: IrClassSymbol) =
@@ -463,3 +463,11 @@ val IrDeclaration.file: IrFile get() = parent.let {
         else -> TODO("Unexpected declaration parent")
     }
 }
+
+@Deprecated("...")
+val <D : DeclarationDescriptor> IrSymbolDeclaration<IrBindableSymbol<D, *>>.descriptorWithoutAccessCheck: D
+    get() = symbol.descriptor
+
+@Deprecated("...")
+val IrDeclaration.descriptorWithoutAccessCheck: DeclarationDescriptor
+    get() = descriptor

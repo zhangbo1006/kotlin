@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
 
 
 interface IrConstructor : IrFunction, IrSymbolDeclaration<IrConstructorSymbol> {
+    @DescriptorInIrDeclaration
     override val descriptor: ClassConstructorDescriptor
 
     val isPrimary: Boolean

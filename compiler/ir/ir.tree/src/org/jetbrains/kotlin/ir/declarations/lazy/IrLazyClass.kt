@@ -66,6 +66,7 @@ class IrLazyClass(
         symbol.bind(this)
     }
 
+    @DescriptorInIrDeclaration
     override val descriptor: ClassDescriptor get() = symbol.descriptor
 
     override var thisReceiver: IrValueParameter? by lazyVar {

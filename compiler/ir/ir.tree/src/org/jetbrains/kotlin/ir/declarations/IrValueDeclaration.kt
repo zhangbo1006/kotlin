@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.ir.symbols.IrValueSymbol
 import org.jetbrains.kotlin.ir.types.IrType
 
 interface IrValueDeclaration : IrDeclarationWithName, IrSymbolOwner {
+    @DescriptorInIrDeclaration
     override val descriptor: ValueDescriptor
     override val symbol: IrValueSymbol
 

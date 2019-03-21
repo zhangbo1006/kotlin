@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.ir.declarations.impl
 
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
+import org.jetbrains.kotlin.ir.declarations.DescriptorInIrDeclaration
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.descriptors.IrBuiltIns
@@ -25,13 +26,16 @@ import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.name.Name
 
 class IrModuleFragmentImpl(
-    override val descriptor: ModuleDescriptor,
+    descriptor: ModuleDescriptor,
     override val irBuiltins: IrBuiltIns
 ) : IrModuleFragment {
 
     constructor(descriptor: ModuleDescriptor, irBuiltins: IrBuiltIns, files: List<IrFile>) : this(descriptor, irBuiltins) {
         this.files.addAll(files)
     }
+
+    @DescriptorInIrDeclaration
+    override val descriptor = descriptor
 
     override val name: Name get() = descriptor.name // TODO
 

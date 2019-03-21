@@ -19,5 +19,6 @@ package org.jetbrains.kotlin.ir.declarations
 interface IrDeclarationParent
 
 interface IrDeclarationContainer : IrDeclarationParent {
+    @DescriptorInIrDeclaration
     val declarations: MutableList<IrDeclaration>
 }

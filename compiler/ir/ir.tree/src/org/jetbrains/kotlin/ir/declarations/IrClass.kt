@@ -26,6 +26,7 @@ interface IrClass :
     IrSymbolDeclaration<IrClassSymbol>, IrDeclarationWithName, IrDeclarationWithVisibility,
     IrDeclarationContainer, IrTypeParametersContainer {
 
+    @DescriptorInIrDeclaration
     override val descriptor: ClassDescriptor
 
     val kind: ClassKind
