@@ -525,6 +525,26 @@ public class InlineSuspendTestsGenerated extends AbstractInlineSuspendTests {
                 KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/codegen/boxInline/suspend/stateMachine/interop"), Pattern.compile("^(.+)\\.kt$"), TargetBackend.JS, true);
             }
 
+            @TestMetadata("doubleInline.kt")
+            public void testDoubleInline_1_2() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/doubleInline.kt", "kotlin.coroutines.experimental");
+            }
+
+            @TestMetadata("doubleInline.kt")
+            public void testDoubleInline_1_3() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/doubleInline.kt", "kotlin.coroutines");
+            }
+
+            @TestMetadata("inlineInsideObject.kt")
+            public void testInlineInsideObject_1_2() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/inlineInsideObject.kt", "kotlin.coroutines.experimental");
+            }
+
+            @TestMetadata("inlineInsideObject.kt")
+            public void testInlineInsideObject_1_3() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/inlineInsideObject.kt", "kotlin.coroutines");
+            }
+
             @TestMetadata("lambdaNoCapture.kt")
             public void testLambdaNoCapture_1_2() throws Exception {
                 runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/lambdaNoCapture.kt", "kotlin.coroutines.experimental");
@@ -533,6 +553,16 @@ public class InlineSuspendTestsGenerated extends AbstractInlineSuspendTests {
             @TestMetadata("lambdaNoCapture.kt")
             public void testLambdaNoCapture_1_3() throws Exception {
                 runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/lambdaNoCapture.kt", "kotlin.coroutines");
+            }
+
+            @TestMetadata("objectInsideLambdas.kt")
+            public void testObjectInsideLambdas_1_2() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/objectInsideLambdas.kt", "kotlin.coroutines.experimental");
+            }
+
+            @TestMetadata("objectInsideLambdas.kt")
+            public void testObjectInsideLambdas_1_3() throws Exception {
+                runTestWithPackageReplacement("compiler/testData/codegen/boxInline/suspend/stateMachine/interop/objectInsideLambdas.kt", "kotlin.coroutines");
             }
 
             @TestMetadata("objectWithSuspendFunction.kt")
