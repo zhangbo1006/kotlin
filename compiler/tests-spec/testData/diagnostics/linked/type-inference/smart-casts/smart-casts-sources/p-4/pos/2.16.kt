@@ -28,7 +28,7 @@ fun case_1() {
 
 // TESTCASE NUMBER: 2
 fun case_2() {
-    var x: Any? = <!VARIABLE_WITH_REDUNDANT_INITIALIZER!>null<!>
+    val x: Any?
 
     if (true) {
         x = 42
@@ -37,7 +37,7 @@ fun case_2() {
     }
 
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>x<!>.<!DEBUG_INFO_UNRESOLVED_WITH_TARGET, UNRESOLVED_REFERENCE_WRONG_RECEIVER!>inv<!>()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(10)
 }
 
 // TESTCASE NUMBER: 3
@@ -51,5 +51,47 @@ fun case_3() {
     }
 
     <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>x<!>
-    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?")!>x<!>.<!DEBUG_INFO_UNRESOLVED_WITH_TARGET, UNRESOLVED_REFERENCE_WRONG_RECEIVER!>inv<!>()
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any?"), DEBUG_INFO_SMARTCAST!>x<!>.equals(10)
+}
+
+// TESTCASE NUMBER: 4
+fun case_4() {
+    val x: Any?
+
+    if (true) {
+        return
+    } else {
+        x = 42.0
+    }
+
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Double")!>x<!>
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Double"), DEBUG_INFO_SMARTCAST!>x<!>.minus(10.0)
+}
+
+// TESTCASE NUMBER: 5
+fun case_5() {
+    val x: Any?
+
+    if (true) {
+        throw Exception()
+    } else {
+        x = 42.0
+    }
+
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any & kotlin.Any? & kotlin.Double")!>x<!>
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any? & kotlin.Double"), DEBUG_INFO_SMARTCAST!>x<!>.minus(10.0)
+}
+
+// TESTCASE NUMBER: 6
+fun case_6() {
+    val x: Any?
+
+    if (true) {
+        x = 42.0
+    } else {
+        null!!
+    }
+
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?"), UNINITIALIZED_VARIABLE!>x<!>
+    <!DEBUG_INFO_EXPRESSION_TYPE("kotlin.Any?")!>x<!>.<!UNRESOLVED_REFERENCE_WRONG_RECEIVER!>minus<!>(10.0)
 }

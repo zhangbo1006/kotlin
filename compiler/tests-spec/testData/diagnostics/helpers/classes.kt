@@ -13,6 +13,11 @@ class Class {
     fun fun_3(value_1: Int): (Int) -> Int = fun(value_2: Int): Int = value_1 * value_2 * 2
     fun fun_4(): Class? = Class()
 
+    operator fun get(i1: Int, i2: Int) = 10
+    operator fun set(i1: Int, i2: Int, el: Int) {}
+    operator fun get(i1: Int) = 10
+    operator fun set(i1: Int, el: Int) {}
+    operator fun invoke(y: Int, z: Int) {}
     operator fun contains(a: Int) = a > 30
     operator fun contains(a: Long) = a > 30L
     operator fun contains(a: Char) = a > 30.toChar()

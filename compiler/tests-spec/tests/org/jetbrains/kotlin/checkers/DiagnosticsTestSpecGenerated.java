@@ -869,6 +869,26 @@ public class DiagnosticsTestSpecGenerated extends AbstractDiagnosticsTestSpec {
                                 runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/neg/2.1.kt");
                             }
 
+                            @TestMetadata("2.10.kt")
+                            public void test2_10() throws Exception {
+                                runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/neg/2.10.kt");
+                            }
+
+                            @TestMetadata("2.11.kt")
+                            public void test2_11() throws Exception {
+                                runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/neg/2.11.kt");
+                            }
+
+                            @TestMetadata("2.12.kt")
+                            public void test2_12() throws Exception {
+                                runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/neg/2.12.kt");
+                            }
+
+                            @TestMetadata("2.13.kt")
+                            public void test2_13() throws Exception {
+                                runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/neg/2.13.kt");
+                            }
+
                             @TestMetadata("2.2.kt")
                             public void test2_2() throws Exception {
                                 runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/neg/2.2.kt");
@@ -1050,6 +1070,16 @@ public class DiagnosticsTestSpecGenerated extends AbstractDiagnosticsTestSpec {
                             @TestMetadata("2.16.kt")
                             public void test2_16() throws Exception {
                                 runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/pos/2.16.kt");
+                            }
+
+                            @TestMetadata("2.17.kt")
+                            public void test2_17() throws Exception {
+                                runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/pos/2.17.kt");
+                            }
+
+                            @TestMetadata("2.18.kt")
+                            public void test2_18() throws Exception {
+                                runTest("compiler/tests-spec/testData/diagnostics/linked/type-inference/smart-casts/smart-casts-sources/p-4/pos/2.18.kt");
                             }
 
                             @TestMetadata("2.2.kt")
