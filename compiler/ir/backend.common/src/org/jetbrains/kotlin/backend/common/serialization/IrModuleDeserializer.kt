@@ -9,6 +9,14 @@ import org.jetbrains.kotlin.backend.common.LoggingContext
 import org.jetbrains.kotlin.backend.common.descriptors.*
 import org.jetbrains.kotlin.backend.common.ir.DeclarationFactory
 import org.jetbrains.kotlin.backend.common.ir.ir2string
+import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrConst.ValueCase.*
+import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrDeclarator.DeclaratorCase.*
+import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrOperation.OperationCase.*
+import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrStatement.StatementCase
+import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrType.KindCase.*
+import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrTypeArgument.KindCase.STAR
+import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrTypeArgument.KindCase.TYPE
+import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrVarargElement.VarargElementCase
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
@@ -22,14 +30,8 @@ import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.types.impl.*
 import org.jetbrains.kotlin.ir.util.SymbolTable
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.util.render
-import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrStatement.*
-import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrOperation.OperationCase.*
-import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrConst.ValueCase.*
-import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrDeclarator.DeclaratorCase.*
-import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrType.KindCase.*
-import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrVarargElement.VarargElementCase
-import org.jetbrains.kotlin.backend.common.serialization.KotlinIr.IrTypeArgument.KindCase.*
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.types.Variance
 
@@ -1050,15 +1052,15 @@ abstract class IrModuleDeserializer(
         val getter = if (proto.hasGetter()) deserializeIrFunction(proto.getter, start, end, origin) else null
         val setter = if (proto.hasSetter()) deserializeIrFunction(proto.setter, start, end, origin) else null
 
-        backingField?.let { (it.descriptor as? WrappedFieldDescriptor)?.bind(it) }
-        getter?.let { (it.descriptor as? WrappedSimpleFunctionDescriptor)?.bind(it) }
-        setter?.let { (it.descriptor as? WrappedSimpleFunctionDescriptor)?.bind(it) }
+        backingField?.let { (it.descriptorWithoutAccessCheck as? WrappedFieldDescriptor)?.bind(it) } //
+        getter?.let { (it.descriptorWithoutAccessCheck as? WrappedSimpleFunctionDescriptor)?.bind(it) }
+        setter?.let { (it.descriptorWithoutAccessCheck as? WrappedSimpleFunctionDescriptor)?.bind(it) }
 
         val descriptor =
             if (proto.hasDescriptorReference())
                 deserializeDescriptorReference(proto.descriptorReference) as PropertyDescriptor
             else
-                backingField?.descriptor as? WrappedPropertyDescriptor // If field's descriptor coincides with property's.
+                backingField?.descriptorWithoutAccessCheck as? WrappedPropertyDescriptor // If field's descriptor coincides with property's.
                     ?: getterToPropertyDescriptorMap.getOrPut(getter!!.symbol) { WrappedPropertyDescriptor() }
 
         val property = IrPropertyImpl(
@@ -1141,7 +1143,7 @@ abstract class IrModuleDeserializer(
 
         parent?.let { declaration.parent = it }
 
-        val descriptor = declaration.descriptor
+        val descriptor = declaration.descriptorWithoutAccessCheck
 
         if (descriptor is WrappedDeclarationDescriptor<*>) {
             when (declaration) {

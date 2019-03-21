@@ -19,7 +19,10 @@ package org.jetbrains.kotlin.backend.common.ir
 import org.jetbrains.kotlin.backend.common.DumpIrTreeWithDescriptorsVisitor
 import org.jetbrains.kotlin.backend.common.deepCopyWithVariables
 import org.jetbrains.kotlin.backend.common.descriptors.*
-import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.descriptors.ClassKind
+import org.jetbrains.kotlin.descriptors.MemberDescriptor
+import org.jetbrains.kotlin.descriptors.Modality
+import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.Scope
 import org.jetbrains.kotlin.ir.declarations.*
@@ -87,7 +90,7 @@ fun IrClass.addSimpleDelegatingConstructor(
             listOf(
                 IrDelegatingConstructorCallImpl(
                     startOffset, endOffset, irBuiltIns.unitType,
-                    superConstructor.symbol, superConstructor.descriptor,
+                    superConstructor.symbol, superConstructor.descriptorWithoutAccessCheck, ///
                     0, superConstructor.valueParameters.size
                 ).apply {
                     constructor.valueParameters.forEachIndexed { idx, parameter ->
@@ -102,6 +105,8 @@ fun IrClass.addSimpleDelegatingConstructor(
 
 val IrCall.isSuspend get() = (symbol.owner as? IrSimpleFunction)?.isSuspend == true
 val IrFunctionReference.isSuspend get() = (symbol.owner as? IrSimpleFunction)?.isSuspend == true
+
+val IrDeclaration.isExpect get() = descriptorWithoutAccessCheck.let { it is MemberDescriptor && it.isExpect }
 
 val IrSimpleFunction.isOverridable: Boolean
     get() = visibility != Visibilities.PRIVATE && modality != Modality.FINAL && (parent as? IrClass)?.isFinalClass != true
@@ -172,7 +177,7 @@ fun IrFunction.copyParameterDeclarationsFrom(from: IrFunction) {
 
     // TODO: should dispatch receiver be copied?
     dispatchReceiverParameter = from.dispatchReceiverParameter?.let {
-        IrValueParameterImpl(it.startOffset, it.endOffset, it.origin, it.descriptor, it.type, it.varargElementType).also {
+        IrValueParameterImpl(it.startOffset, it.endOffset, it.origin, it.descriptorWithoutAccessCheck, it.type, it.varargElementType).also {
             it.parent = this
         }
     }
@@ -339,7 +344,7 @@ fun IrClass.createImplicitParameterDeclarationWithWrappedDescriptor() {
     }
 
     assert(typeParameters.isEmpty())
-    assert(descriptor.declaredTypeParameters.isEmpty())
+    assert(descriptorWithoutAccessCheck.declaredTypeParameters.isEmpty())
 }
 
 fun isElseBranch(branch: IrBranch) = branch is IrElseBranch || ((branch.condition as? IrConst<Boolean>)?.value == true)

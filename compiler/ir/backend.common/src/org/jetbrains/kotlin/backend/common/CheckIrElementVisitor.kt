@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.ir.descriptors.IrBuiltIns
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
 import org.jetbrains.kotlin.ir.types.*
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.util.isAnnotationClass
 import org.jetbrains.kotlin.ir.util.render
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
@@ -216,10 +217,10 @@ class CheckIrElementVisitor(
             // Check that all functions and properties from memberScope are present in IR
             // (including FAKE_OVERRIDE ones).
 
-            val allDescriptors = declaration.descriptor.unsubstitutedMemberScope
+            val allDescriptors = declaration.descriptorWithoutAccessCheck.unsubstitutedMemberScope /// no in JS?
                     .getContributedDescriptors().filterIsInstance<CallableMemberDescriptor>()
 
-            val presentDescriptors = declaration.declarations.map { it.descriptor }
+            val presentDescriptors = declaration.declarations.map { it.descriptorWithoutAccessCheck }
 
             val missingDescriptors = allDescriptors - presentDescriptors
 

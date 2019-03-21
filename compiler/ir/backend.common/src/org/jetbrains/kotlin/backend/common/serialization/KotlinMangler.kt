@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.types.*
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.util.isInlined
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -42,7 +43,7 @@ abstract class KotlinManglerImpl: KotlinMangler {
      */
     override tailrec fun IrDeclaration.isExported(): Boolean {
         // TODO: revise
-        val descriptorAnnotations = this.descriptor.annotations
+        val descriptorAnnotations = this.descriptorWithoutAccessCheck.annotations ///
 
         if (this.isPlatformSpecificExported()) return true
 
@@ -60,7 +61,7 @@ abstract class KotlinManglerImpl: KotlinMangler {
         }
 
         if (this is IrFunction) {
-            val descriptor = this.descriptor
+            val descriptor = this.descriptorWithoutAccessCheck
             // TODO: this code is required because accessor doesn't have a reference to property.
             if (descriptor is PropertyAccessorDescriptor) {
                 val property = descriptor.correspondingProperty

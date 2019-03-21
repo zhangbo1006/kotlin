@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.backend.common.serialization
 
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 
 
@@ -21,7 +22,7 @@ open class DescriptorReferenceSerializer(
     // available as deserialized descriptor, plus the path to find the needed descriptor from that one.
     fun serializeDescriptorReference(declaration: IrDeclaration): KotlinIr.DescriptorReference? {
 
-        val descriptor = declaration.descriptor
+        val descriptor = declaration.descriptorWithoutAccessCheck ///
 
         if (!declaration.isExported() &&
             !((declaration as? IrDeclarationWithVisibility)?.visibility == Visibilities.INVISIBLE_FAKE)) {
@@ -77,7 +78,7 @@ open class DescriptorReferenceSerializer(
         }
 
         val uniqId = discoverableDescriptorsDeclaration?.let { declarationTable.uniqIdByDeclaration(it) }
-        uniqId?.let { declarationTable.descriptors.put(discoverableDescriptorsDeclaration.descriptor, it) }
+        uniqId?.let { declarationTable.descriptors.put(discoverableDescriptorsDeclaration.descriptorWithoutAccessCheck, it) }
 
         val proto = KotlinIr.DescriptorReference.newBuilder()
             .setPackageFqName(serializeString(packageFqName))

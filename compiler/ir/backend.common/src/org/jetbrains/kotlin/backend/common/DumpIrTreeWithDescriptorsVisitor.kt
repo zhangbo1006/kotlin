@@ -6,10 +6,12 @@
 package org.jetbrains.kotlin.backend.common
 
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.ReceiverParameterDescriptor
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.util.render
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.renderer.*
@@ -21,7 +23,7 @@ class RenderIrElementWithDescriptorsVisitor : IrElementVisitor<String, Nothing?>
         "? ${element.javaClass.simpleName}"
 
     override fun visitDeclaration(declaration: IrDeclaration, data: Nothing?): String =
-        "? ${declaration.javaClass.simpleName} ${declaration.descriptor.ref()}"
+        "? ${declaration.javaClass.simpleName} ${declaration.descriptorWithoutAccessCheck.ref()}"
 
     override fun visitModuleFragment(declaration: IrModuleFragment, data: Nothing?): String =
         "MODULE_FRAGMENT ${declaration.descriptor}"
@@ -30,31 +32,31 @@ class RenderIrElementWithDescriptorsVisitor : IrElementVisitor<String, Nothing?>
         "FILE ${declaration.path}"
 
     override fun visitFunction(declaration: IrFunction, data: Nothing?): String =
-        "FUN ${declaration.descriptor}"
+        "FUN ${declaration.descriptorWithoutAccessCheck}"
 
     override fun visitConstructor(declaration: IrConstructor, data: Nothing?): String =
-        "CONSTRUCTOR ${declaration.descriptor}"
+        "CONSTRUCTOR ${declaration.descriptorWithoutAccessCheck}"
 
     override fun visitProperty(declaration: IrProperty, data: Nothing?): String =
-        "PROPERTY ${declaration.descriptor}"
+        "PROPERTY ${declaration.descriptorWithoutAccessCheck}"
 
     override fun visitField(declaration: IrField, data: Nothing?): String =
-        "FIELD ${declaration.descriptor}"
+        "FIELD ${declaration.descriptorWithoutAccessCheck}"
 
     override fun visitClass(declaration: IrClass, data: Nothing?): String =
-        "CLASS ${declaration.descriptor}"
+        "CLASS ${declaration.descriptorWithoutAccessCheck}"
 
     override fun visitVariable(declaration: IrVariable, data: Nothing?): String =
-        "VAR ${declaration.descriptor}"
+        "VAR ${declaration.descriptorWithoutAccessCheck}"
 
     override fun visitEnumEntry(declaration: IrEnumEntry, data: Nothing?): String =
-        "ENUM_ENTRY ${declaration.descriptor}"
+        "ENUM_ENTRY ${declaration.descriptorWithoutAccessCheck}"
 
     override fun visitAnonymousInitializer(declaration: IrAnonymousInitializer, data: Nothing?): String =
-        "ANONYMOUS_INITIALIZER ${declaration.descriptor}"
+        "ANONYMOUS_INITIALIZER ${declaration.descriptorWithoutAccessCheck}"
 
     override fun visitLocalDelegatedProperty(declaration: IrLocalDelegatedProperty, data: Nothing?): String =
-        "LOCAL_DELEGATED_PROPERTY ${declaration.descriptor}"
+        "LOCAL_DELEGATED_PROPERTY ${declaration.descriptorWithoutAccessCheck}"
 
     override fun visitExpressionBody(body: IrExpressionBody, data: Nothing?): String =
         "EXPRESSION_BODY"
@@ -163,7 +165,7 @@ class RenderIrElementWithDescriptorsVisitor : IrElementVisitor<String, Nothing?>
         "CATCH parameter=${aCatch.parameter.ref()}"
 
     override fun visitErrorDeclaration(declaration: IrErrorDeclaration, data: Nothing?): String =
-        "ERROR_DECL ${declaration.descriptor.javaClass.simpleName} ${declaration.descriptor.ref()}"
+        "ERROR_DECL ${declaration.descriptorWithoutAccessCheck.javaClass.simpleName} ${declaration.descriptorWithoutAccessCheck.ref()}"
 
     override fun visitErrorExpression(expression: IrErrorExpression, data: Nothing?): String =
         "ERROR_EXPR '${expression.description}' type=${expression.type.render()}"
@@ -183,8 +185,7 @@ class RenderIrElementWithDescriptorsVisitor : IrElementVisitor<String, Nothing?>
 
         val REFERENCE_RENDERER = DescriptorRenderer.ONLY_NAMES_WITH_SHORT_TYPES
 
-        internal fun IrDeclaration.name(): String =
-            descriptor.let { it.name.toString() }
+        internal fun IrDeclaration.name(): Int = 1 //name.toString()
 
         internal fun DeclarationDescriptor.ref(): String =
             if (this is ReceiverParameterDescriptor)
@@ -227,8 +228,10 @@ class DumpIrTreeWithDescriptorsVisitor(out: Appendable) : IrElementVisitor<Unit,
         }
     }
 
+
     override fun visitBlock(expression: IrBlock, data: String) {
         if (expression is IrReturnableBlock) {
+            @UseExperimental(DescriptorInIrDeclaration::class)
             printer.println("RETURNABLE BLOCK " + expression.descriptor)
             indented { super.visitBlock(expression, data) }
             return
@@ -253,7 +256,7 @@ class DumpIrTreeWithDescriptorsVisitor(out: Appendable) : IrElementVisitor<Unit,
 
     private fun visitFunctionWithParameters(declaration: IrFunction, data: String) {
         declaration.dumpLabeledElementWith(data) {
-            declaration.descriptor.valueParameters.forEach { valueParameter ->
+            (declaration.descriptorWithoutAccessCheck as FunctionDescriptor).valueParameters.forEach { valueParameter ->
                 declaration.getDefault(valueParameter)?.accept(this, valueParameter.name.asString())
             }
             declaration.body?.accept(this, "")

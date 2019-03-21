@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 
 class ScopeWithIr(val scope: Scope, val irElement: IrElement)
 
@@ -45,7 +46,7 @@ abstract class IrElementTransformerVoidWithContext : IrElementTransformerVoid() 
     }
 
     override final fun visitProperty(declaration: IrProperty): IrStatement {
-        scopeStack.push(ScopeWithIr(Scope(declaration.descriptor), declaration))
+        scopeStack.push(ScopeWithIr(Scope(declaration.descriptorWithoutAccessCheck), declaration)) ///
         val result = visitPropertyNew(declaration)
         scopeStack.pop()
         return result
@@ -115,20 +116,20 @@ abstract class IrElementVisitorVoidWithContext : IrElementVisitorVoid {
     }
 
     override final fun visitProperty(declaration: IrProperty) {
-        scopeStack.push(ScopeWithIr(Scope(declaration.descriptor), declaration))
+        scopeStack.push(ScopeWithIr(Scope(declaration.descriptorWithoutAccessCheck), declaration))
         visitPropertyNew(declaration)
         scopeStack.pop()
     }
 
     override final fun visitField(declaration: IrField) {
-        val isDelegated = declaration.descriptor.isDelegated
+        val isDelegated = declaration.descriptorWithoutAccessCheck.isDelegated
         if (isDelegated) scopeStack.push(ScopeWithIr(Scope(declaration.symbol), declaration))
         visitFieldNew(declaration)
         if (isDelegated) scopeStack.pop()
     }
 
     override final fun visitFunction(declaration: IrFunction) {
-        scopeStack.push(ScopeWithIr(Scope(declaration.descriptor), declaration))
+        scopeStack.push(ScopeWithIr(Scope(declaration.descriptorWithoutAccessCheck), declaration))
         visitFunctionNew(declaration)
         scopeStack.pop()
     }

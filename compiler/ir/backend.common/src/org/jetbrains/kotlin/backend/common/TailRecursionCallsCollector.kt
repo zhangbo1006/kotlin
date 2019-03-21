@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.*
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.util.usesDefaultArguments
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.resolve.DescriptorUtils
@@ -63,7 +64,7 @@ fun collectTailRecursionCalls(irFunction: IrFunction): Set<IrCall> {
         }
 
         override fun visitReturn(expression: IrReturn, data: ElementKind) {
-            val valueKind = if (expression.returnTarget == irFunction.descriptor) {
+            val valueKind = if (expression.returnTarget == irFunction.descriptorWithoutAccessCheck) { ///
                 ElementKind.TAIL_STATEMENT
             } else {
                 ElementKind.NOT_SURE
@@ -99,18 +100,18 @@ fun collectTailRecursionCalls(irFunction: IrFunction): Set<IrCall> {
             }
 
             // Is it a recursive call?
-            if (expression.descriptor.original != irFunction.descriptor) {
+            if (expression.descriptor.original != irFunction.descriptorWithoutAccessCheck) {
                 return
             }
             // TODO: check type arguments
 
-            if (DescriptorUtils.isOverride(irFunction.descriptor) && expression.usesDefaultArguments()) {
+            if (DescriptorUtils.isOverride(irFunction.descriptorWithoutAccessCheck) && expression.usesDefaultArguments()) {
                 // Overridden functions using default arguments at tail call are not included: KT-4285
                 return
             }
 
             expression.dispatchReceiver?.let {
-                if (it !is IrGetValue || it.descriptor != irFunction.descriptor.dispatchReceiverParameter) {
+                if (it !is IrGetValue || it.descriptor != irFunction.descriptorWithoutAccessCheck.dispatchReceiverParameter) {
                     // A tail call is not allowed to change dispatch receiver
                     //   class C {
                     //       fun foo(other: C) {
@@ -133,7 +134,7 @@ fun collectTailRecursionCalls(irFunction: IrFunction): Set<IrCall> {
     }
 
     body.statements.forEachIndexed { index, irStatement ->
-        val kind = if (index == body.statements.lastIndex && irFunction.descriptor.returnType?.isUnit() == true) {
+        val kind = if (index == body.statements.lastIndex && irFunction.descriptorWithoutAccessCheck.returnType?.isUnit() == true) {
             ElementKind.TAIL_STATEMENT
         } else {
             ElementKind.NOT_SURE

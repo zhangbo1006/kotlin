@@ -5,18 +5,16 @@
 
 package org.jetbrains.kotlin.backend.common.serialization
 
+import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.ir.SourceManager
+import org.jetbrains.kotlin.ir.SourceRangeInfo
+import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.descriptors.ClassKind
-import org.jetbrains.kotlin.ir.SourceRangeInfo
-import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
-import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrDeclaration
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.descriptorUtil.module
 import java.io.File
@@ -132,10 +130,10 @@ fun IrDeclaration.findTopLevelDeclaration(): IrDeclaration = when {
         (this.parent as IrDeclaration).findTopLevelDeclaration()
 }
 
-val IrDeclaration.isAnonymousObject get() = DescriptorUtils.isAnonymousObject(this.descriptor)
-val IrDeclaration.isLocal get() = DescriptorUtils.isLocal(this.descriptor)
+val IrDeclaration.isAnonymousObject get() = DescriptorUtils.isAnonymousObject(this.descriptorWithoutAccessCheck)
+val IrDeclaration.isLocal get() = DescriptorUtils.isLocal(this.descriptorWithoutAccessCheck) //deep?
 
-val IrDeclaration.module get() = this.descriptor.module
+val IrDeclaration.module get() = this.descriptorWithoutAccessCheck.module
 
 const val SYNTHETIC_OFFSET = -2
 

@@ -21,7 +21,8 @@ import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrLocalDelegatedProperty
-import org.jetbrains.kotlin.ir.expressions.*
+import org.jetbrains.kotlin.ir.expressions.IrValueAccessExpression
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
@@ -57,7 +58,7 @@ abstract class AbstractClosureAnnotator : IrElementVisitorVoid {
     }
 
     override fun visitClass(declaration: IrClass) {
-        val classDescriptor = declaration.descriptor
+        val classDescriptor = declaration.descriptorWithoutAccessCheck /// is not used in JS?
         val closureBuilder = ClosureBuilder(classDescriptor)
 
         closuresStack.push(closureBuilder)
@@ -74,7 +75,7 @@ abstract class AbstractClosureAnnotator : IrElementVisitorVoid {
     }
 
     override fun visitFunction(declaration: IrFunction) {
-        val functionDescriptor = declaration.descriptor
+        val functionDescriptor = declaration.descriptorWithoutAccessCheck as FunctionDescriptor
         val closureBuilder = ClosureBuilder(functionDescriptor)
 
         closuresStack.push(closureBuilder)

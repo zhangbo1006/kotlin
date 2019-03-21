@@ -18,6 +18,7 @@ import org.jetbrains.kotlin.ir.declarations.impl.IrFunctionImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrBlockBodyImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrBlockImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.util.isEffectivelyExternal
 import org.jetbrains.kotlin.ir.util.transformDeclarationsFlat
 import org.jetbrains.kotlin.ir.visitors.*
@@ -70,7 +71,7 @@ class PropertiesLowering(
             null
 
     private fun createSyntheticMethodForAnnotations(declaration: IrProperty, origin: IrDeclarationOrigin, name: String): IrFunctionImpl {
-        val descriptor = WrappedSimpleFunctionDescriptor(declaration.descriptor.annotations)
+        val descriptor = WrappedSimpleFunctionDescriptor(declaration.descriptorWithoutAccessCheck.annotations) ///
         val symbol = IrSimpleFunctionSymbolImpl(descriptor)
         // TODO: ACC_DEPRECATED
         return IrFunctionImpl(

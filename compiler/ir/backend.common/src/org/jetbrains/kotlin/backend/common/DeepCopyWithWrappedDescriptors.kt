@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.util.DescriptorsRemapper
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
+import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
@@ -22,6 +23,7 @@ import org.jetbrains.kotlin.ir.visitors.acceptVoid
  */
 
 inline fun <reified T : IrElement> T.deepCopyWithWrappedDescriptors(initialParent: IrDeclarationParent? = null): T =
+    // deep?
     deepCopyWithSymbols(initialParent, DescriptorsToIrRemapper).also {
         it.acceptVoid(WrappedDescriptorPatcher)
     }
@@ -60,46 +62,48 @@ object WrappedDescriptorPatcher : IrElementVisitorVoid {
         element.acceptChildrenVoid(this)
     }
 
+    private fun <T : IrDeclaration> T.rebindWrappedDescriptor(to: T = this) {
+        (descriptorWithoutAccessCheck as WrappedDeclarationDescriptor<T>).bind(to)
+    }
+
     override fun visitClass(declaration: IrClass) {
-        (declaration.descriptor as WrappedClassDescriptor).bind(declaration)
+        declaration.rebindWrappedDescriptor()
         declaration.acceptChildrenVoid(this)
     }
 
     override fun visitConstructor(declaration: IrConstructor) {
-        (declaration.descriptor as WrappedClassConstructorDescriptor).bind(declaration)
+        declaration.rebindWrappedDescriptor()
         declaration.acceptChildrenVoid(this)
     }
 
     override fun visitEnumEntry(declaration: IrEnumEntry) {
-        (declaration.descriptor as WrappedClassDescriptor).bind(
-            declaration.correspondingClass ?: declaration.parentAsClass
-        )
+        declaration.rebindWrappedDescriptor(declaration.correspondingClass ?: declaration.parentAsClass)
         declaration.acceptChildrenVoid(this)
     }
 
     override fun visitField(declaration: IrField) {
-        (declaration.descriptor as WrappedFieldDescriptor).bind(declaration)
+        (declaration.descriptorWithoutAccessCheck as? WrappedFieldDescriptor)?.bind(declaration)
         declaration.acceptChildrenVoid(this)
     }
 
     override fun visitFunction(declaration: IrFunction) {
-        (declaration.descriptor as WrappedSimpleFunctionDescriptor).bind(declaration as IrSimpleFunction)
+        declaration.rebindWrappedDescriptor()
         declaration.acceptChildrenVoid(this)
     }
 
     override fun visitValueParameter(declaration: IrValueParameter) {
-        (declaration.descriptor as? WrappedValueParameterDescriptor)?.bind(declaration)
-        (declaration.descriptor as? WrappedReceiverParameterDescriptor)?.bind(declaration)
+        (declaration.descriptorWithoutAccessCheck as? WrappedValueParameterDescriptor)?.bind(declaration)
+        (declaration.descriptorWithoutAccessCheck as? WrappedReceiverParameterDescriptor)?.bind(declaration)
         declaration.acceptChildrenVoid(this)
     }
 
     override fun visitTypeParameter(declaration: IrTypeParameter) {
-        (declaration.descriptor as WrappedTypeParameterDescriptor).bind(declaration)
+        declaration.rebindWrappedDescriptor()
         declaration.acceptChildrenVoid(this)
     }
 
     override fun visitVariable(declaration: IrVariable) {
-        (declaration.descriptor as WrappedVariableDescriptor).bind(declaration)
+        declaration.rebindWrappedDescriptor()
         declaration.acceptChildrenVoid(this)
     }
 }
