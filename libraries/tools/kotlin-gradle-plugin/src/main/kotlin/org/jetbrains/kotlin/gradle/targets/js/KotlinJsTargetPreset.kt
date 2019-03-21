@@ -17,8 +17,6 @@ open class KotlinJsTargetPreset(
     project,
     kotlinPluginVersion
 ) {
-    open val isSinglePlatformProject: Boolean = false
-
     override fun createKotlinTargetConfigurator() = KotlinJsTargetConfigurator(kotlinPluginVersion)
 
     override fun getName(): String = PRESET_NAME
@@ -39,9 +37,6 @@ class KotlinJsSingleTargetPreset(
     kotlinPluginVersion: String
 ) :
     KotlinJsTargetPreset(project, kotlinPluginVersion) {
-
-    override val isSinglePlatformProject: Boolean
-        get() = true
 
     // In a Kotlin/JS single-platform project, we don't need any disambiguation suffixes or prefixes in the names:
     override fun provideTargetDisambiguationClassifier(target: KotlinOnlyTarget<KotlinJsCompilation>): String? = null
