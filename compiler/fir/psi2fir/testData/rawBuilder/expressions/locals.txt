@@ -1,6 +1,6 @@
 FILE: locals.kt
     public? final? function withLocals(p: Int): Int {
-        public? final? class Local {
+        public? final? class Local : kotlin/Any {
             public? constructor(pp: Int): super<kotlin/Any>()
 
             public? final? property pp(val): Int

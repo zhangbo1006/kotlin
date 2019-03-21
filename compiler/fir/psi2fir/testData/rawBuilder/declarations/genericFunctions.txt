@@ -4,7 +4,7 @@ FILE: genericFunctions.kt
     <reified T : Any> public? final? inline function safeAs Any.(): T? {
         return@@@safeAs as?/T(this#)
     }
-    public? abstract class Summator {
+    public? abstract class Summator : kotlin/Any {
         public? constructor(): super<kotlin/Any>()
 
         <T> public? abstract function plus(first: T, second: T): T
