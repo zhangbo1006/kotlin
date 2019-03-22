@@ -45,6 +45,7 @@ public final class Class {
     public final val prop_5: kotlin.Float = 3.0.toFloat()
     public final val prop_6: kotlin.String = "..."
     public final val prop_7: kotlin.Nothing? = "..."
+    public final val prop_8: Class? = "..."
     public final operator fun contains(/*0*/ a: kotlin.Char): kotlin.Boolean
     public final operator fun contains(/*0*/ a: kotlin.Int): kotlin.Boolean
     public final operator fun contains(/*0*/ a: kotlin.Long): kotlin.Boolean
@@ -52,10 +53,16 @@ public final class Class {
     public final fun fun_1(): (kotlin.Int) -> (kotlin.Int) -> kotlin.Int
     public final fun fun_2(/*0*/ value_1: kotlin.Int): kotlin.Int
     public final fun fun_3(/*0*/ value_1: kotlin.Int): (kotlin.Int) -> kotlin.Int
+    public final fun fun_4(): Class?
+    public final operator fun get(/*0*/ i1: kotlin.Int): kotlin.Int
+    public final operator fun get(/*0*/ i1: kotlin.Int, /*1*/ i2: kotlin.Int): kotlin.Int
     public final fun getCharArray(): kotlin.CharArray
     public final fun getIntArray(): kotlin.IntArray
     public final fun getLongArray(): kotlin.LongArray
     public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+    public final operator fun invoke(/*0*/ y: kotlin.Int, /*1*/ z: kotlin.Int): kotlin.Unit
+    public final operator fun set(/*0*/ i1: kotlin.Int, /*1*/ el: kotlin.Int): kotlin.Unit
+    public final operator fun set(/*0*/ i1: kotlin.Int, /*1*/ i2: kotlin.Int, /*2*/ el: kotlin.Int): kotlin.Unit
     public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
 
     public final class NestedClass {
@@ -189,6 +196,8 @@ public final class In</*0*/ in T> {
 
 public final class Inv</*0*/ T> {
     public constructor Inv</*0*/ T>(/*0*/ x: T = ...)
+    public final val prop_1: Inv<T>? = null
+    public final val prop_2: T? = null
     public final val x: T
     public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
     public final fun get(): T
@@ -201,6 +210,8 @@ public final class Inv</*0*/ T> {
 
 public final class Out</*0*/ out T> {
     public constructor Out</*0*/ out T>(/*0*/ x: T = ...)
+    public final val prop_1: Inv<T>? = null
+    public final val prop_2: T? = null
     public final val x: T
     public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
     public final fun get(): T
