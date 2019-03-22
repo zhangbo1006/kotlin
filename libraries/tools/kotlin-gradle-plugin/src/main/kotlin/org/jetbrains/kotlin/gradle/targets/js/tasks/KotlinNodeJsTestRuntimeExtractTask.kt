@@ -21,7 +21,6 @@ const val kotlinTestNodeJsRunnerJs = "kotlin-test-nodejs-runner.js"
 internal val Project.extractedKotlinTestNodeJsRunner: File
     get() = project.buildDir.resolve("kotlin/$kotlinTestNodeJsRunnerJs")
 
-
 internal val Project.kotlinNodeJsTestRuntimeExtractTask
     get() = project.locateOrRegisterTask<KotlinNodeJsTestRuntimeExtractTask>(
         "kotlinNodeJsTestRuntimeExtract"
