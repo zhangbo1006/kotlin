@@ -53,6 +53,16 @@ class IrFunctionReferenceImpl(
         origin: IrStatementOrigin? = null
     ) : this(startOffset, endOffset, type, symbol, descriptor, typeArgumentsCount, descriptor.valueParameters.size, origin)
 
+    constructor(
+        startOffset: Int,
+        endOffset: Int,
+        type: IrType,
+        symbol: IrFunctionSymbol,
+        typeArgumentsCount: Int,
+        valueArgumentsCount: Int,
+        origin: IrStatementOrigin? = null
+    ) : this(startOffset, endOffset, type, symbol, symbol.descriptor, typeArgumentsCount, valueArgumentsCount, origin)
+
     override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R =
         visitor.visitFunctionReference(this, data)
 }

@@ -50,7 +50,7 @@ class IrDelegatingConstructorCallImpl(
         typeArgumentsCount: Int,
         valueArgumentsCount: Int
     ) : this(startOffset, endOffset, type, symbol, typeArgumentsCount, valueArgumentsCount) {
-        require(symbol.descriptor === descriptor)
+//        require(symbol.descriptor === descriptor)
     }
 
     constructor(

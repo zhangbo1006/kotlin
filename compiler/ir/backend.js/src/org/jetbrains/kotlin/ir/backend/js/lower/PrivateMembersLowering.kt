@@ -27,7 +27,6 @@ import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrValueParameterSymbolImpl
 import org.jetbrains.kotlin.ir.util.deepCopyWithSymbols
-import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.util.transformFlat
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 import org.jetbrains.kotlin.name.Name
@@ -68,7 +67,7 @@ class PrivateMembersLowering(val context: JsIrBackendContext) : ClassLoweringPas
                     IrFunctionReferenceImpl(
                         expression.startOffset, expression.endOffset,
                         expression.type,
-                        it.symbol, it.descriptorWithoutAccessCheck, /// dead code?
+                        it.symbol,
                         expression.typeArgumentsCount, expression.valueArgumentsCount,
                         expression.origin
                     )
@@ -97,8 +96,9 @@ class PrivateMembersLowering(val context: JsIrBackendContext) : ClassLoweringPas
                 val newExpression = IrCallImpl(
                     expression.startOffset, expression.endOffset,
                     expression.type,
-                    staticTarget.symbol, staticTarget.descriptorWithoutAccessCheck,
-                    expression.typeArgumentsCount,
+                    staticTarget.symbol,
+                    staticTarget.typeParameters.size,
+                    staticTarget.valueParameters.size,
                     expression.origin,
                     expression.superQualifierSymbol
                 )
