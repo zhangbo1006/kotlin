@@ -1,0 +1,60 @@
+/*
+ * Copyright 2010-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
+ * that can be found in the license/LICENSE.txt file.
+ */
+
+package org.jetbrains.kotlin.idea.configuration
+
+import com.intellij.openapi.externalSystem.model.DataNode
+import com.intellij.openapi.externalSystem.model.ProjectKeys
+import com.intellij.openapi.externalSystem.model.project.ContentRootData
+import com.intellij.openapi.externalSystem.model.project.ExternalSystemSourceType
+import com.intellij.openapi.externalSystem.model.project.ModuleData
+import com.intellij.openapi.externalSystem.model.project.TestData
+import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
+import org.jetbrains.plugins.gradle.model.data.GradleSourceSetData
+
+object KotlinMPPTestSourceRootPatcher {
+    /*
+        `TestData` nodes are added in `BaseGradleProjectResolverExtension.populateModuleExtraModels()`,
+        based on the contents of `ExternalTestSourceMapping` proxies.
+
+        The problem is that these proxies are built entirely using the Gradle source set model.
+        As a result, our fancy MPP source sets are not recognized, and no paths are provided for them.
+
+        This hack finds for these 'empty' test nodes and fulfills source roots for them.
+     */
+    fun patchTestDataSources(ideModule: DataNode<ModuleData>) {
+        for (dataNode in ExternalSystemApiUtil.findAll(ideModule, ProjectKeys.TEST)) {
+            val testData = dataNode.data
+            if (testData.sourceFolders.isNotEmpty()) {
+                continue
+            }
+
+            val taskPath = testData.testTaskName
+            val correspondingSourceSet = ExternalSystemApiUtil
+                .findAll(ideModule, GradleSourceSetData.KEY).find { it.data.id == taskPath }
+                ?: continue
+
+            val paths = ExternalSystemApiUtil.findAll(correspondingSourceSet, ProjectKeys.CONTENT_ROOT)
+                .flatMapTo(mutableSetOf()) { it.data.getTestRootPaths() }
+
+            if (paths.isEmpty()) {
+                continue
+            }
+
+            dataNode.visitData {
+                TestData(testData.owner, testData.testName, testData.testTaskName, testData.cleanTestTaskName, paths)
+            }
+        }
+    }
+
+    private val testSourceRootTypes = listOf(
+        ExternalSystemSourceType.TEST,
+        ExternalSystemSourceType.TEST_GENERATED,
+        ExternalSystemSourceType.TEST_RESOURCE)
+
+    private fun ContentRootData.getTestRootPaths(): List<String> {
+        return testSourceRootTypes.flatMap { getPaths(it) }.map { it.path }
+    }
+}

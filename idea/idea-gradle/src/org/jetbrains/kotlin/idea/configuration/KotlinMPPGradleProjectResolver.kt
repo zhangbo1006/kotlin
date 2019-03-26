@@ -69,6 +69,8 @@ open class KotlinMPPGradleProjectResolver : AbstractProjectResolverExtension() {
         }
 
         super.populateModuleExtraModels(gradleModule, ideModule)
+
+        KotlinMPPTestSourceRootPatcher.patchTestDataSources(ideModule)
     }
 
     override fun populateModuleContentRoots(gradleModule: IdeaModule, ideModule: DataNode<ModuleData>) {
