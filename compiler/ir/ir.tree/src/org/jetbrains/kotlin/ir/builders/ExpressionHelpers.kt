@@ -243,7 +243,7 @@ fun IrBuilderWithScope.irCall(callee: IrFunction, origin: IrStatementOrigin): Ir
     IrCallImpl(startOffset, endOffset, callee.returnType, callee.symbol, callee.descriptor, origin)
 
 fun IrBuilderWithScope.irDelegatingConstructorCall(callee: IrConstructor): IrDelegatingConstructorCall =
-    IrDelegatingConstructorCallImpl(startOffset, endOffset, callee.returnType, callee.symbol, callee.descriptorWithoutAccessCheck,
+    IrDelegatingConstructorCallImpl(startOffset, endOffset, callee.returnType, callee.symbol,
                                     callee.parentAsClass.typeParameters.size, callee.valueParameters.size)
 
 fun IrBuilderWithScope.irCallOp(

@@ -291,7 +291,6 @@ abstract class IrModuleDeserializer(
             end,
             builtIns.unitType,
             symbol,
-            symbol.descriptor,
             proto.memberAccess.typeArguments.typeArgumentCount,
             proto.memberAccess.valueArgumentList.size
         )

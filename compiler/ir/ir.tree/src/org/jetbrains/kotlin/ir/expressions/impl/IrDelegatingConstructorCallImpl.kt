@@ -28,7 +28,6 @@ class IrDelegatingConstructorCallImpl(
     endOffset: Int,
     type: IrType,
     override val symbol: IrConstructorSymbol,
-    override val descriptor: ClassConstructorDescriptor,
     typeArgumentsCount: Int,
     valueArgumentsCount: Int
 ) :
@@ -40,6 +39,19 @@ class IrDelegatingConstructorCallImpl(
         valueArgumentsCount = valueArgumentsCount
     ),
     IrDelegatingConstructorCall {
+
+    @Deprecated("")
+    constructor(
+        startOffset: Int,
+        endOffset: Int,
+        type: IrType,
+        symbol: IrConstructorSymbol,
+        descriptor: ClassConstructorDescriptor,
+        typeArgumentsCount: Int,
+        valueArgumentsCount: Int
+    ) : this(startOffset, endOffset, type, symbol, typeArgumentsCount, valueArgumentsCount) {
+        require(symbol.descriptor === descriptor)
+    }
 
     constructor(
         startOffset: Int,
@@ -64,6 +76,8 @@ class IrDelegatingConstructorCallImpl(
         descriptor: ClassConstructorDescriptor,
         typeArgumentsCount: Int
     ) : this(startOffset, endOffset, type, symbol, descriptor, typeArgumentsCount, descriptor.valueParameters.size)
+
+    override val descriptor get() = symbol.descriptor
 
     override fun <R, D> accept(visitor: IrElementVisitor<R, D>, data: D): R {
         return visitor.visitDelegatingConstructorCall(this, data)

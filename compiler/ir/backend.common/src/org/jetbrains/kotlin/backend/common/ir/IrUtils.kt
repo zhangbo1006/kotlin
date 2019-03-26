@@ -90,7 +90,7 @@ fun IrClass.addSimpleDelegatingConstructor(
             listOf(
                 IrDelegatingConstructorCallImpl(
                     startOffset, endOffset, irBuiltIns.unitType,
-                    superConstructor.symbol, superConstructor.descriptorWithoutAccessCheck, ///
+                    superConstructor.symbol,
                     0, superConstructor.valueParameters.size
                 ).apply {
                     constructor.valueParameters.forEachIndexed { idx, parameter ->
