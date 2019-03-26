@@ -426,6 +426,11 @@ public class KotlinTestUtils {
         return normalizeFile(FileUtil.createTempDirectory(name, "", false));
     }
 
+    @NotNull
+    public static File tmpDirForReusableLibrary(String name) throws IOException {
+        return normalizeFile(FileUtil.createTempDirectory(new File(System.getProperty("java.io.tmpdir")), name, "", true));
+    }
+
     private static File normalizeFile(File file) throws IOException {
         // Get canonical file to be sure that it's the same as inside the compiler,
         // for example, on Windows, if a canonical path contains any space from FileUtil.createTempDirectory we will get
