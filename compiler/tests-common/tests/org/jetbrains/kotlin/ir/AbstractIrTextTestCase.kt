@@ -147,6 +147,7 @@ abstract class AbstractIrTextTestCase : AbstractIrGeneratorTestCase() {
             element.acceptChildrenVoid(this)
         }
 
+        @UseExperimental(DescriptorInIrDeclaration::class)
         override fun visitDeclaration(declaration: IrDeclaration) {
             if (declaration is IrSymbolOwner) {
                 declaration.symbol.checkBinding("decl", declaration)
@@ -156,28 +157,29 @@ abstract class AbstractIrTextTestCase : AbstractIrGeneratorTestCase() {
                 }
             }
 
-            val containingDeclarationDescriptor = declaration.descriptorWithoutAccessCheck.containingDeclaration
+            val containingDeclarationDescriptor = declaration.descriptor.containingDeclaration
             if (containingDeclarationDescriptor != null) {
                 val parent = declaration.parent
                 if (parent is IrDeclaration) {
-                    require(parent.descriptorWithoutAccessCheck == containingDeclarationDescriptor) {
-                        "In declaration ${declaration.descriptorWithoutAccessCheck}: " +
-                                "Mismatching parent descriptor (${parent.descriptorWithoutAccessCheck}) " +
+                    require(parent.descriptor == containingDeclarationDescriptor) {
+                        "In declaration ${declaration.descriptor}: " +
+                                "Mismatching parent descriptor (${parent.descriptor}) " +
                                 "and containing declaration descriptor ($containingDeclarationDescriptor)"
                     }
                 }
             }
         }
 
+        @UseExperimental(DescriptorInIrDeclaration::class)
         override fun visitFunction(declaration: IrFunction) {
             visitDeclaration(declaration)
 
-            val functionDescriptor = declaration.descriptorWithoutAccessCheck as FunctionDescriptor
+            val functionDescriptor = declaration.descriptor as FunctionDescriptor
 
             checkTypeParameters(functionDescriptor, declaration, functionDescriptor.typeParameters)
 
             val expectedDispatchReceiver = functionDescriptor.dispatchReceiverParameter
-            val actualDispatchReceiver = declaration.dispatchReceiverParameter?.descriptorWithoutAccessCheck
+            val actualDispatchReceiver = declaration.dispatchReceiverParameter?.descriptor
             require(expectedDispatchReceiver == actualDispatchReceiver) {
                 "$functionDescriptor: Dispatch receiver parameter mismatch: " +
                         "expected $expectedDispatchReceiver, actual $actualDispatchReceiver"
@@ -185,14 +187,14 @@ abstract class AbstractIrTextTestCase : AbstractIrGeneratorTestCase() {
             }
 
             val expectedExtensionReceiver = functionDescriptor.extensionReceiverParameter
-            val actualExtensionReceiver = declaration.extensionReceiverParameter?.descriptorWithoutAccessCheck
+            val actualExtensionReceiver = declaration.extensionReceiverParameter?.descriptor
             require(expectedExtensionReceiver == actualExtensionReceiver) {
                 "$functionDescriptor: Extension receiver parameter mismatch: " +
                         "expected $expectedExtensionReceiver, actual $actualExtensionReceiver"
 
             }
 
-            val declaredValueParameters = declaration.valueParameters.map { it.descriptorWithoutAccessCheck }
+            val declaredValueParameters = declaration.valueParameters.map { it.descriptor }
             val actualValueParameters = functionDescriptor.valueParameters
             if (declaredValueParameters.size != actualValueParameters.size) {
                 error("$functionDescriptor: Value parameters mismatch: $declaredValueParameters != $actualValueParameters")
@@ -245,18 +247,20 @@ abstract class AbstractIrTextTestCase : AbstractIrGeneratorTestCase() {
             }
         }
 
+        @UseExperimental(DescriptorInIrDeclaration::class)
         override fun visitClass(declaration: IrClass) {
             visitDeclaration(declaration)
 
-            checkTypeParameters(declaration.descriptorWithoutAccessCheck, declaration, declaration.descriptorWithoutAccessCheck.declaredTypeParameters)
+            checkTypeParameters(declaration.descriptor, declaration, declaration.descriptor.declaredTypeParameters)
         }
 
+        @UseExperimental(DescriptorInIrDeclaration::class)
         private fun checkTypeParameters(
             descriptor: DeclarationDescriptor,
             declaration: IrTypeParametersContainer,
             expectedTypeParameters: List<TypeParameterDescriptor>
         ) {
-            val declaredTypeParameters = declaration.typeParameters.map { it.descriptorWithoutAccessCheck }
+            val declaredTypeParameters = declaration.typeParameters.map { it.descriptor }
 
             if (declaredTypeParameters.size != expectedTypeParameters.size) {
                 error("$descriptor: Type parameters mismatch: $declaredTypeParameters != $expectedTypeParameters")
