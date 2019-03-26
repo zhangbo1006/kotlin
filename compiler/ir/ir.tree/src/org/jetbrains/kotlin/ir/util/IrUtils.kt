@@ -19,11 +19,8 @@ import org.jetbrains.kotlin.ir.types.classifierOrFail
 import org.jetbrains.kotlin.ir.types.isAny
 import org.jetbrains.kotlin.ir.types.toKotlinType
 import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
-import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.source.PsiSourceElement
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
@@ -301,12 +298,12 @@ tailrec fun IrElement.getPackageFragment(): IrPackageFragment? {
 
 fun IrAnnotationContainer.getAnnotation(name: FqName) =
     annotations.find {
-        it.symbol.owner.parentAsClass.getFqName() == name
+        it.symbol.owner.parentAsClass.fqNameWhenAvailable == name
     }
 
 fun IrAnnotationContainer.hasAnnotation(name: FqName) =
     annotations.any {
-        it.symbol.owner.parentAsClass.getFqName() == name
+        it.symbol.owner.parentAsClass.fqNameWhenAvailable == name
     }
 
 fun IrAnnotationContainer.hasAnnotation(symbol: IrClassSymbol) =
