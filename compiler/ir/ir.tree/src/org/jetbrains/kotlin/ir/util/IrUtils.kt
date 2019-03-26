@@ -460,11 +460,3 @@ val IrDeclaration.file: IrFile get() = parent.let {
         else -> TODO("Unexpected declaration parent")
     }
 }
-
-@Deprecated("...")
-val <D : DeclarationDescriptor> IrSymbolDeclaration<IrBindableSymbol<D, *>>.descriptorWithoutAccessCheck: D
-    get() = symbol.descriptor
-
-@Deprecated("...")
-val IrDeclaration.descriptorWithoutAccessCheck: DeclarationDescriptor
-    get() = descriptor
