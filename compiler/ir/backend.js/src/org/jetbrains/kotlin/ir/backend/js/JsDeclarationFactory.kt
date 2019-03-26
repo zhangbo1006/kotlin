@@ -23,7 +23,6 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrConstructorSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.util.defaultType
-import org.jetbrains.kotlin.ir.util.descriptorWithoutAccessCheck
 import org.jetbrains.kotlin.ir.util.dump
 import org.jetbrains.kotlin.name.Name
 import java.util.*
@@ -86,7 +85,8 @@ class JsDeclarationFactory : DeclarationFactory {
         val irClass = oldConstructor.parent as IrClass
         val outerThisType = (irClass.parent as IrClass).defaultType
 
-        val descriptor = WrappedClassConstructorDescriptor(oldConstructor.descriptorWithoutAccessCheck.annotations, oldConstructor.descriptorWithoutAccessCheck.source)
+        val oldDescriptor = oldConstructor.symbol.descriptor
+        val descriptor = WrappedClassConstructorDescriptor(oldDescriptor.annotations, oldDescriptor.source)
         val symbol = IrConstructorSymbolImpl(descriptor)
 
         val newConstructor = IrConstructorImpl(
