@@ -845,6 +845,7 @@ open class WrappedPropertyDescriptor(
     override fun <V : Any?> getUserData(key: CallableDescriptor.UserDataKey<V>?): V? = null
 }
 
+@UseExperimental(DescriptorInIrDeclaration::class)
 open class WrappedFieldDescriptor(
     annotations: Annotations = Annotations.EMPTY,
     private val sourceElement: SourceElement = SourceElement.NO_SOURCE
