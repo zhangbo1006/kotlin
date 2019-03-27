@@ -3,7 +3,7 @@
  * that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.idea.core.script.dependencies
+package org.jetbrains.kotlin.idea.core.script.dependencies.loaders
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile

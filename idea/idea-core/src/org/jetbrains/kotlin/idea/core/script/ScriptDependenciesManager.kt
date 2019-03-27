@@ -23,7 +23,7 @@ import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.io.URLUtil
 import org.jetbrains.annotations.TestOnly
-import org.jetbrains.kotlin.idea.core.script.dependencies.SyncScriptDependenciesLoader
+import org.jetbrains.kotlin.idea.core.script.dependencies.loaders.SyncScriptDependenciesLoader
 import org.jetbrains.kotlin.script.ScriptDependenciesProvider
 import java.io.File
 import kotlin.script.experimental.dependencies.ScriptDependencies
