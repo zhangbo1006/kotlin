@@ -33,7 +33,11 @@ import com.intellij.psi.PsiManager
 import com.intellij.util.Alarm
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.kotlin.idea.KotlinFileType
-import org.jetbrains.kotlin.idea.core.script.dependencies.loaders.*
+import org.jetbrains.kotlin.idea.core.script.definitions.ScriptDefinitionsManager
+import org.jetbrains.kotlin.idea.core.script.dependencies.loaders.AsyncScriptDependenciesLoader
+import org.jetbrains.kotlin.idea.core.script.dependencies.loaders.FromFileAttributeScriptDependenciesLoader
+import org.jetbrains.kotlin.idea.core.script.dependencies.loaders.OutsiderFileDependenciesLoader
+import org.jetbrains.kotlin.idea.core.script.dependencies.loaders.SyncScriptDependenciesLoader
 import org.jetbrains.kotlin.idea.util.ProjectRootsUtil
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.NotNullableUserDataProperty

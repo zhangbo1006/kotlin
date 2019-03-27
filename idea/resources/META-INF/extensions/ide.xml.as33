@@ -69,7 +69,7 @@
 
         <scriptDefinitionContributor id="StandardScriptDefinitionContributor"
                                  order="last"
-                                 implementation="org.jetbrains.kotlin.idea.core.script.StandardScriptDefinitionContributor"/>
+                                 implementation="org.jetbrains.kotlin.idea.core.script.definitions.StandardScriptDefinitionContributor"/>
 
         <scriptDefinitionContributor id="ConsoleScriptDefinitionContributor"
                                  implementation="org.jetbrains.kotlin.console.ConsoleScriptDefinitionContributor"/>
