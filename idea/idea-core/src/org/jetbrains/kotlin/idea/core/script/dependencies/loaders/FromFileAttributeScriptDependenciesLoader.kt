@@ -7,7 +7,7 @@ package org.jetbrains.kotlin.idea.core.script.dependencies.loaders
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import org.jetbrains.kotlin.idea.core.script.scriptDependencies
+import org.jetbrains.kotlin.idea.core.script.dependencies.scriptDependencies
 
 class FromFileAttributeScriptDependenciesLoader(project: Project) : ScriptDependenciesLoader(project) {
 

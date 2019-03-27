@@ -7,7 +7,7 @@ package org.jetbrains.kotlin.idea.core.script.dependencies.loaders
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesUpdater
+import org.jetbrains.kotlin.idea.core.script.dependencies.ScriptDependenciesUpdater
 import org.jetbrains.kotlin.scripting.shared.definitions.findScriptDefinition
 
 class SyncScriptDependenciesLoader internal constructor(project: Project) : ScriptDependenciesLoader(project) {
