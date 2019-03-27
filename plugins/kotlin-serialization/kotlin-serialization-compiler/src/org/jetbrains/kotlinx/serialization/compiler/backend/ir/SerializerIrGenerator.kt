@@ -167,7 +167,7 @@ class SerializerIrGenerator(val irClass: IrClass, override val compilerContext: 
 
     override fun generateChildSerializersGetter(function: FunctionDescriptor) = irClass.contributeFunction(function) { irFun ->
         val allSerializers = serializableProperties.map { requireNotNull(
-                serializerTower(this@SerializerIrGenerator, it)) { "Property ${it.name} must have a serializer" }
+                serializerTower(this@SerializerIrGenerator, irFun.dispatchReceiverParameter!!, it)) { "Property ${it.name} must have a serializer" }
         }
 
         val kSer = serializableDescriptor.module.getClassFromSerializationPackage(KSERIALIZER_NAME.identifier)
@@ -222,6 +222,7 @@ class SerializerIrGenerator(val irClass: IrClass, override val compilerContext: 
             val sti = getSerialTypeInfo(property)
             val innerSerial = serializerInstance(
                 this@SerializerIrGenerator,
+                saveFunc.dispatchReceiverParameter!!,
                 serializableDescriptor,
                 sti.serializer,
                 property.module,
@@ -351,6 +352,7 @@ class SerializerIrGenerator(val irClass: IrClass, override val compilerContext: 
                                 val sti = getSerialTypeInfo(property)
                                 val innerSerial = serializerInstance(
                                     this@SerializerIrGenerator,
+                                    loadFunc.dispatchReceiverParameter!!,
                                     serializableDescriptor,
                                     sti.serializer,
                                     property.module,

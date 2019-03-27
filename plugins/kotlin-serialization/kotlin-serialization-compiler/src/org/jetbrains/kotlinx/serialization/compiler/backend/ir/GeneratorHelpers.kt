@@ -69,7 +69,7 @@ interface IrBuilderExtension {
         ) else compilerContext.externalSymbols.referenceSimpleFunction(descriptor).owner
         f.parent = this
         f.returnType = descriptor.returnType!!.toIrType()
-        if (!fromStubs) f.createParameterDeclarations(this.thisReceiver)
+        if (!fromStubs) f.createParameterDeclarations(this.thisReceiver!!)
         f.body = compilerContext.createIrBuilder(f.symbol).at(this).irBlockBody(this.startOffset, this.endOffset) { bodyGen(f) }
         this.addMember(f)
     }
@@ -87,7 +87,7 @@ interface IrBuilderExtension {
         ) else compilerContext.externalSymbols.referenceConstructor(descriptor).owner
         c.parent = this
         c.returnType = descriptor.returnType.toIrType()
-        if (!fromStubs) c.createParameterDeclarations()
+        if (!fromStubs) c.createParameterDeclarations(receiver = null)
         c.body = compilerContext.createIrBuilder(c.symbol).at(this).irBlockBody(this.startOffset, this.endOffset) { bodyGen(c) }
         this.addMember(c)
     }
@@ -287,7 +287,7 @@ interface IrBuilderExtension {
         val endOffset = irAccessor.endOffset
         val irBody = IrBlockBodyImpl(startOffset, endOffset)
 
-        val receiver = generateReceiverExpressionForFieldAccess(ownerSymbol, property)
+        val receiver = generateReceiverExpressionForFieldAccess(irAccessor.dispatchReceiverParameter!!.symbol, property)
 
         irBody.statements.add(
             IrReturnImpl(
@@ -315,7 +315,7 @@ interface IrBuilderExtension {
         val endOffset = irAccessor.endOffset
         val irBody = IrBlockBodyImpl(startOffset, endOffset)
 
-        val receiver = generateReceiverExpressionForFieldAccess(ownerSymbol, property)
+        val receiver = generateReceiverExpressionForFieldAccess(irAccessor.dispatchReceiverParameter!!.symbol, property)
 
         val irValueParameter = irAccessor.valueParameters.single()
         irBody.statements.add(
@@ -347,18 +347,18 @@ interface IrBuilderExtension {
     }
 
     // todo: delet zis
-    fun IrFunction.createParameterDeclarations(receiver: IrValueParameter? = null) {
-        fun ParameterDescriptor.irValueParameter() = IrValueParameterImpl(
+    fun IrFunction.createParameterDeclarations(receiver: IrValueParameter?) {
+        fun ParameterDescriptor.irValueParameter(possibleReceiver: IrValueParameter? = null) = IrValueParameterImpl(
             this@createParameterDeclarations.startOffset, this@createParameterDeclarations.endOffset,
             SERIALIZABLE_PLUGIN_ORIGIN,
             this,
-            type.toIrType(),
-            (this as? ValueParameterDescriptor)?.varargElementType?.toIrType()
+            possibleReceiver?.type ?: type.toIrType(),
+            null
         ).also {
             it.parent = this@createParameterDeclarations
         }
 
-        dispatchReceiverParameter = receiver ?: (descriptor.dispatchReceiverParameter?.irValueParameter())
+        dispatchReceiverParameter = descriptor.dispatchReceiverParameter?.irValueParameter(receiver)
         extensionReceiverParameter = descriptor.extensionReceiverParameter?.irValueParameter()
 
         assert(valueParameters.isEmpty())
@@ -424,7 +424,7 @@ interface IrBuilderExtension {
     }
 
     // Does not use sti and therefore does not perform encoder calls optimization
-    fun IrBuilderWithScope.serializerTower(generator: SerializerIrGenerator, property: SerializableProperty): IrExpression? {
+    fun IrBuilderWithScope.serializerTower(generator: SerializerIrGenerator, dispatchReceiverParameter: IrValueParameter, property: SerializableProperty): IrExpression? {
         val nullableSerClass =
                 compilerContext.externalSymbols.referenceClass(property.module.getClassFromInternalSerializationPackage(SpecialBuiltins.nullableSerializer))
         val serializer =
@@ -435,7 +435,7 @@ interface IrBuilderExtension {
                                 property.descriptor.annotations,
                                 property.descriptor.findPsi()
                         ) else null
-        return serializerInstance(generator, generator.serializableDescriptor, serializer, property.module, property.type, property.genericIndex)
+        return serializerInstance(generator, dispatchReceiverParameter, generator.serializableDescriptor, serializer, property.module, property.type, property.genericIndex)
                 ?.let { expr -> wrapWithNullableSerializerIfNeeded(property.type, expr, nullableSerClass) }
     }
 
@@ -448,6 +448,7 @@ interface IrBuilderExtension {
 
     fun IrBuilderWithScope.serializerInstance(
         enclosingGenerator: SerializerIrGenerator,
+        dispatchReceiverParameter: IrValueParameter,
         serializableDescriptor: ClassDescriptor,
         serializerClassOriginal: ClassDescriptor?,
         module: ModuleDescriptor,
@@ -460,7 +461,7 @@ interface IrBuilderExtension {
             if (genericIndex == null) return null
             val thiz = enclosingGenerator.irClass.thisReceiver!!
             val prop = enclosingGenerator.localSerializersFieldsDescriptors[genericIndex]
-            return irGetField(irGet(thiz), compilerContext.localSymbolTable.referenceField(prop).owner)
+            return irGetField(irGet(dispatchReceiverParameter), compilerContext.localSymbolTable.referenceField(prop).owner)
         }
         if (serializerClassOriginal.kind == ClassKind.OBJECT) {
             return irGetObject(serializerClassOriginal)
@@ -483,7 +484,7 @@ interface IrBuilderExtension {
                 }
                 else -> kType.arguments.map {
                     val argSer = enclosingGenerator.findTypeSerializerOrContext(module, it.type, sourceElement = serializerClassOriginal.findPsi())
-                    val expr = serializerInstance(enclosingGenerator, serializableDescriptor, argSer, module, it.type, it.type.genericIndex)
+                    val expr = serializerInstance(enclosingGenerator, dispatchReceiverParameter, serializableDescriptor, argSer, module, it.type, it.type.genericIndex)
                         ?: return null
                     wrapWithNullableSerializerIfNeeded(it.type, expr, nullableSerClass)
                 }
