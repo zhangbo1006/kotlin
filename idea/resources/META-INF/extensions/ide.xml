@@ -65,15 +65,15 @@
 
         <scriptDefinitionContributor
             id="ScriptTemplatesFromCompilerSettingsProvider"
-            implementation="org.jetbrains.kotlin.idea.script.ScriptTemplatesFromCompilerSettingsProvider"/>
+            implementation="org.jetbrains.kotlin.idea.core.script.definitions.ScriptTemplatesFromCompilerSettingsProvider"/>
 
         <scriptDefinitionContributor
             id="BridgeScriptDefinitionsContributor"
-            implementation="org.jetbrains.kotlin.idea.script.BridgeScriptDefinitionsContributor"/>
+            implementation="org.jetbrains.kotlin.idea.core.script.definitions.BridgeScriptDefinitionsContributor"/>
 
         <scriptDefinitionContributor
             id="ScriptTemplatesFromDependenciesProvider"
-            implementation="org.jetbrains.kotlin.idea.script.ScriptTemplatesFromDependenciesProvider"/>
+            implementation="org.jetbrains.kotlin.idea.core.script.definitions.ScriptTemplatesFromDependenciesProvider"/>
 
         <scriptDefinitionContributor id="StandardScriptDefinitionContributor"
                                  order="last"

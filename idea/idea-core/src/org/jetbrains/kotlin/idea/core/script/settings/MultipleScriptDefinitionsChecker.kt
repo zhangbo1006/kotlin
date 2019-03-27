@@ -3,7 +3,7 @@
  * that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.idea.script.configuration
+package org.jetbrains.kotlin.idea.core.script.settings
 
 import com.intellij.ide.actions.ShowSettingsUtilImpl
 import com.intellij.openapi.fileEditor.FileEditor
@@ -20,7 +20,6 @@ import com.intellij.ui.HyperlinkLabel
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.core.script.definitions.ScriptDefinitionsManager
 import org.jetbrains.kotlin.idea.core.script.definitions.StandardIdeScriptDefinition
-import org.jetbrains.kotlin.idea.core.script.settings.KotlinScriptingSettings
 import org.jetbrains.kotlin.parsing.KotlinParserDefinition
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.script.KotlinScriptDefinition

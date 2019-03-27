@@ -396,7 +396,7 @@
     <lang.commenter language="kotlin" implementationClass="org.jetbrains.kotlin.idea.KotlinCommenter"/>
     <lang.psiStructureViewFactory language="kotlin" implementationClass="org.jetbrains.kotlin.idea.structureView.KotlinStructureViewFactory"/>
     <structureViewBuilder order="first" key="CLASS" factoryClass="org.jetbrains.kotlin.idea.structureView.KtClsStructureViewBuilderProvider"/>
-    <editorNotificationProvider implementation="org.jetbrains.kotlin.idea.script.configuration.MultipleScriptDefinitionsChecker"/>
+    <editorNotificationProvider implementation="org.jetbrains.kotlin.idea.core.script.configuration.MultipleScriptDefinitionsChecker"/>
     <editor.linePainter order="first" implementation="org.jetbrains.kotlin.idea.parameterInfo.custom.ReturnHintLinePainter"/>
 
     <lang.foldingBuilder language="kotlin" implementationClass="org.jetbrains.kotlin.idea.KotlinFoldingBuilder"/>
@@ -476,7 +476,7 @@
                              instance="org.jetbrains.kotlin.idea.configuration.KotlinUpdatesSettingsConfigurable"/>
 
     <projectConfigurable groupId="language" displayName="Kotlin Scripting" id="preferences.language.Kotlin.scripting"
-                         instance="org.jetbrains.kotlin.idea.script.configuration.KotlinScriptingSettingsConfigurable"
+                         instance="org.jetbrains.kotlin.idea.core.script.configuration.KotlinScriptingSettingsConfigurable"
                          parentId="preferences.language.Kotlin"/>
 
     <qualifiedNameProvider implementation="org.jetbrains.kotlin.idea.actions.KotlinQualifiedNameProvider"/>

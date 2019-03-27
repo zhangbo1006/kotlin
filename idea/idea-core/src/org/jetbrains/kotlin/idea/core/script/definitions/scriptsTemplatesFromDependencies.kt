@@ -1,11 +1,12 @@
 /*
- * Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
+ * Copyright 2010-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
  * that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.idea.script
+package org.jetbrains.kotlin.idea.core.script.definitions
 
 import com.intellij.ProjectTopics
+import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootEvent
 import com.intellij.openapi.roots.ModuleRootListener
@@ -13,7 +14,6 @@ import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import org.jetbrains.kotlin.idea.core.script.loadDefinitionsFromTemplates
-import org.jetbrains.kotlin.idea.util.projectStructure.allModules
 import org.jetbrains.kotlin.script.KotlinScriptDefinition
 import java.io.File
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -86,7 +86,7 @@ private fun scriptDefinitionsFromDependencies(project: Project): TemplatesWithCp
     }
 
     // processing source roots from the same project first since the resources are copied to the classes roots only on compilation
-    project.allModules().forEach { module ->
+    ModuleManager.getInstance(project).modules.forEach { module ->
         OrderEnumerator.orderEntries(module).withoutDepModules().withoutLibraries().withoutSdk().sourceRoots.forEach { root ->
             if (addTemplatesFromRoot(root)) {
                 classpath.addAll(OrderEnumerator.orderEntries(module).withoutSdk().classesRoots.mapNotNull {
@@ -96,7 +96,7 @@ private fun scriptDefinitionsFromDependencies(project: Project): TemplatesWithCp
         }
     }
 
-    project.allModules().forEach { module ->
+    ModuleManager.getInstance(project).modules.forEach { module ->
         // assuming that all libraries are placed into classes roots
         // TODO: extract exact library dependencies instead of putting all module dependencies into classpath
         OrderEnumerator.orderEntries(module).withoutDepModules().withoutSdk().classesRoots.forEach { root ->
