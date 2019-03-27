@@ -16,27 +16,16 @@
 
 package org.jetbrains.kotlin.idea.core.script
 
-import com.intellij.execution.console.IdeConsoleRootType
-import com.intellij.ide.scratch.ScratchFileService
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.extensions.Extensions
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.projectRoots.JavaSdk
-import com.intellij.openapi.projectRoots.ProjectJdkTable
-import com.intellij.openapi.projectRoots.ex.PathUtilEx
-import com.intellij.openapi.roots.ProjectRootManager
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.EditorNotifications
 import com.intellij.util.containers.SLRUMap
 import org.jetbrains.kotlin.idea.KotlinFileType
-import org.jetbrains.kotlin.idea.caches.project.SdkInfo
-import org.jetbrains.kotlin.idea.caches.project.getScriptRelatedModuleInfo
 import org.jetbrains.kotlin.idea.core.script.settings.KotlinScriptingSettings
 import org.jetbrains.kotlin.script.KotlinScriptDefinition
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromAnnotatedTemplate
@@ -44,7 +33,6 @@ import org.jetbrains.kotlin.script.ScriptDefinitionProvider
 import org.jetbrains.kotlin.script.ScriptTemplatesProvider
 import org.jetbrains.kotlin.scripting.shared.definitions.KotlinScriptDefinitionAdapterFromNewAPI
 import org.jetbrains.kotlin.scripting.shared.definitions.LazyScriptDefinitionProvider
-import org.jetbrains.kotlin.utils.PathUtil
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.jetbrains.kotlin.utils.addToStdlib.flattenTo
 import java.io.File
@@ -52,18 +40,12 @@ import java.net.URLClassLoader
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
 import kotlin.script.dependencies.Environment
-import kotlin.script.dependencies.ScriptContents
 import kotlin.script.experimental.api.KotlinType
-import kotlin.script.experimental.dependencies.DependenciesResolver
-import kotlin.script.experimental.dependencies.ScriptDependencies
-import kotlin.script.experimental.dependencies.asSuccess
 import kotlin.script.experimental.host.ScriptingHostConfiguration
 import kotlin.script.experimental.host.configurationDependencies
 import kotlin.script.experimental.host.createCompilationConfigurationFromTemplate
 import kotlin.script.experimental.jvm.JvmDependency
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
-import kotlin.script.experimental.jvm.util.scriptCompilationClasspathFromContextOrStdlib
-import kotlin.script.templates.standard.ScriptTemplateWithArgs
 
 class ScriptDefinitionsManager(private val project: Project) : LazyScriptDefinitionProvider() {
     private var definitionsByContributor = mutableMapOf<ScriptDefinitionContributor, List<KotlinScriptDefinition>>()
@@ -274,69 +256,5 @@ fun loadDefinitionsFromTemplates(
             LOG.error("[kts] cannot load script definition class $templateClassName", e)
             null
         }
-    }
-}
-
-interface ScriptDefinitionContributor {
-    val id: String
-
-    fun getDefinitions(): List<KotlinScriptDefinition>
-    fun isReady() = true
-
-    companion object {
-        val EP_NAME: ExtensionPointName<ScriptDefinitionContributor> =
-            ExtensionPointName.create<ScriptDefinitionContributor>("org.jetbrains.kotlin.scriptDefinitionContributor")
-
-        inline fun <reified T> find(project: Project) =
-            Extensions.getArea(project).getExtensionPoint(ScriptDefinitionContributor.EP_NAME).extensions.filterIsInstance<T>().firstOrNull()
-    }
-
-}
-
-class StandardScriptDefinitionContributor(project: Project) : ScriptDefinitionContributor {
-    private val standardIdeScriptDefinition = StandardIdeScriptDefinition(project)
-
-    override fun getDefinitions() = listOf(standardIdeScriptDefinition)
-
-    override val id: String = "StandardKotlinScript"
-}
-
-
-class StandardIdeScriptDefinition internal constructor(project: Project) : KotlinScriptDefinition(ScriptTemplateWithArgs::class) {
-    override val dependencyResolver = BundledKotlinScriptDependenciesResolver(project)
-}
-
-class BundledKotlinScriptDependenciesResolver(private val project: Project) : DependenciesResolver {
-    override fun resolve(
-        scriptContents: ScriptContents,
-        environment: Environment
-    ): DependenciesResolver.ResolveResult {
-        val virtualFile = scriptContents.file?.let { VfsUtil.findFileByIoFile(it, true) }
-
-        val javaHome = getScriptSDK(project, virtualFile)
-
-        var classpath = with(PathUtil.kotlinPathsForIdeaPlugin) {
-            listOf(reflectPath, stdlibPath, scriptRuntimePath)
-        }
-        if (ScratchFileService.getInstance().getRootType(virtualFile) is IdeConsoleRootType) {
-            classpath = scriptCompilationClasspathFromContextOrStdlib(wholeClasspath = true) + classpath
-        }
-
-        return ScriptDependencies(javaHome = javaHome?.let(::File), classpath = classpath).asSuccess()
-    }
-
-    private fun getScriptSDK(project: Project, virtualFile: VirtualFile?): String? {
-        if (virtualFile != null) {
-            val dependentModuleSourceInfo = getScriptRelatedModuleInfo(project, virtualFile)
-            val sdk = dependentModuleSourceInfo?.dependencies()?.filterIsInstance<SdkInfo>()?.singleOrNull()?.sdk
-            if (sdk != null) {
-                return sdk.homePath
-            }
-        }
-
-        val jdk = ProjectRootManager.getInstance(project).projectSdk
-            ?: ProjectJdkTable.getInstance().allJdks.firstOrNull { sdk -> sdk.sdkType is JavaSdk }
-            ?: PathUtilEx.getAnyJdk(project)
-        return jdk?.homePath
     }
 }
