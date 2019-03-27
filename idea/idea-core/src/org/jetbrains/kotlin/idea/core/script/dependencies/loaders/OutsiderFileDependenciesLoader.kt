@@ -10,7 +10,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesManager
 import org.jetbrains.kotlin.idea.highlighter.OutsidersPsiFileSupportUtils
 import org.jetbrains.kotlin.idea.highlighter.OutsidersPsiFileSupportWrapper
-import kotlin.script.experimental.dependencies.ScriptDependencies
 
 class OutsiderFileDependenciesLoader(project: Project) : ScriptDependenciesLoader(project) {
     override fun isApplicable(file: VirtualFile): Boolean {
@@ -19,15 +18,7 @@ class OutsiderFileDependenciesLoader(project: Project) : ScriptDependenciesLoade
 
     override fun loadDependencies(file: VirtualFile) {
         val fileOrigin = OutsidersPsiFileSupportUtils.getOutsiderFileOrigin(project, file) ?: return
-        saveToCache(file, ScriptDependenciesManager.getInstance(project).getScriptDependencies(fileOrigin))
-    }
-
-    private fun saveToCache(file: VirtualFile, dependencies: ScriptDependencies) {
-        val rootsChanged = cache.hasNotCachedRoots(dependencies)
-        cache.save(file, dependencies)
-        if (rootsChanged) {
-            shouldNotifyRootsChanged = true
-        }
+        saveDependenciesToCache(file, ScriptDependenciesManager.getInstance(project).getScriptDependencies(fileOrigin))
     }
 
     override fun shouldShowNotification(): Boolean = false

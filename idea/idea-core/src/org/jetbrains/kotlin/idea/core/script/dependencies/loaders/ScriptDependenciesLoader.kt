@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
+ * Copyright 2010-2019 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
  * that can be found in the license/LICENSE.txt file.
  */
 
@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.script.ScriptContentLoader
 import org.jetbrains.kotlin.script.ScriptReportSink
 import org.jetbrains.kotlin.script.adjustByDefinition
 import kotlin.script.experimental.dependencies.DependenciesResolver
+import kotlin.script.experimental.dependencies.ScriptDependencies
 
 abstract class ScriptDependenciesLoader(protected val project: Project) {
 
@@ -86,7 +87,12 @@ abstract class ScriptDependenciesLoader(protected val project: Project) {
         }
 
         val dependencies = result.dependencies?.adjustByDefinition(scriptDef) ?: return
+        saveDependenciesToCache(file, dependencies)
+    }
+
+    protected fun saveDependenciesToCache(file: VirtualFile, dependencies: ScriptDependencies) {
         val rootsChanged = cache.hasNotCachedRoots(dependencies)
+
         if (cache.save(file, dependencies)) {
             file.scriptDependencies = dependencies
         }
