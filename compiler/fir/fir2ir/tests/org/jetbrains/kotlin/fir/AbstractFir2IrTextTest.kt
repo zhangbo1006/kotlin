@@ -25,7 +25,7 @@ abstract class AbstractFir2IrTextTest : AbstractIrTextTestCase() {
 
         val scope = GlobalSearchScope.filesScope(project, psiFiles.map { it.virtualFile })
             .uniteWith(TopDownAnalyzerFacadeForJVM.AllJavaSourcesInProjectScope(project))
-        val session = createSession(project, scope)
+        val session = createSession(myEnvironment, scope)
 
         val builder = RawFirBuilder(session, stubMode = false)
 
