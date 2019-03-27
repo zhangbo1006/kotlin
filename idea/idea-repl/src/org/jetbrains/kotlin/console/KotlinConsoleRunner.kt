@@ -62,7 +62,7 @@ import org.jetbrains.kotlin.idea.caches.project.productionSourceInfo
 import org.jetbrains.kotlin.idea.caches.project.testSourceInfo
 import org.jetbrains.kotlin.idea.caches.resolve.unsafeResolveToDescriptor
 import org.jetbrains.kotlin.idea.core.script.ScriptDefinitionContributor
-import org.jetbrains.kotlin.idea.core.script.ScriptDefinitionsManager
+import org.jetbrains.kotlin.idea.core.script.definitions.ScriptDefinitionsManager
 import org.jetbrains.kotlin.idea.project.KOTLIN_CONSOLE_KEY
 import org.jetbrains.kotlin.idea.util.application.runReadAction
 import org.jetbrains.kotlin.name.Name
