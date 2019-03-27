@@ -66,7 +66,7 @@ public class TargetPlatformDetector {
                 for (IdePlatform platform : IdePlatformKind.Companion.getAll_PLATFORMS()) {
                     TargetPlatform compilerPlatform = platform.getKind().getCompilerPlatform();
                     if (compilerPlatform.getPlatformName().equals(platformNameFromScriptDefinition)) {
-                        return compilerPlatform;
+                    //    return compilerPlatform;
                     }
                 }
             }
