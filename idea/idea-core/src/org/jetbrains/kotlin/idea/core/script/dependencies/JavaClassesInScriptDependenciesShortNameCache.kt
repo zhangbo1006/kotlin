@@ -26,7 +26,6 @@ import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.psi.stubs.StubIndex
 import com.intellij.util.Processor
 import com.intellij.util.containers.HashSet
-import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesManager
 
 // Allow searching java classes in jars in script dependencies, this is needed for stuff like completion and autoimport
 class JavaClassesInScriptDependenciesShortNameCache(private val project: Project) : PsiShortNamesCache() {

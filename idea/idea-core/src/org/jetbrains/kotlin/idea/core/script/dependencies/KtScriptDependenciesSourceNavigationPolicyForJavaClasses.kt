@@ -21,7 +21,6 @@ import com.intellij.psi.PsiClassOwner
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.compiled.*
 import com.intellij.psi.util.MethodSignatureUtil
-import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesManager
 
 class KtScriptDependenciesSourceNavigationPolicyForJavaClasses : ClsCustomNavigationPolicyEx() {
     override fun getNavigationElement(clsClass: ClsClassImpl): PsiClass? {

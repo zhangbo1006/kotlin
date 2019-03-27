@@ -7,7 +7,7 @@ package org.jetbrains.kotlin.idea.core.script.dependencies.loaders
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesManager
+import org.jetbrains.kotlin.idea.core.script.dependencies.ScriptDependenciesManager
 import org.jetbrains.kotlin.idea.highlighter.OutsidersPsiFileSupportUtils
 import org.jetbrains.kotlin.idea.highlighter.OutsidersPsiFileSupportWrapper
 

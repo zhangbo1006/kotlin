@@ -15,7 +15,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.NonClasspathDirectoriesScope
 import com.intellij.util.containers.SLRUCache
 import org.jetbrains.kotlin.idea.core.script.dependencies.ScriptDependenciesCache.Companion.MAX_SCRIPTS_CACHED
-import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesManager
+import org.jetbrains.kotlin.idea.core.script.dependencies.ScriptDependenciesManager
 import org.jetbrains.kotlin.idea.core.script.dependencies.ScriptRelatedModulesProvider
 import org.jetbrains.kotlin.idea.stubindex.KotlinSourceFilterScope
 import org.jetbrains.kotlin.name.Name
