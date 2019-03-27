@@ -3,7 +3,7 @@ import com.moowork.gradle.node.npm.NpmTask
 import org.gradle.internal.os.OperatingSystem
 
 tasks.withType<Test> {
-    maxParallelForks = Math.max(Runtime.getRuntime().availableProcessors(), 1)
+    maxParallelForks = Math.max(Runtime.getRuntime().availableProcessors()*3/4, 1)
 }
 
 plugins {
