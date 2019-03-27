@@ -74,7 +74,7 @@ class ScriptDependenciesCache(private val project: Project) {
 
         val kotlinScriptDependenciesClassFinder =
             Extensions.getArea(project).getExtensionPoint(PsiElementFinder.EP_NAME).extensions
-                .filterIsInstance<KotlinScriptDependenciesClassFinder>()
+                .filterIsInstance<KtScriptDependenciesClassFinder>()
                 .single()
 
         kotlinScriptDependenciesClassFinder.clearCache()

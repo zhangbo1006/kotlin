@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.idea.core.script.definitions.StandardIdeScriptDefini
 import org.jetbrains.kotlin.script.KotlinScriptDefinitionFromAnnotatedTemplate
 import org.jetbrains.kotlin.scripting.shared.definitions.findScriptDefinition
 
-class KotlinScriptResolveScopeProvider : ResolveScopeProvider() {
+class KtScriptResolveScopeProvider : ResolveScopeProvider() {
     companion object {
         // Used in LivePlugin
         val USE_NULL_RESOLVE_SCOPE = "USE_NULL_RESOLVE_SCOPE"

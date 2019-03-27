@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.idea.caches.project.ScriptDependenciesInfo
 import org.jetbrains.kotlin.idea.caches.project.ScriptDependenciesSourceInfo
 import org.jetbrains.kotlin.idea.caches.project.getModuleInfoByVirtualFile
 
-class ScriptDependenciesResolveScopeProvider : ResolveScopeProvider() {
+class KtScriptDependenciesResolveScopeProvider : ResolveScopeProvider() {
     override fun getResolveScope(file: VirtualFile, project: Project): GlobalSearchScope? {
         val moduleInfo = getModuleInfoByVirtualFile(project, file) ?: return null
         val scriptDependenciesModuleInfo = (moduleInfo as? ScriptDependenciesInfo)

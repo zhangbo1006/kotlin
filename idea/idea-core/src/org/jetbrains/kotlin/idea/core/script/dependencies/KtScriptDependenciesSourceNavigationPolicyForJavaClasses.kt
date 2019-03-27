@@ -23,7 +23,7 @@ import com.intellij.psi.impl.compiled.*
 import com.intellij.psi.util.MethodSignatureUtil
 import org.jetbrains.kotlin.idea.core.script.ScriptDependenciesManager
 
-class ScriptDependencySourceNavigationPolicyForJavaClasses : ClsCustomNavigationPolicyEx() {
+class KtScriptDependenciesSourceNavigationPolicyForJavaClasses : ClsCustomNavigationPolicyEx() {
     override fun getNavigationElement(clsClass: ClsClassImpl): PsiClass? {
         val containingClass = clsClass.containingClass as? ClsClassImpl
         if (containingClass != null) {

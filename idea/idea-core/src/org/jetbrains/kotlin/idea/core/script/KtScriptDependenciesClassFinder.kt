@@ -33,8 +33,8 @@ import org.jetbrains.kotlin.resolve.jvm.KotlinSafeClassFinder
 
 
 
-class KotlinScriptDependenciesClassFinder(project: Project,
-                                          private val scriptDependenciesManager: ScriptDependenciesManager
+class KtScriptDependenciesClassFinder(project: Project,
+                                      private val scriptDependenciesManager: ScriptDependenciesManager
 ) : NonClasspathClassFinder(project), KotlinSafeClassFinder {
 
     private val myCaches by lazy {
