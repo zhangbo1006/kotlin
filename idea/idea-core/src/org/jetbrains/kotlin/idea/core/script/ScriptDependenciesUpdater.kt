@@ -36,6 +36,7 @@ import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.core.script.dependencies.AsyncScriptDependenciesLoader
 import org.jetbrains.kotlin.idea.core.script.dependencies.FromFileAttributeScriptDependenciesLoader
 import org.jetbrains.kotlin.idea.core.script.dependencies.SyncScriptDependenciesLoader
+import org.jetbrains.kotlin.idea.highlighter.OutsidersPsiFileSupportUtils
 import org.jetbrains.kotlin.idea.util.ProjectRootsUtil
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.NotNullableUserDataProperty
@@ -63,6 +64,8 @@ class ScriptDependenciesUpdater(
 
     fun getCurrentDependencies(file: VirtualFile): ScriptDependencies {
         cache[file]?.let { return it }
+
+        getDependenciesForOriginalFileIfPossible(file)?.let { return it }
 
         val scriptDef = file.findScriptDefinition(project) ?: return ScriptDependencies.Empty
 
@@ -97,6 +100,11 @@ class ScriptDependenciesUpdater(
             else -> syncLoader
         }
         loader.updateDependencies(file, scriptDef)
+    }
+
+    private fun getDependenciesForOriginalFileIfPossible(file: VirtualFile): ScriptDependencies? {
+        val fileOrigin = OutsidersPsiFileSupportUtils.getOutsiderFileOrigin(project, file)
+        return fileOrigin?.let { getCurrentDependencies(fileOrigin) }
     }
 
     private fun makeRootsChangeIfNeeded() {
