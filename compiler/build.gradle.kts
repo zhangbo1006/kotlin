@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile
 
 tasks.withType<Test> {
-    maxParallelForks = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1)
+    maxParallelForks = Math.max(Runtime.getRuntime().availableProcessors(), 1)
 }
 
 plugins {
