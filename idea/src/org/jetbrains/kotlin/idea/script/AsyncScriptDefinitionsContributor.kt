@@ -42,12 +42,7 @@ abstract class AsyncScriptDefinitionsContributor(protected val project: Project)
             }
             return@write null
         }
-        // TODO: resolve actual reason for the exception below
-        try {
-            backgroundTask?.queue()
-        } catch (e: IllegalStateException) {
-            if (e.message?.contains("Calling invokeAndWait from read-action leads to possible deadlock") == false) throw e
-        }
+        backgroundTask?.queue()
     }
 
     protected abstract fun loadScriptDefinitions(previous: List<KotlinScriptDefinition>?): List<KotlinScriptDefinition>
