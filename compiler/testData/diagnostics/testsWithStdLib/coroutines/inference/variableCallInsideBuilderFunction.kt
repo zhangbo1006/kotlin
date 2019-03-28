@@ -13,6 +13,6 @@ fun <E> produce(@BuilderInference block: ProducerScope<E>.() -> Unit): ProducerS
 
 fun <K> filter(e: K, predicate: (K) -> Boolean) =
     produce {
-        <!DEBUG_INFO_MISSING_UNRESOLVED!>predicate(e)<!>
+        predicate(e)
         yield(42)
     }

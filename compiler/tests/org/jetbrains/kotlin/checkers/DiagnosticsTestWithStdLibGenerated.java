@@ -1802,11 +1802,6 @@ public class DiagnosticsTestWithStdLibGenerated extends AbstractDiagnosticsTestW
                 runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/inference/applyInsideCoroutine.kt");
             }
 
-            @TestMetadata("callWithStubTypeInsideFor.kt")
-            public void testCallWithStubTypeInsideFor() throws Exception {
-                runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/inference/callWithStubTypeInsideFor.kt");
-            }
-
             @TestMetadata("chainCallWithExtensionExplicitTypes.kt")
             public void testChainCallWithExtensionExplicitTypes() throws Exception {
                 runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/inference/chainCallWithExtensionExplicitTypes.kt");
@@ -1915,6 +1910,11 @@ public class DiagnosticsTestWithStdLibGenerated extends AbstractDiagnosticsTestW
             @TestMetadata("useInferenceInformationFromExtension.kt")
             public void testUseInferenceInformationFromExtension() throws Exception {
                 runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/inference/useInferenceInformationFromExtension.kt");
+            }
+
+            @TestMetadata("variableCallInsideBuilderFunction.kt")
+            public void testVariableCallInsideBuilderFunction() throws Exception {
+                runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/inference/variableCallInsideBuilderFunction.kt");
             }
 
             @TestMetadata("withParameter.kt")
