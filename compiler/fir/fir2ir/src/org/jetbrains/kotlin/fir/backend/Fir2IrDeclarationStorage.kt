@@ -13,13 +13,14 @@ import org.jetbrains.kotlin.fir.descriptors.FirPackageFragmentDescriptor
 import org.jetbrains.kotlin.fir.expressions.FirVariable
 import org.jetbrains.kotlin.fir.resolve.FirSymbolProvider
 import org.jetbrains.kotlin.fir.service
-import org.jetbrains.kotlin.fir.symbols.ConeCallableSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.*
 import org.jetbrains.kotlin.ir.symbols.*
+import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
 import org.jetbrains.kotlin.ir.util.SymbolTable
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 
 class Fir2IrDeclarationStorage(
     private val session: FirSession,
@@ -77,6 +78,20 @@ class Fir2IrDeclarationStorage(
                                 parent = getIrExternalPackageFragment(packageFqName)
                             }
                         }
+                        irSymbolTable.enterScope(descriptor)
+                        val thisOrigin = IrDeclarationOrigin.INSTANCE_RECEIVER
+                        val thisType = IrSimpleTypeImpl(symbol, false, emptyList(), emptyList())
+                        val parent = this
+                        thisReceiver = irSymbolTable.declareValueParameter(
+                            startOffset, endOffset, thisOrigin, WrappedValueParameterDescriptor(), thisType
+                        ) { symbol ->
+                            IrValueParameterImpl(
+                                startOffset, endOffset, thisOrigin, symbol,
+                                Name.special("<this>"), -1, thisType,
+                                varargElementType = null, isCrossinline = false, isNoinline = false
+                            ).apply { this.parent = parent }
+                        }
+                        irSymbolTable.leaveScope(descriptor)
                     }
                 }
             }
@@ -104,30 +119,31 @@ class Fir2IrDeclarationStorage(
 
     private fun IrDeclaration.setParentByOwnFir(firMember: FirCallableMemberDeclaration) {
         val firBasedSymbol = firMember.symbol
-        if (firBasedSymbol is ConeCallableSymbol) {
-            val callableId = firBasedSymbol.callableId
-            val parentClassId = callableId.classId
-            if (parentClassId != null) {
-                val parentFirSymbol = firSymbolProvider.getClassLikeSymbolByFqName(parentClassId)
-                if (parentFirSymbol is FirClassSymbol) {
-                    val parentIrSymbol = getIrClassSymbol(parentFirSymbol)
-                    val parentIrClass = parentIrSymbol.owner
-                    parent = parentIrClass
-                    parentIrClass.declarations += this
-                }
-            } else {
-                val packageFqName = callableId.packageName
-                val parentIrPackageFragment = getIrExternalPackageFragment(packageFqName)
-                parent = parentIrPackageFragment
-                parentIrPackageFragment.declarations += this
+        val callableId = firBasedSymbol.callableId
+        val parentClassId = callableId.classId
+        if (parentClassId != null) {
+            val parentFirSymbol = firSymbolProvider.getClassLikeSymbolByFqName(parentClassId)
+            if (parentFirSymbol is FirClassSymbol) {
+                val parentIrSymbol = getIrClassSymbol(parentFirSymbol)
+                val parentIrClass = parentIrSymbol.owner
+                parent = parentIrClass
+                parentIrClass.declarations += this
             }
+        } else {
+            val packageFqName = callableId.packageName
+            val parentIrPackageFragment = getIrExternalPackageFragment(packageFqName)
+            parent = parentIrPackageFragment
+            parentIrPackageFragment.declarations += this
         }
     }
 
-    fun getIrFunction(function: FirNamedFunction, setParent: Boolean = true): IrSimpleFunction {
+    fun getIrFunction(
+        function: FirNamedFunction,
+        setParent: Boolean = true,
+        origin: IrDeclarationOrigin = IrDeclarationOrigin.DEFINED
+    ): IrSimpleFunction {
         return functionCache.getOrPut(function) {
             val descriptor = WrappedSimpleFunctionDescriptor()
-            val origin = IrDeclarationOrigin.DEFINED
             function.convertWithOffsets { startOffset, endOffset ->
                 irSymbolTable.declareSimpleFunction(startOffset, endOffset, origin, descriptor) { symbol ->
                     IrFunctionImpl(

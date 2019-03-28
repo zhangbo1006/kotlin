@@ -11,19 +11,21 @@ import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.*
-import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertyGetter
-import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertySetter
+import org.jetbrains.kotlin.fir.declarations.impl.*
 import org.jetbrains.kotlin.fir.descriptors.FirModuleDescriptor
 import org.jetbrains.kotlin.fir.expressions.*
 import org.jetbrains.kotlin.fir.references.FirPropertyFromParameterCallableReference
 import org.jetbrains.kotlin.fir.render
+import org.jetbrains.kotlin.fir.resolve.FirSymbolProvider
 import org.jetbrains.kotlin.fir.resolve.buildUseSiteScope
 import org.jetbrains.kotlin.fir.resolve.toSymbol
 import org.jetbrains.kotlin.fir.scopes.ProcessorAction
+import org.jetbrains.kotlin.fir.service
 import org.jetbrains.kotlin.fir.symbols.ConeClassLikeLookupTagImpl
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirTypeAliasSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirVariableSymbol
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
 import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.FirTypeRef
@@ -36,13 +38,9 @@ import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.declarations.impl.*
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
-import org.jetbrains.kotlin.ir.symbols.IrFieldSymbol
-import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
-import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
-import org.jetbrains.kotlin.ir.symbols.IrValueSymbol
+import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.impl.IrErrorTypeImpl
-import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
 import org.jetbrains.kotlin.ir.util.SymbolTable
 import org.jetbrains.kotlin.ir.util.constructedClassType
 import org.jetbrains.kotlin.ir.util.constructors
@@ -186,17 +184,6 @@ class Fir2IrVisitor(
         val useSiteScope = (klass as? FirRegularClass)?.buildUseSiteScope(session)
         val superTypesFunctionNames = klass.collectFunctionNamesFromSupertypes()
         symbolTable.enterScope(descriptor)
-        val thisOrigin = IrDeclarationOrigin.INSTANCE_RECEIVER
-        val thisType = IrSimpleTypeImpl(symbol, false, emptyList(), emptyList())
-        thisReceiver = symbolTable.declareValueParameter(
-            startOffset, endOffset, thisOrigin, WrappedValueParameterDescriptor(), thisType
-        ) { symbol ->
-            IrValueParameterImpl(
-                startOffset, endOffset, thisOrigin, symbol,
-                Name.special("<this>"), -1, thisType,
-                varargElementType = null, isCrossinline = false, isNoinline = false
-            ).setParentByParentStack()
-        }
         withClass {
             val primaryConstructor = klass.getPrimaryConstructorIfAny()
             val irPrimaryConstructor = primaryConstructor?.accept(this@Fir2IrVisitor, null) as IrConstructor?
@@ -220,9 +207,33 @@ class Fir2IrVisitor(
                 processedFunctionNames += name
                 useSiteScope?.processFunctionsByName(name) { functionSymbol ->
                     if (functionSymbol is FirFunctionSymbol) {
-                        val function = functionSymbol.fir
-                        // TODO: this declarations should be FUN FAKE OVERRIDE
-                        declarations += function.accept(this@Fir2IrVisitor, null) as IrDeclaration
+                        val originalFunction = functionSymbol.fir as FirNamedFunction
+
+                        val fakeOverrideSymbol = FirFunctionSymbol(functionSymbol.callableId, true)
+                        val fakeOverrideFunction = with(originalFunction) {
+                            // TODO: consider using here some light-weight functions instead of pseudo-real FirMemberFunctionImpl
+                            // As second alternative, we can invent some light-weight kind of FirRegularClass
+                            FirMemberFunctionImpl(
+                                this@Fir2IrVisitor.session, psi, fakeOverrideSymbol,
+                                name, receiverTypeRef, returnTypeRef
+                            ).apply {
+                                status = originalFunction.status as FirDeclarationStatusImpl
+                                valueParameters += originalFunction.valueParameters.map { valueParameter ->
+                                    with(valueParameter) {
+                                        FirValueParameterImpl(
+                                            this@Fir2IrVisitor.session, psi,
+                                            this.name, this.returnTypeRef,
+                                            defaultValue, isCrossinline, isNoinline, isVararg,
+                                            FirVariableSymbol(valueParameter.symbol.callableId)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        declarations += fakeOverrideFunction.accept(
+                            this@Fir2IrVisitor, IrDeclarationOrigin.FAKE_OVERRIDE
+                        ) as IrDeclaration
                     }
                     ProcessorAction.STOP
                 }
@@ -242,11 +253,33 @@ class Fir2IrVisitor(
             }
     }
 
-    private fun <T : IrFunction> T.setFunctionContent(descriptor: FunctionDescriptor, firFunction: FirFunction): T {
+    private fun <T : IrFunction> T.setFunctionContent(
+        descriptor: FunctionDescriptor,
+        firFunction: FirFunction,
+        isFakeOverride: Boolean = false
+    ): T {
         setParentByParentStack()
         withParent {
             symbolTable.enterScope(descriptor)
-            val containingClass = classStack.lastOrNull()
+            val firFunctionSymbol = (firFunction as? FirNamedFunction)?.symbol
+            val lastClass = classStack.lastOrNull()
+            val containingClass = if (!isFakeOverride || firFunctionSymbol == null) {
+                lastClass
+            } else {
+                val callableId = firFunctionSymbol.callableId
+                val ownerClassId = callableId.classId
+                if (ownerClassId == null) {
+                    lastClass
+                } else {
+                    val classLikeSymbol = session.service<FirSymbolProvider>().getClassLikeSymbolByFqName(ownerClassId)
+                    if (classLikeSymbol !is FirClassSymbol) {
+                        lastClass
+                    } else {
+                        val firClass = classLikeSymbol.fir
+                        declarationStorage.getIrClass(firClass, setParent = false)
+                    }
+                }
+            }
             if (firFunction !is FirConstructor && containingClass != null) {
                 val thisOrigin = IrDeclarationOrigin.DEFINED
                 val thisType = containingClass.thisReceiver!!.type
@@ -264,6 +297,12 @@ class Fir2IrVisitor(
             if (firFunction !is FirDefaultPropertySetter) {
                 for ((index, valueParameter) in firFunction.valueParameters.withIndex()) {
                     valueParameters += valueParameter.accept(this@Fir2IrVisitor, index) as IrValueParameter
+                }
+            }
+            if (isFakeOverride && this is IrSimpleFunction && firFunctionSymbol != null) {
+                val overriddenSymbol = declarationStorage.getIrFunctionSymbol(firFunctionSymbol)
+                if (overriddenSymbol is IrSimpleFunctionSymbol) {
+                    overriddenSymbols += overriddenSymbol
                 }
             }
             body = firFunction.body?.accept(this@Fir2IrVisitor, null) as IrBody?
@@ -315,8 +354,11 @@ class Fir2IrVisitor(
     }
 
     override fun visitNamedFunction(namedFunction: FirNamedFunction, data: Any?): IrElement {
-        val irFunction = declarationStorage.getIrFunction(namedFunction, setParent = false)
-        return irFunction.setParentByParentStack().withFunction { setFunctionContent(irFunction.descriptor, namedFunction) }
+        val origin = data as? IrDeclarationOrigin ?: IrDeclarationOrigin.DEFINED
+        val irFunction = declarationStorage.getIrFunction(namedFunction, setParent = false, origin = origin)
+        return irFunction.setParentByParentStack().withFunction {
+            setFunctionContent(irFunction.descriptor, namedFunction, isFakeOverride = origin == IrDeclarationOrigin.FAKE_OVERRIDE)
+        }
     }
 
     override fun visitValueParameter(valueParameter: FirValueParameter, data: Any?): IrElement {
