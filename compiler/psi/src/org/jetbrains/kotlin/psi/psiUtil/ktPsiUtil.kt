@@ -571,6 +571,14 @@ fun KtCallExpression.addTypeArgument(typeArgument: KtTypeProjection) {
     }
 }
 
+fun KtCallExpression.replaceOrCreateTypeArgumentList(newTypeArgumentList: KtTypeArgumentList) {
+    if (typeArgumentList != null) typeArgumentList?.replace(newTypeArgumentList)
+    else addAfter(
+        newTypeArgumentList,
+        calleeExpression
+    )
+}
+
 fun KtDeclaration.hasBody() = when (this) {
     is KtFunction -> hasBody()
     is KtProperty -> hasBody()
